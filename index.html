@@ -1,11 +1,13 @@
 <!DOCTYPE html>
-<html lang="tr" data-theme="dark">
+<html lang="tr">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SaveMaster - Akıllı GVAS Editörü</title>
+    
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Fira+Code&display=swap" rel="stylesheet">
     <script src="https://unpkg.com/@phosphor-icons/web"></script>
+    
     <style>
         :root {
             --bg-base: #1a1b26;
@@ -21,87 +23,155 @@
 
         * { margin: 0; padding: 0; box-sizing: border-box; }
 
-        body { font-family: var(--font-ui); background: var(--bg-base); color: var(--text-main); height: 100vh; display: flex; flex-direction: column; }
+        body { 
+            font-family: var(--font-ui); 
+            background: var(--bg-base); 
+            color: var(--text-main); 
+            height: 100vh; 
+            display: flex; 
+            flex-direction: column; 
+            overflow: hidden;
+        }
 
-        .navbar { height: 60px; display: flex; justify-content: space-between; align-items: center; padding: 0 24px; background: var(--bg-panel); border-bottom: 1px solid var(--border-color); }
+        .navbar { 
+            height: 60px; 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            padding: 0 20px; 
+            background: var(--bg-panel); 
+            border-bottom: 1px solid var(--border-color); 
+            flex-shrink: 0;
+        }
+        
         .logo { font-size: 1.2rem; font-weight: 600; display: flex; align-items: center; gap: 8px; color: var(--accent-color); }
         
-        .btn { padding: 8px 16px; border-radius: 6px; font-weight: 500; cursor: pointer; display: flex; align-items: center; gap: 6px; border: none; font-family: var(--font-ui); }
+        .nav-actions { display: flex; gap: 10px; }
+        
+        .btn { 
+            padding: 8px 16px; 
+            border-radius: 6px; 
+            font-weight: 500; 
+            cursor: pointer; 
+            display: flex; 
+            align-items: center; 
+            gap: 6px; 
+            border: none; 
+            font-family: var(--font-ui);
+            font-size: 0.85rem;
+        }
         .primary-btn { background: var(--accent-color); color: #1a1b26; }
         .success-btn { background: var(--success-color); color: #1a1b26; }
         .success-btn:disabled { background: #334155; color: #94a3b8; cursor: not-allowed; }
 
-        .workspace { display: flex; flex: 1; overflow: hidden; }
-        .sidebar { width: 300px; padding: 20px; border-right: 1px solid var(--border-color); background: var(--bg-panel); }
-        .file-info { font-size: 0.85rem; padding: 12px; border-radius: 6px; border: 1px solid var(--border-color); line-height: 1.6; background: var(--bg-base); margin-bottom: 20px;}
+        .workspace { display: flex; flex: 1; overflow: hidden; flex-direction: column; }
+        
+        @media (min-width: 768px) {
+            .workspace { flex-direction: row; }
+        }
 
-        .editor-area { flex: 1; display: flex; flex-direction: column; background: var(--bg-base); }
+        .sidebar { 
+            width: 100%; 
+            padding: 20px; 
+            border-bottom: 1px solid var(--border-color); 
+            background: var(--bg-panel); 
+        }
+        
+        @media (min-width: 768px) {
+            .sidebar { width: 300px; border-bottom: none; border-right: 1px solid var(--border-color); }
+        }
 
-        .tabs { display: flex; border-bottom: 1px solid var(--border-color); background: var(--bg-panel); }
-        .tab { padding: 12px 20px; background: transparent; border: none; color: var(--text-muted); font-weight: 500; cursor: pointer; display: flex; align-items: center; gap: 8px; }
+        .file-info { 
+            font-size: 0.85rem; 
+            padding: 12px; 
+            border-radius: 6px; 
+            border: 1px solid var(--border-color); 
+            line-height: 1.6; 
+            background: var(--bg-base); 
+        }
+
+        .editor-area { flex: 1; display: flex; flex-direction: column; background: var(--bg-base); overflow: hidden; }
+
+        .tabs { display: flex; border-bottom: 1px solid var(--border-color); background: var(--bg-panel); flex-shrink: 0; }
+        .tab { padding: 12px 20px; background: transparent; border: none; color: var(--text-muted); font-weight: 500; display: flex; align-items: center; gap: 8px; }
         .tab.active { color: var(--accent-color); border-bottom: 2px solid var(--accent-color); }
 
-        .view-content { flex: 1; display: none; overflow: auto; padding: 20px; }
-        .view-content.active { display: block; }
-        .empty-state { text-align: center; color: var(--text-muted); margin-top: 20%; }
+        .view-content { flex: 1; overflow-y: auto; padding: 20px; }
+        .empty-state { text-align: center; color: var(--text-muted); margin-top: 10vh; }
         .empty-state i { font-size: 3rem; opacity: 0.5; margin-bottom: 10px; }
 
-        /* SaveEditOnline Tarzı Akıllı Liste Tasarımı */
-        .smart-list { max-width: 800px; margin: 0 auto; }
+        /* Akıllı Liste (SaveEditOnline Tarzı) */
+        .smart-list { max-width: 800px; margin: 0 auto; padding-bottom: 40px; }
         .smart-item { 
-            display: flex; justify-content: flex-end; align-items: center; 
-            padding: 12px 16px; border-bottom: 1px solid var(--border-color);
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            padding: 12px 16px; 
+            border-bottom: 1px solid var(--border-color);
             transition: background 0.2s;
         }
+        @media (min-width: 768px) {
+            .smart-item { justify-content: flex-end; }
+        }
         .smart-item:hover { background: var(--bg-panel); }
-        .smart-name { font-family: var(--font-mono); font-size: 0.9rem; color: #a9b1d6; margin-right: 15px; }
+        
+        .smart-left { display: flex; align-items: center; flex: 1; overflow: hidden; }
+        .smart-type { font-size: 0.7rem; color: var(--text-muted); margin-right: 10px; background: rgba(255,255,255,0.05); padding: 2px 6px; border-radius: 4px; flex-shrink: 0;}
+        .smart-name { font-family: var(--font-mono); font-size: 0.85rem; color: #a9b1d6; margin-right: 15px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        
         .smart-input { 
             background: transparent; border: 1px solid var(--border-color); 
             color: var(--success-color); padding: 6px 10px; border-radius: 4px; 
-            font-family: var(--font-mono); font-weight: 600; width: 150px; text-align: left;
+            font-family: var(--font-mono); font-weight: 600; width: 120px; text-align: right;
+            flex-shrink: 0;
         }
-        .smart-input:focus { outline: none; border-color: var(--accent-color); }
-        .smart-type { font-size: 0.7rem; color: var(--text-muted); margin-right: 10px; background: rgba(255,255,255,0.05); padding: 2px 6px; border-radius: 4px; }
+        .smart-input:focus { outline: none; border-color: var(--accent-color); background: var(--bg-panel); }
 
-        .search-box { width: 100%; padding: 10px; border-radius: 6px; border: 1px solid var(--border-color); background: var(--bg-base); color: white; margin-bottom: 20px; }
+        .search-box { width: 100%; max-width: 800px; margin: 0 auto 20px auto; display: block; padding: 12px; border-radius: 6px; border: 1px solid var(--border-color); background: var(--bg-panel); color: white; font-family: var(--font-ui); }
+        .search-box:focus { outline: none; border-color: var(--accent-color); }
     </style>
 </head>
 <body>
 
     <nav class="navbar">
         <div class="logo"><i class="ph-fill ph-game-controller"></i> SaveMaster</div>
-        <div style="display: flex; gap: 12px;">
+        <div class="nav-actions">
             <label class="btn primary-btn">
-                <i class="ph ph-upload-simple"></i> Dosya Yükle
+                <i class="ph ph-upload-simple"></i> Yükle
                 <input type="file" id="upload-save" style="display: none;">
             </label>
             <button class="btn success-btn" id="download-save" disabled>
-                <i class="ph ph-download-simple"></i> Güncellenmiş Dosyayı İndir
+                <i class="ph ph-download-simple"></i> İndir
             </button>
         </div>
     </nav>
 
     <main class="workspace">
+        
         <aside class="sidebar">
             <h3 style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 10px;">DOSYA BİLGİSİ</h3>
-            <div class="file-info" id="file-info">Dosya bekleniyor...</div>
+            <div class="file-info" id="file-info">
+                <p style="color: var(--text-muted)">Dosya bekleniyor...</p>
+            </div>
         </aside>
 
         <section class="editor-area">
             <div class="tabs">
-                <button class="tab active" data-target="smart-view"><i class="ph ph-list-numbers"></i> Akıllı Liste (SaveEditOnline Tarzı)</button>
+                <div class="tab active"><i class="ph ph-list-numbers"></i> Akıllı Editör</div>
             </div>
 
-            <div class="view-content active" id="smart-view">
+            <div class="view-content" id="smart-view">
+                
                 <div class="empty-state" id="empty-message">
                     <i class="ph ph-file-dashed"></i>
-                    <p>PUBG Active.sav (veya herhangi bir GVAS) dosyasını yükleyin.</p>
+                    <p>PUBG Active.sav dosyasını yükleyin.</p>
                 </div>
                 
                 <div id="smart-editor-container" style="display: none;">
-                    <input type="text" id="search-input" class="search-box" placeholder="Ayar ara... (Örn: FPSLevel, MainVolumValue)">
+                    <input type="text" id="search-input" class="search-box" placeholder="Ayar ara... (Örn: FPSLevel, Shoot)">
                     <div class="smart-list" id="smart-list"></div>
                 </div>
+                
             </div>
         </section>
     </main>
@@ -120,7 +190,6 @@
             let dataView = null;
             let currentFileName = "";
 
-            // Dosya Okuma
             uploadInput.addEventListener("change", (e) => {
                 const file = e.target.files[0];
                 if (!file) return;
@@ -135,7 +204,6 @@
                 reader.readAsArrayBuffer(file); 
             });
 
-            // GVAS (Unreal Engine) Akıllı Tarayıcı Mantığı
             function processUE4File(file) {
                 fileInfo.innerHTML = `
                     <strong>Dosya:</strong> ${file.name} <br>
@@ -145,47 +213,35 @@
 
                 emptyMsg.style.display = "none";
                 editorContainer.style.display = "block";
-                smartList.innerHTML = "<p style='text-align:center;'>Ayarlar taranıyor...</p>";
+                smartList.innerHTML = "<p style='text-align:center; margin-top: 20px;'>Ayarlar taranıyor, lütfen bekleyin...</p>";
                 downloadBtn.disabled = false;
 
-                // Tarayıcıyı dondurmamak için asenkron (timeout) çalıştırıyoruz
                 setTimeout(() => extractProperties(), 100);
             }
 
             function extractProperties() {
                 const uint8 = new Uint8Array(fileBuffer);
                 const decoder = new TextDecoder('ascii');
-                const str = decoder.decode(uint8); // Hızlı arama için önce metne çeviriyoruz
+                const str = decoder.decode(uint8); 
                 
                 let properties = [];
-                
-                // Aradığımız veri tipleri (Oyunların en çok kullandığı sayılar)
                 const types = ["IntProperty", "FloatProperty", "BoolProperty"];
 
                 types.forEach(type => {
                     let index = 0;
                     while ((index = str.indexOf(type, index)) !== -1) {
                         
-                        // Property tipini bulduk, şimdi adını (Variable Name) bulalım.
-                        // UE4 dosyalarında isim genellikle bu string'den hemen önce yer alır.
                         let nameStart = index - 2; 
                         while (nameStart > 0 && uint8[nameStart] !== 0) { nameStart--; }
-                        nameStart++; // null byte'ı atla
+                        nameStart++; 
                         
                         let varName = str.substring(nameStart, index - 1).replace(/[^\w]/g, '');
                         
                         if (varName.length > 2) {
-                            // Değerin saklandığı bayt ofsetini (konumunu) bul
-                            // Genellikle "IntProperty\0" yazısından 9 bayt sonra asıl değer başlar
                             const valueOffset = index + type.length + 9; 
                             
-                            // Güvenlik kontrolü (Dosya boyutunu aşmamak için)
                             if (valueOffset + 4 < uint8.length) {
-                                properties.push({
-                                    name: varName,
-                                    type: type,
-                                    offset: valueOffset
-                                });
+                                properties.push({ name: varName, type: type, offset: valueOffset });
                             }
                         }
                         index += type.length;
@@ -200,43 +256,46 @@
                 
                 if(properties.length === 0) {
                     smartList.innerHTML = "<p style='color:var(--text-muted); text-align:center;'>Bu dosyada okunabilir standart bir ayar bulunamadı.</p>";
+                    fileInfo.innerHTML += `<br><strong>Hata:</strong> <span style="color:#ef4444">Ayar Bulunamadı</span>`;
                     return;
                 }
 
-                // Listeyi alfabetik sırala
+                fileInfo.innerHTML = fileInfo.innerHTML.replace("Çözümleniyor...", `Hazır (${properties.length} Ayar Bulundu)`);
+
                 properties.sort((a, b) => a.name.localeCompare(b.name));
 
-                properties.forEach((prop, i) => {
+                properties.forEach((prop) => {
                     const item = document.createElement("div");
                     item.className = "smart-item";
                     
                     let currentValue = 0;
                     let step = "1";
                     
-                    // Değeri DataView ile oku
                     try {
                         if (prop.type === "IntProperty") {
-                            currentValue = dataView.getInt32(prop.offset, true); // true = Little Endian
+                            currentValue = dataView.getInt32(prop.offset, true); 
                             step = "1";
                         } else if (prop.type === "FloatProperty") {
                             currentValue = dataView.getFloat32(prop.offset, true);
-                            step = "0.0001";
+                            currentValue = parseFloat(currentValue.toFixed(6)); // Küsüratları temiz göster
+                            step = "0.01";
                         } else if (prop.type === "BoolProperty") {
                             currentValue = dataView.getUint8(prop.offset) === 1 ? 1 : 0;
                             step = "1";
                         }
-                    } catch(e) { currentValue = "Hata"; }
+                    } catch(e) { currentValue = 0; }
 
                     item.innerHTML = `
-                        <span class="smart-type">${prop.type.replace('Property','')}</span>
-                        <span class="smart-name">${prop.name}</span>
+                        <div class="smart-left">
+                            <span class="smart-type">${prop.type.replace('Property','')}</span>
+                            <span class="smart-name" title="${prop.name}">${prop.name}</span>
+                        </div>
                         <input type="number" class="smart-input" step="${step}" value="${currentValue}" data-offset="${prop.offset}" data-type="${prop.type}">
                     `;
 
                     smartList.appendChild(item);
                 });
 
-                // Değer değiştiğinde dosyaya (RAM'e) anında yaz
                 document.querySelectorAll(".smart-input").forEach(input => {
                     input.addEventListener("change", (e) => {
                         const offset = parseInt(e.target.dataset.offset);
@@ -248,16 +307,17 @@
                         } else if (type === "FloatProperty") {
                             dataView.setFloat32(offset, newVal, true);
                         } else if (type === "BoolProperty") {
-                            dataView.setUint8(offset, newVal > 0 ? 1 : 0);
-                            e.target.value = newVal > 0 ? 1 : 0; // Sadece 0 veya 1 olsun
+                            newVal = newVal > 0 ? 1 : 0;
+                            dataView.setUint8(offset, newVal);
+                            e.target.value = newVal; 
                         }
                         
-                        e.target.style.color = "#ff9e64"; // Değiştiğini belli et (Turuncu)
+                        e.target.style.color = "#ff9e64"; 
+                        e.target.style.borderColor = "#ff9e64";
                     });
                 });
             }
 
-            // Arama Kutusu Filtreleme
             searchInput.addEventListener("input", (e) => {
                 const term = e.target.value.toLowerCase();
                 document.querySelectorAll(".smart-item").forEach(item => {
@@ -266,7 +326,6 @@
                 });
             });
 
-            // İndirme İşlemi
             downloadBtn.addEventListener("click", () => {
                 const blob = new Blob([fileBuffer], { type: "application/octet-stream" });
                 const url = URL.createObjectURL(blob);
@@ -276,420 +335,6 @@
                 document.body.appendChild(a);
                 a.click();
                 setTimeout(() => { document.body.removeChild(a); URL.revokeObjectURL(url); }, 0);
-            });
-        });
-    </script>
-</body>
-</html>
-        .outline-btn { background: transparent; border: 1px solid var(--border-color); color: var(--text-main); width: 100%; justify-content: center; margin-bottom: 8px; }
-        .outline-btn:hover { background: var(--border-color); }
-
-        /* Workspace */
-        .workspace { display: flex; flex: 1; overflow: hidden; }
-        .sidebar { width: 300px; padding: 20px; border-right: 1px solid var(--border-color); display: flex; flex-direction: column; }
-        .panel-header h3 { font-size: 0.75rem; color: var(--text-muted); letter-spacing: 1px; margin-bottom: 12px; }
-        .file-info { font-size: 0.85rem; background: var(--bg-base); padding: 12px; border-radius: 6px; border: 1px solid var(--border-color); line-height: 1.6;}
-
-        .editor-area { flex: 1; display: flex; flex-direction: column; background: var(--bg-panel); }
-
-        /* Sekmeler */
-        .tabs { display: flex; border-bottom: 1px solid var(--border-color); background: var(--bg-base); }
-        .tab {
-            padding: 12px 20px; background: transparent; border: none; color: var(--text-muted); font-weight: 500;
-            cursor: pointer; border-bottom: 2px solid transparent; display: flex; align-items: center; gap: 8px;
-        }
-        .tab.active { color: var(--accent-color); border-bottom-color: var(--accent-color); background: var(--bg-panel); }
-
-        /* Editör İçerikleri */
-        .view-content { flex: 1; display: none; overflow: auto; position: relative; }
-        .view-content.active { display: block; }
-        .empty-state { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); text-align: center; color: var(--text-muted); }
-        .empty-state i { font-size: 3rem; margin-bottom: 10px; opacity: 0.5; }
-
-        /* Visual Editor (Tree) */
-        .visual-editor-container { padding: 20px; }
-        .kv-row { display: flex; align-items: center; margin-bottom: 8px; font-family: var(--font-mono); font-size: 0.85rem; }
-        .kv-key { width: 200px; color: #818cf8; font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-        .kv-val-input { 
-            flex: 1; background: var(--bg-base); border: 1px solid var(--border-color); color: var(--text-main); 
-            padding: 6px 10px; border-radius: 4px; font-family: var(--font-mono); font-size: 0.85rem;
-        }
-        .kv-val-input:focus { border-color: var(--accent-color); outline: none; }
-        .kv-object-title { margin: 12px 0 8px 0; color: #f8fafc; font-weight: 600; padding-bottom: 4px; border-bottom: 1px dashed var(--border-color); }
-        .kv-indent { margin-left: 20px; border-left: 1px solid var(--border-color); padding-left: 15px; }
-
-        /* Raw Code Editor */
-        .code-editor {
-            width: 100%; height: 100%; background: transparent; border: none; color: #a5b4fc;
-            padding: 20px; font-family: var(--font-mono); font-size: 0.9rem; resize: none; line-height: 1.5;
-        }
-        .code-editor:focus { outline: none; }
-
-        /* Hex Editör Tasarımı */
-        .hex-editor-container {
-            padding: 20px;
-            font-family: var(--font-mono);
-            font-size: 0.85rem;
-            height: 100%;
-            display: flex;
-            flex-direction: column;
-        }
-        .hex-header {
-            display: flex;
-            color: var(--accent-color);
-            font-weight: 600;
-            padding-bottom: 10px;
-            border-bottom: 1px solid var(--border-color);
-            margin-bottom: 10px;
-        }
-        .hex-body {
-            flex: 1;
-            overflow-y: auto;
-        }
-        .hex-row {
-            display: flex;
-            padding: 4px 0;
-            transition: background 0.1s;
-        }
-        .hex-row:hover { background: rgba(255,255,255,0.05); }
-        .hex-offset-col { width: 80px; color: var(--text-muted); user-select: none; }
-        .hex-bytes-col { flex: 1; display: flex; gap: 8px; color: #a5b4fc; }
-        .hex-ascii-col { width: 160px; color: #f8fafc; letter-spacing: 2px; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
-
-        .hex-byte { cursor: pointer; padding: 0 2px; border-radius: 2px; }
-        .hex-byte:hover { background: var(--accent-color); color: white; }
-    </style>
-</head>
-<body>
-
-    <nav class="navbar glass">
-        <div class="logo">
-            <i class="ph-fill ph-floppy-disk"></i>
-            <span>SaveMaster</span>
-        </div>
-        <div class="nav-actions">
-            <label class="btn primary-btn">
-                <i class="ph ph-upload-simple"></i> Save Dosyası Yükle
-                <input type="file" id="upload-save" style="display: none;">
-            </label>
-            <button class="btn success-btn" id="download-save" disabled>
-                <i class="ph ph-download-simple"></i> Düzenlenmiş Save'i İndir
-            </button>
-        </div>
-    </nav>
-
-    <main class="workspace">
-        <aside class="sidebar panel glass">
-            <div class="panel-header"><h3>DOSYA BİLGİSİ</h3></div>
-            <div class="file-info" id="file-info">
-                <p class="text-muted">Henüz dosya yüklenmedi.</p>
-            </div>
-            
-            <div class="panel-header" style="margin-top: 20px;"><h3>ARAÇLAR</h3></div>
-            <div class="tools-menu">
-                <button class="btn outline-btn" id="btn-base64-decode"><i class="ph ph-lock-key-open"></i> Base64 Çöz</button>
-                <button class="btn outline-btn" id="btn-format-json"><i class="ph ph-brackets-curly"></i> JSON Formatla</button>
-            </div>
-        </aside>
-
-        <section class="editor-area panel">
-            <div class="tabs">
-                <button class="tab" data-target="visual-view"><i class="ph ph-tree-structure"></i> Görsel Editör</button>
-                <button class="tab" data-target="raw-view"><i class="ph ph-code"></i> Metin (Raw)</button>
-                <button class="tab active" data-target="hex-view"><i class="ph ph-hash"></i> Hex Editör (GVAS/Binary)</button>
-            </div>
-
-            <div class="view-content" id="visual-view">
-                <div class="visual-editor-container" id="visual-editor">
-                    <div class="empty-state">
-                        <i class="ph ph-file-dashed"></i>
-                        <p>Düzenlemek için bir dosya yükleyin.</p>
-                    </div>
-                </div>
-            </div>
-
-            <div class="view-content" id="raw-view">
-                <textarea id="raw-editor" class="code-editor" spellcheck="false" placeholder="Dosya içeriği burada görünecek..."></textarea>
-            </div>
-
-            <div class="view-content active" id="hex-view">
-                <div class="hex-editor-container">
-                    <div class="hex-header">
-                        <div class="hex-offset-col">Offset</div>
-                        <div class="hex-bytes-col">00 01 02 03 04 05 06 07 08 09 0A 0B 0C 0D 0E 0F</div>
-                        <div class="hex-ascii-col">ASCII</div>
-                    </div>
-                    <div class="hex-body" id="hex-body">
-                        <div class="empty-state">
-                            <i class="ph ph-binary"></i>
-                            <p>Binary veya GVAS formatında bir dosya yükleyin.</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </section>
-    </main>
-
-    <script>
-        document.addEventListener("DOMContentLoaded", () => {
-            const uploadInput = document.getElementById("upload-save");
-            const downloadBtn = document.getElementById("download-save");
-            const fileInfo = document.getElementById("file-info");
-            const tabs = document.querySelectorAll(".tab");
-            const views = document.querySelectorAll(".view-content");
-            const visualEditor = document.getElementById("visual-editor");
-            const rawEditor = document.getElementById("raw-editor");
-            
-            let currentFileName = "";
-            let fileBuffer = null; 
-            let uint8Array = null; 
-            let isGVAS = false;
-            let currentData = null; // JSON datası için
-            let isJson = false;
-
-            // --- Tab Değiştirme ---
-            tabs.forEach(tab => {
-                tab.addEventListener("click", () => {
-                    tabs.forEach(t => t.classList.remove("active"));
-                    views.forEach(v => v.classList.remove("active"));
-                    tab.classList.add("active");
-                    document.getElementById(tab.dataset.target).classList.add("active");
-                });
-            });
-
-            // --- Dosyayı ArrayBuffer Olarak Okuma ---
-            uploadInput.addEventListener("change", (e) => {
-                const file = e.target.files[0];
-                if (!file) return;
-
-                currentFileName = file.name;
-                
-                const reader = new FileReader();
-                reader.onload = (event) => {
-                    fileBuffer = event.target.result;
-                    uint8Array = new Uint8Array(fileBuffer);
-                    processFile(file);
-                };
-                reader.readAsArrayBuffer(file); 
-            });
-
-            // --- Dosya Tipi Analizi (GVAS veya Text/JSON) ---
-            function processFile(file) {
-                downloadBtn.disabled = false;
-                isGVAS = false;
-                isJson = false;
-                currentData = null;
-                
-                // İlk 4 baytı kontrol et (GVAS Magic Number)
-                if (uint8Array.length >= 4) {
-                    const magic = String.fromCharCode(uint8Array[0], uint8Array[1], uint8Array[2], uint8Array[3]);
-                    if (magic === 'GVAS') isGVAS = true;
-                }
-
-                fileInfo.innerHTML = `
-                    <strong>Dosya:</strong> ${file.name} <br>
-                    <strong>Boyut:</strong> ${(file.size / 1024).toFixed(2)} KB <br>
-                `;
-
-                if (isGVAS) {
-                    fileInfo.innerHTML += `<strong>Format:</strong> <span style="color:var(--success-color)">UE4 GVAS (Binary)</span>`;
-                    document.querySelector('[data-target="hex-view"]').click();
-                    renderHexEditor();
-                    rawEditor.value = "Bu bir GVAS (Binary) dosyasıdır. Düzenlemek için Hex Editör sekmesini kullanın.";
-                    visualEditor.innerHTML = `<div class="empty-state"><p>Binary dosyalar görsel editörde açılamaz.</p></div>`;
-                } else {
-                    // Metin dosyası ise Text Decoder ile çevir
-                    const textDecoder = new TextDecoder("utf-8");
-                    const textContent = textDecoder.decode(uint8Array);
-                    rawEditor.value = textContent;
-
-                    try {
-                        currentData = JSON.parse(textContent);
-                        isJson = true;
-                        fileInfo.innerHTML += `<strong>Format:</strong> <span style="color:var(--accent-color)">JSON</span>`;
-                        renderVisualEditor(currentData, visualEditor);
-                        document.querySelector('[data-target="visual-view"]').click();
-                    } catch (error) {
-                        fileInfo.innerHTML += `<strong>Format:</strong> <span style="color:#f59e0b">Bilinmeyen (Metin)</span>`;
-                        document.querySelector('[data-target="raw-view"]').click();
-                        visualEditor.innerHTML = `<div class="empty-state"><p>Bu dosya formatı görsel editör tarafından desteklenmiyor.</p></div>`;
-                    }
-                    
-                    // Hex editörü yine de doldur (isteyen metni hex olarak görebilsin)
-                    renderHexEditor();
-                }
-            }
-
-            // --- Hex Editör Oluşturucu ---
-            function renderHexEditor() {
-                const hexBody = document.getElementById("hex-body");
-                hexBody.innerHTML = ""; 
-
-                // Arayüzün çökmemesi için maksimum 16KB render (Geliştirilebilir)
-                const maxBytesToRender = Math.min(uint8Array.length, 16384); 
-                let htmlContent = "";
-                
-                for (let i = 0; i < maxBytesToRender; i += 16) {
-                    let hexRow = `<div class="hex-row">`;
-                    hexRow += `<div class="hex-offset-col">${i.toString(16).padStart(8, '0').toUpperCase()}</div>`;
-                    
-                    let hexBytes = "";
-                    let asciiChars = "";
-                    
-                    for (let j = 0; j < 16; j++) {
-                        if (i + j < maxBytesToRender) {
-                            const byte = uint8Array[i + j];
-                            const hexValue = byte.toString(16).padStart(2, '0').toUpperCase();
-                            hexBytes += `<span class="hex-byte" data-index="${i+j}" title="Değiştirmek için tıkla">${hexValue}</span> `;
-                            asciiChars += (byte >= 32 && byte <= 126) ? String.fromCharCode(byte) : ".";
-                        } else {
-                            hexBytes += "   "; 
-                        }
-                    }
-                    
-                    hexRow += `<div class="hex-bytes-col">${hexBytes}</div>`;
-                    asciiChars = asciiChars.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
-                    hexRow += `<div class="hex-ascii-col">${asciiChars}</div>`;
-                    hexRow += `</div>`;
-                    htmlContent += hexRow;
-                }
-                
-                if(uint8Array.length > 16384) {
-                   htmlContent += `<div style="padding: 10px; color: var(--text-muted); text-align: center;">Dosya çok büyük. Sadece ilk 16KB gösteriliyor.</div>`;
-                }
-
-                hexBody.innerHTML = htmlContent;
-
-                // Bayt Değiştirme Tıklaması
-                document.querySelectorAll('.hex-byte').forEach(span => {
-                    span.addEventListener('click', function() {
-                        const index = parseInt(this.getAttribute('data-index'));
-                        const currentHex = this.innerText;
-                        const newHex = prompt(`Adres: 0x${index.toString(16).toUpperCase()}\nMevcut Değer: ${currentHex}\nYeni değeri girin (00 - FF):`, currentHex);
-                        
-                        if (newHex && /^[0-9A-Fa-f]{1,2}$/.test(newHex)) {
-                            const newByte = parseInt(newHex, 16);
-                            uint8Array[index] = newByte; 
-                            this.innerText = newHex.padStart(2, '0').toUpperCase(); 
-                            this.style.color = "var(--success-color)"; 
-                        } else if (newHex !== null) {
-                            alert("Sadece geçerli bir Hex değeri girin! (Örn: 0A, FF, 12)");
-                        }
-                    });
-                });
-            }
-
-            // --- JSON Görsel Editör Oluşturucu ---
-            function renderVisualEditor(data, container) {
-                container.innerHTML = ""; 
-                function createNode(obj, currentPath, parentElement) {
-                    for (let key in obj) {
-                        if (obj.hasOwnProperty(key)) {
-                            const value = obj[key];
-                            const newPath = currentPath ? `${currentPath}.${key}` : key;
-
-                            if (typeof value === 'object' && value !== null) {
-                                const title = document.createElement("div");
-                                title.className = "kv-object-title";
-                                title.innerText = key;
-                                parentElement.appendChild(title);
-
-                                const indent = document.createElement("div");
-                                indent.className = "kv-indent";
-                                parentElement.appendChild(indent);
-
-                                createNode(value, newPath, indent);
-                            } else {
-                                const row = document.createElement("div");
-                                row.className = "kv-row";
-
-                                const label = document.createElement("div");
-                                label.className = "kv-key";
-                                label.innerText = key;
-
-                                const input = document.createElement("input");
-                                input.type = typeof value === 'number' ? 'number' : 'text';
-                                input.className = "kv-val-input";
-                                input.value = value;
-                                
-                                input.addEventListener("input", (e) => {
-                                    let val = e.target.value;
-                                    if(typeof value === 'number') val = Number(val);
-                                    if(typeof value === 'boolean') val = val === 'true';
-                                    
-                                    // Deep update
-                                    const keys = newPath.split('.');
-                                    const lastKey = keys.pop();
-                                    const deepObj = keys.reduce((o, k) => o[k], currentData);
-                                    deepObj[lastKey] = val;
-                                });
-
-                                row.appendChild(label);
-                                row.appendChild(input);
-                                parentElement.appendChild(row);
-                            }
-                        }
-                    }
-                }
-                const rootDiv = document.createElement("div");
-                createNode(data, "", rootDiv);
-                container.appendChild(rootDiv);
-            }
-
-            // --- Araçlar ---
-            document.getElementById("btn-base64-decode").addEventListener("click", () => {
-                try {
-                    const decodedStr = atob(rawEditor.value);
-                    const bytes = new Uint8Array(decodedStr.length);
-                    for (let i = 0; i < decodedStr.length; i++) {
-                        bytes[i] = decodedStr.charCodeAt(i);
-                    }
-                    fileBuffer = bytes.buffer;
-                    uint8Array = bytes;
-                    processFile({name: currentFileName + "_decoded", size: bytes.length});
-                } catch (e) {
-                    alert("Bu geçerli bir Base64 dizgesi değil!");
-                }
-            });
-
-            document.getElementById("btn-format-json").addEventListener("click", () => {
-                try {
-                    const parsed = JSON.parse(rawEditor.value);
-                    rawEditor.value = JSON.stringify(parsed, null, 4);
-                } catch (e) {
-                    alert("Formatlamak için geçerli bir JSON olmalı!");
-                }
-            });
-
-            // --- Kaydet ve İndir ---
-            downloadBtn.addEventListener("click", () => {
-                let blob;
-                
-                // Hangi sekmenin aktif olduğuna göre indirme mantığını belirle
-                const activeTab = document.querySelector('.tab.active').dataset.target;
-
-                if (isGVAS || activeTab === "hex-view") {
-                    // Binary dosyasıysa güncellenmiş Array'i indir
-                    blob = new Blob([uint8Array], { type: "application/octet-stream" });
-                } else if (isJson && activeTab === "visual-view") {
-                    // JSON ise görsel editörden veriyi al
-                    blob = new Blob([JSON.stringify(currentData, null, 4)], { type: "application/json" });
-                } else {
-                    // Raw metin ise textarea'yı al
-                    blob = new Blob([rawEditor.value], { type: "text/plain" });
-                }
-
-                const url = URL.createObjectURL(blob);
-                const a = document.createElement("a");
-                a.href = url;
-                a.download = "edited_" + currentFileName;
-                document.body.appendChild(a);
-                a.click();
-                
-                setTimeout(() => {
-                    document.body.removeChild(a);
-                    URL.revokeObjectURL(url);
-                }, 0);
             });
         });
     </script>
