@@ -3,64 +3,284 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SaveMaster - Gelişmiş Kayıt Editörü (GVAS Destekli)</title>
-    
+    <title>SaveMaster - Akıllı GVAS Editörü</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Fira+Code&display=swap" rel="stylesheet">
     <script src="https://unpkg.com/@phosphor-icons/web"></script>
-
     <style>
         :root {
-            --bg-base: #0f111a;
-            --bg-panel: #161925;
-            --bg-glass: rgba(22, 25, 37, 0.8);
-            --border-color: #2b3041;
-            --text-main: #f8fafc;
-            --text-muted: #94a3b8;
-            --accent-color: #6366f1;
-            --success-color: #10b981;
+            --bg-base: #1a1b26;
+            --bg-panel: #24283b;
+            --border-color: #414868;
+            --text-main: #c0caf5;
+            --text-muted: #565f89;
+            --accent-color: #7aa2f7;
+            --success-color: #9ece6a;
             --font-ui: 'Inter', sans-serif;
             --font-mono: 'Fira Code', monospace;
-            --transition: all 0.2s ease;
         }
 
         * { margin: 0; padding: 0; box-sizing: border-box; }
 
-        body {
-            font-family: var(--font-ui);
-            background-color: var(--bg-base);
-            color: var(--text-main);
-            height: 100vh;
-            display: flex;
-            flex-direction: column;
-        }
+        body { font-family: var(--font-ui); background: var(--bg-base); color: var(--text-main); height: 100vh; display: flex; flex-direction: column; }
 
-        .glass {
-            background: var(--bg-glass);
-            backdrop-filter: blur(10px);
-            border: 1px solid var(--border-color);
-        }
-
-        /* Navbar */
-        .navbar {
-            height: 60px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 0 24px;
-            border-bottom: 1px solid var(--border-color);
-        }
+        .navbar { height: 60px; display: flex; justify-content: space-between; align-items: center; padding: 0 24px; background: var(--bg-panel); border-bottom: 1px solid var(--border-color); }
         .logo { font-size: 1.2rem; font-weight: 600; display: flex; align-items: center; gap: 8px; color: var(--accent-color); }
-        .nav-actions { display: flex; gap: 12px; }
-
-        /* Butonlar */
-        .btn {
-            padding: 8px 16px; border-radius: 6px; font-family: var(--font-ui); font-size: 0.85rem; font-weight: 500;
-            cursor: pointer; display: flex; align-items: center; gap: 6px; border: none; transition: var(--transition);
-        }
-        .primary-btn { background: var(--accent-color); color: white; }
-        .primary-btn:hover { filter: brightness(1.1); }
-        .success-btn { background: var(--success-color); color: white; }
+        
+        .btn { padding: 8px 16px; border-radius: 6px; font-weight: 500; cursor: pointer; display: flex; align-items: center; gap: 6px; border: none; font-family: var(--font-ui); }
+        .primary-btn { background: var(--accent-color); color: #1a1b26; }
+        .success-btn { background: var(--success-color); color: #1a1b26; }
         .success-btn:disabled { background: #334155; color: #94a3b8; cursor: not-allowed; }
+
+        .workspace { display: flex; flex: 1; overflow: hidden; }
+        .sidebar { width: 300px; padding: 20px; border-right: 1px solid var(--border-color); background: var(--bg-panel); }
+        .file-info { font-size: 0.85rem; padding: 12px; border-radius: 6px; border: 1px solid var(--border-color); line-height: 1.6; background: var(--bg-base); margin-bottom: 20px;}
+
+        .editor-area { flex: 1; display: flex; flex-direction: column; background: var(--bg-base); }
+
+        .tabs { display: flex; border-bottom: 1px solid var(--border-color); background: var(--bg-panel); }
+        .tab { padding: 12px 20px; background: transparent; border: none; color: var(--text-muted); font-weight: 500; cursor: pointer; display: flex; align-items: center; gap: 8px; }
+        .tab.active { color: var(--accent-color); border-bottom: 2px solid var(--accent-color); }
+
+        .view-content { flex: 1; display: none; overflow: auto; padding: 20px; }
+        .view-content.active { display: block; }
+        .empty-state { text-align: center; color: var(--text-muted); margin-top: 20%; }
+        .empty-state i { font-size: 3rem; opacity: 0.5; margin-bottom: 10px; }
+
+        /* SaveEditOnline Tarzı Akıllı Liste Tasarımı */
+        .smart-list { max-width: 800px; margin: 0 auto; }
+        .smart-item { 
+            display: flex; justify-content: flex-end; align-items: center; 
+            padding: 12px 16px; border-bottom: 1px solid var(--border-color);
+            transition: background 0.2s;
+        }
+        .smart-item:hover { background: var(--bg-panel); }
+        .smart-name { font-family: var(--font-mono); font-size: 0.9rem; color: #a9b1d6; margin-right: 15px; }
+        .smart-input { 
+            background: transparent; border: 1px solid var(--border-color); 
+            color: var(--success-color); padding: 6px 10px; border-radius: 4px; 
+            font-family: var(--font-mono); font-weight: 600; width: 150px; text-align: left;
+        }
+        .smart-input:focus { outline: none; border-color: var(--accent-color); }
+        .smart-type { font-size: 0.7rem; color: var(--text-muted); margin-right: 10px; background: rgba(255,255,255,0.05); padding: 2px 6px; border-radius: 4px; }
+
+        .search-box { width: 100%; padding: 10px; border-radius: 6px; border: 1px solid var(--border-color); background: var(--bg-base); color: white; margin-bottom: 20px; }
+    </style>
+</head>
+<body>
+
+    <nav class="navbar">
+        <div class="logo"><i class="ph-fill ph-game-controller"></i> SaveMaster</div>
+        <div style="display: flex; gap: 12px;">
+            <label class="btn primary-btn">
+                <i class="ph ph-upload-simple"></i> Dosya Yükle
+                <input type="file" id="upload-save" style="display: none;">
+            </label>
+            <button class="btn success-btn" id="download-save" disabled>
+                <i class="ph ph-download-simple"></i> Güncellenmiş Dosyayı İndir
+            </button>
+        </div>
+    </nav>
+
+    <main class="workspace">
+        <aside class="sidebar">
+            <h3 style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 10px;">DOSYA BİLGİSİ</h3>
+            <div class="file-info" id="file-info">Dosya bekleniyor...</div>
+        </aside>
+
+        <section class="editor-area">
+            <div class="tabs">
+                <button class="tab active" data-target="smart-view"><i class="ph ph-list-numbers"></i> Akıllı Liste (SaveEditOnline Tarzı)</button>
+            </div>
+
+            <div class="view-content active" id="smart-view">
+                <div class="empty-state" id="empty-message">
+                    <i class="ph ph-file-dashed"></i>
+                    <p>PUBG Active.sav (veya herhangi bir GVAS) dosyasını yükleyin.</p>
+                </div>
+                
+                <div id="smart-editor-container" style="display: none;">
+                    <input type="text" id="search-input" class="search-box" placeholder="Ayar ara... (Örn: FPSLevel, MainVolumValue)">
+                    <div class="smart-list" id="smart-list"></div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            const uploadInput = document.getElementById("upload-save");
+            const downloadBtn = document.getElementById("download-save");
+            const fileInfo = document.getElementById("file-info");
+            const smartList = document.getElementById("smart-list");
+            const emptyMsg = document.getElementById("empty-message");
+            const editorContainer = document.getElementById("smart-editor-container");
+            const searchInput = document.getElementById("search-input");
+            
+            let fileBuffer = null; 
+            let dataView = null;
+            let currentFileName = "";
+
+            // Dosya Okuma
+            uploadInput.addEventListener("change", (e) => {
+                const file = e.target.files[0];
+                if (!file) return;
+
+                currentFileName = file.name;
+                const reader = new FileReader();
+                reader.onload = (event) => {
+                    fileBuffer = event.target.result;
+                    dataView = new DataView(fileBuffer);
+                    processUE4File(file);
+                };
+                reader.readAsArrayBuffer(file); 
+            });
+
+            // GVAS (Unreal Engine) Akıllı Tarayıcı Mantığı
+            function processUE4File(file) {
+                fileInfo.innerHTML = `
+                    <strong>Dosya:</strong> ${file.name} <br>
+                    <strong>Boyut:</strong> ${(file.size / 1024).toFixed(2)} KB <br>
+                    <strong>Durum:</strong> <span style="color:var(--success-color)">Çözümleniyor...</span>
+                `;
+
+                emptyMsg.style.display = "none";
+                editorContainer.style.display = "block";
+                smartList.innerHTML = "<p style='text-align:center;'>Ayarlar taranıyor...</p>";
+                downloadBtn.disabled = false;
+
+                // Tarayıcıyı dondurmamak için asenkron (timeout) çalıştırıyoruz
+                setTimeout(() => extractProperties(), 100);
+            }
+
+            function extractProperties() {
+                const uint8 = new Uint8Array(fileBuffer);
+                const decoder = new TextDecoder('ascii');
+                const str = decoder.decode(uint8); // Hızlı arama için önce metne çeviriyoruz
+                
+                let properties = [];
+                
+                // Aradığımız veri tipleri (Oyunların en çok kullandığı sayılar)
+                const types = ["IntProperty", "FloatProperty", "BoolProperty"];
+
+                types.forEach(type => {
+                    let index = 0;
+                    while ((index = str.indexOf(type, index)) !== -1) {
+                        
+                        // Property tipini bulduk, şimdi adını (Variable Name) bulalım.
+                        // UE4 dosyalarında isim genellikle bu string'den hemen önce yer alır.
+                        let nameStart = index - 2; 
+                        while (nameStart > 0 && uint8[nameStart] !== 0) { nameStart--; }
+                        nameStart++; // null byte'ı atla
+                        
+                        let varName = str.substring(nameStart, index - 1).replace(/[^\w]/g, '');
+                        
+                        if (varName.length > 2) {
+                            // Değerin saklandığı bayt ofsetini (konumunu) bul
+                            // Genellikle "IntProperty\0" yazısından 9 bayt sonra asıl değer başlar
+                            const valueOffset = index + type.length + 9; 
+                            
+                            // Güvenlik kontrolü (Dosya boyutunu aşmamak için)
+                            if (valueOffset + 4 < uint8.length) {
+                                properties.push({
+                                    name: varName,
+                                    type: type,
+                                    offset: valueOffset
+                                });
+                            }
+                        }
+                        index += type.length;
+                    }
+                });
+
+                renderList(properties);
+            }
+
+            function renderList(properties) {
+                smartList.innerHTML = "";
+                
+                if(properties.length === 0) {
+                    smartList.innerHTML = "<p style='color:var(--text-muted); text-align:center;'>Bu dosyada okunabilir standart bir ayar bulunamadı.</p>";
+                    return;
+                }
+
+                // Listeyi alfabetik sırala
+                properties.sort((a, b) => a.name.localeCompare(b.name));
+
+                properties.forEach((prop, i) => {
+                    const item = document.createElement("div");
+                    item.className = "smart-item";
+                    
+                    let currentValue = 0;
+                    let step = "1";
+                    
+                    // Değeri DataView ile oku
+                    try {
+                        if (prop.type === "IntProperty") {
+                            currentValue = dataView.getInt32(prop.offset, true); // true = Little Endian
+                            step = "1";
+                        } else if (prop.type === "FloatProperty") {
+                            currentValue = dataView.getFloat32(prop.offset, true);
+                            step = "0.0001";
+                        } else if (prop.type === "BoolProperty") {
+                            currentValue = dataView.getUint8(prop.offset) === 1 ? 1 : 0;
+                            step = "1";
+                        }
+                    } catch(e) { currentValue = "Hata"; }
+
+                    item.innerHTML = `
+                        <span class="smart-type">${prop.type.replace('Property','')}</span>
+                        <span class="smart-name">${prop.name}</span>
+                        <input type="number" class="smart-input" step="${step}" value="${currentValue}" data-offset="${prop.offset}" data-type="${prop.type}">
+                    `;
+
+                    smartList.appendChild(item);
+                });
+
+                // Değer değiştiğinde dosyaya (RAM'e) anında yaz
+                document.querySelectorAll(".smart-input").forEach(input => {
+                    input.addEventListener("change", (e) => {
+                        const offset = parseInt(e.target.dataset.offset);
+                        const type = e.target.dataset.type;
+                        let newVal = Number(e.target.value);
+
+                        if (type === "IntProperty") {
+                            dataView.setInt32(offset, newVal, true);
+                        } else if (type === "FloatProperty") {
+                            dataView.setFloat32(offset, newVal, true);
+                        } else if (type === "BoolProperty") {
+                            dataView.setUint8(offset, newVal > 0 ? 1 : 0);
+                            e.target.value = newVal > 0 ? 1 : 0; // Sadece 0 veya 1 olsun
+                        }
+                        
+                        e.target.style.color = "#ff9e64"; // Değiştiğini belli et (Turuncu)
+                    });
+                });
+            }
+
+            // Arama Kutusu Filtreleme
+            searchInput.addEventListener("input", (e) => {
+                const term = e.target.value.toLowerCase();
+                document.querySelectorAll(".smart-item").forEach(item => {
+                    const name = item.querySelector(".smart-name").innerText.toLowerCase();
+                    item.style.display = name.includes(term) ? "flex" : "none";
+                });
+            });
+
+            // İndirme İşlemi
+            downloadBtn.addEventListener("click", () => {
+                const blob = new Blob([fileBuffer], { type: "application/octet-stream" });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement("a");
+                a.href = url;
+                a.download = "edited_" + currentFileName;
+                document.body.appendChild(a);
+                a.click();
+                setTimeout(() => { document.body.removeChild(a); URL.revokeObjectURL(url); }, 0);
+            });
+        });
+    </script>
+</body>
+</html>
         .outline-btn { background: transparent; border: 1px solid var(--border-color); color: var(--text-main); width: 100%; justify-content: center; margin-bottom: 8px; }
         .outline-btn:hover { background: var(--border-color); }
 
