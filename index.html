@@ -3,132 +3,68 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SaveMaster - Akıllı GVAS Editörü</title>
-    
+    <title>SaveMaster - Ultimate GVAS Editör</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Fira+Code&display=swap" rel="stylesheet">
     <script src="https://unpkg.com/@phosphor-icons/web"></script>
-    
     <style>
         :root {
-            --bg-base: #1a1b26;
-            --bg-panel: #24283b;
-            --border-color: #414868;
-            --text-main: #c0caf5;
-            --text-muted: #565f89;
-            --accent-color: #7aa2f7;
-            --success-color: #9ece6a;
-            --font-ui: 'Inter', sans-serif;
-            --font-mono: 'Fira Code', monospace;
+            --bg-base: #1a1b26; --bg-panel: #24283b; --border-color: #414868;
+            --text-main: #c0caf5; --text-muted: #565f89; --accent-color: #7aa2f7; --success-color: #9ece6a;
+            --font-ui: 'Inter', sans-serif; --font-mono: 'Fira Code', monospace;
         }
-
         * { margin: 0; padding: 0; box-sizing: border-box; }
-
-        body { 
-            font-family: var(--font-ui); 
-            background: var(--bg-base); 
-            color: var(--text-main); 
-            height: 100vh; 
-            display: flex; 
-            flex-direction: column; 
-            overflow: hidden;
-        }
-
-        .navbar { 
-            height: 60px; 
-            display: flex; 
-            justify-content: space-between; 
-            align-items: center; 
-            padding: 0 20px; 
-            background: var(--bg-panel); 
-            border-bottom: 1px solid var(--border-color); 
-            flex-shrink: 0;
-        }
+        body { font-family: var(--font-ui); background: var(--bg-base); color: var(--text-main); height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
         
+        /* Navbar */
+        .navbar { height: 60px; display: flex; justify-content: space-between; align-items: center; padding: 0 20px; background: var(--bg-panel); border-bottom: 1px solid var(--border-color); flex-shrink: 0; }
         .logo { font-size: 1.2rem; font-weight: 600; display: flex; align-items: center; gap: 8px; color: var(--accent-color); }
-        
         .nav-actions { display: flex; gap: 10px; }
-        
-        .btn { 
-            padding: 8px 16px; 
-            border-radius: 6px; 
-            font-weight: 500; 
-            cursor: pointer; 
-            display: flex; 
-            align-items: center; 
-            gap: 6px; 
-            border: none; 
-            font-family: var(--font-ui);
-            font-size: 0.85rem;
-        }
+        .btn { padding: 8px 16px; border-radius: 6px; font-weight: 500; cursor: pointer; display: flex; align-items: center; gap: 6px; border: none; font-family: var(--font-ui); font-size: 0.85rem; }
         .primary-btn { background: var(--accent-color); color: #1a1b26; }
         .success-btn { background: var(--success-color); color: #1a1b26; }
         .success-btn:disabled { background: #334155; color: #94a3b8; cursor: not-allowed; }
 
+        /* Workspace */
         .workspace { display: flex; flex: 1; overflow: hidden; flex-direction: column; }
+        @media (min-width: 768px) { .workspace { flex-direction: row; } }
         
-        @media (min-width: 768px) {
-            .workspace { flex-direction: row; }
-        }
-
-        .sidebar { 
-            width: 100%; 
-            padding: 20px; 
-            border-bottom: 1px solid var(--border-color); 
-            background: var(--bg-panel); 
-        }
-        
-        @media (min-width: 768px) {
-            .sidebar { width: 300px; border-bottom: none; border-right: 1px solid var(--border-color); }
-        }
-
-        .file-info { 
-            font-size: 0.85rem; 
-            padding: 12px; 
-            border-radius: 6px; 
-            border: 1px solid var(--border-color); 
-            line-height: 1.6; 
-            background: var(--bg-base); 
-        }
+        .sidebar { width: 100%; padding: 20px; border-bottom: 1px solid var(--border-color); background: var(--bg-panel); }
+        @media (min-width: 768px) { .sidebar { width: 300px; border-bottom: none; border-right: 1px solid var(--border-color); } }
+        .file-info { font-size: 0.85rem; padding: 12px; border-radius: 6px; border: 1px solid var(--border-color); line-height: 1.6; background: var(--bg-base); }
 
         .editor-area { flex: 1; display: flex; flex-direction: column; background: var(--bg-base); overflow: hidden; }
-
         .tabs { display: flex; border-bottom: 1px solid var(--border-color); background: var(--bg-panel); flex-shrink: 0; }
-        .tab { padding: 12px 20px; background: transparent; border: none; color: var(--text-muted); font-weight: 500; display: flex; align-items: center; gap: 8px; }
+        .tab { padding: 12px 20px; background: transparent; border: none; color: var(--text-muted); font-weight: 500; display: flex; align-items: center; gap: 8px; cursor: pointer; }
         .tab.active { color: var(--accent-color); border-bottom: 2px solid var(--accent-color); }
 
-        .view-content { flex: 1; overflow-y: auto; padding: 20px; }
+        .view-content { flex: 1; overflow-y: auto; padding: 20px; display: none; }
+        .view-content.active { display: block; }
         .empty-state { text-align: center; color: var(--text-muted); margin-top: 10vh; }
         .empty-state i { font-size: 3rem; opacity: 0.5; margin-bottom: 10px; }
 
-        /* Akıllı Liste (SaveEditOnline Tarzı) */
+        /* Akıllı Liste */
         .smart-list { max-width: 800px; margin: 0 auto; padding-bottom: 40px; }
-        .smart-item { 
-            display: flex; 
-            justify-content: space-between; 
-            align-items: center; 
-            padding: 12px 16px; 
-            border-bottom: 1px solid var(--border-color);
-            transition: background 0.2s;
-        }
-        @media (min-width: 768px) {
-            .smart-item { justify-content: flex-end; }
-        }
+        .smart-item { display: flex; justify-content: space-between; align-items: center; padding: 12px 16px; border-bottom: 1px solid var(--border-color); }
+        @media (min-width: 768px) { .smart-item { justify-content: flex-end; } }
         .smart-item:hover { background: var(--bg-panel); }
-        
         .smart-left { display: flex; align-items: center; flex: 1; overflow: hidden; }
         .smart-type { font-size: 0.7rem; color: var(--text-muted); margin-right: 10px; background: rgba(255,255,255,0.05); padding: 2px 6px; border-radius: 4px; flex-shrink: 0;}
         .smart-name { font-family: var(--font-mono); font-size: 0.85rem; color: #a9b1d6; margin-right: 15px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        
-        .smart-input { 
-            background: transparent; border: 1px solid var(--border-color); 
-            color: var(--success-color); padding: 6px 10px; border-radius: 4px; 
-            font-family: var(--font-mono); font-weight: 600; width: 120px; text-align: right;
-            flex-shrink: 0;
-        }
+        .smart-input { background: transparent; border: 1px solid var(--border-color); color: var(--success-color); padding: 6px 10px; border-radius: 4px; font-family: var(--font-mono); font-weight: 600; width: 120px; text-align: right; flex-shrink: 0;}
         .smart-input:focus { outline: none; border-color: var(--accent-color); background: var(--bg-panel); }
-
         .search-box { width: 100%; max-width: 800px; margin: 0 auto 20px auto; display: block; padding: 12px; border-radius: 6px; border: 1px solid var(--border-color); background: var(--bg-panel); color: white; font-family: var(--font-ui); }
-        .search-box:focus { outline: none; border-color: var(--accent-color); }
+
+        /* Hex Editör */
+        .hex-editor-container { font-family: var(--font-mono); font-size: 0.85rem; height: 100%; display: flex; flex-direction: column; }
+        .hex-header { display: flex; color: var(--accent-color); font-weight: 600; padding-bottom: 10px; border-bottom: 1px solid var(--border-color); margin-bottom: 10px; }
+        .hex-body { flex: 1; overflow-y: auto; }
+        .hex-row { display: flex; padding: 4px 0; }
+        .hex-row:hover { background: rgba(255,255,255,0.05); }
+        .hex-offset-col { width: 80px; color: var(--text-muted); user-select: none; }
+        .hex-bytes-col { flex: 1; display: flex; gap: 8px; color: #a5b4fc; }
+        .hex-ascii-col { width: 160px; color: #f8fafc; letter-spacing: 2px; overflow: hidden; white-space: nowrap; }
+        .hex-byte { cursor: pointer; padding: 0 2px; border-radius: 2px; }
+        .hex-byte:hover { background: var(--accent-color); color: white; }
     </style>
 </head>
 <body>
@@ -138,7 +74,7 @@
         <div class="nav-actions">
             <label class="btn primary-btn">
                 <i class="ph ph-upload-simple"></i> Yükle
-                <input type="file" id="upload-save" style="display: none;">
+                <input type="file" id="upload-save" accept=".sav" style="display: none;">
             </label>
             <button class="btn success-btn" id="download-save" disabled>
                 <i class="ph ph-download-simple"></i> İndir
@@ -147,31 +83,39 @@
     </nav>
 
     <main class="workspace">
-        
         <aside class="sidebar">
             <h3 style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 10px;">DOSYA BİLGİSİ</h3>
-            <div class="file-info" id="file-info">
-                <p style="color: var(--text-muted)">Dosya bekleniyor...</p>
-            </div>
+            <div class="file-info" id="file-info"><p style="color: var(--text-muted)">Dosya bekleniyor...</p></div>
         </aside>
 
         <section class="editor-area">
             <div class="tabs">
-                <div class="tab active"><i class="ph ph-list-numbers"></i> Akıllı Editör</div>
+                <button class="tab active" data-target="smart-view"><i class="ph ph-list-numbers"></i> Akıllı Editör</button>
+                <button class="tab" data-target="hex-view"><i class="ph ph-hash"></i> Hex Editör (Garanti)</button>
             </div>
 
-            <div class="view-content" id="smart-view">
-                
+            <div class="view-content active" id="smart-view">
                 <div class="empty-state" id="empty-message">
                     <i class="ph ph-file-dashed"></i>
-                    <p>PUBG Active.sav dosyasını yükleyin.</p>
+                    <p>Zipten çıkardığınız .sav dosyasını yükleyin.</p>
                 </div>
-                
                 <div id="smart-editor-container" style="display: none;">
                     <input type="text" id="search-input" class="search-box" placeholder="Ayar ara... (Örn: FPSLevel, Shoot)">
                     <div class="smart-list" id="smart-list"></div>
                 </div>
-                
+            </div>
+
+            <div class="view-content" id="hex-view">
+                <div class="hex-editor-container">
+                    <div class="hex-header">
+                        <div class="hex-offset-col">Offset</div>
+                        <div class="hex-bytes-col">00 01 02 03 04 05 06 07 08 09 0A 0B 0C 0D 0E 0F</div>
+                        <div class="hex-ascii-col">ASCII</div>
+                    </div>
+                    <div class="hex-body" id="hex-body">
+                        <div class="empty-state"><p>Dosya yüklenmedi.</p></div>
+                    </div>
+                </div>
             </div>
         </section>
     </main>
@@ -186,9 +130,23 @@
             const editorContainer = document.getElementById("smart-editor-container");
             const searchInput = document.getElementById("search-input");
             
+            const tabs = document.querySelectorAll(".tab");
+            const views = document.querySelectorAll(".view-content");
+
             let fileBuffer = null; 
             let dataView = null;
+            let uint8Array = null;
             let currentFileName = "";
+
+            // Sekme Değiştirme Sistemi
+            tabs.forEach(tab => {
+                tab.addEventListener("click", () => {
+                    tabs.forEach(t => t.classList.remove("active"));
+                    views.forEach(v => v.classList.remove("active"));
+                    tab.classList.add("active");
+                    document.getElementById(tab.dataset.target).classList.add("active");
+                });
+            });
 
             uploadInput.addEventListener("change", (e) => {
                 const file = e.target.files[0];
@@ -199,30 +157,36 @@
                 reader.onload = (event) => {
                     fileBuffer = event.target.result;
                     dataView = new DataView(fileBuffer);
-                    processUE4File(file);
+                    uint8Array = new Uint8Array(fileBuffer);
+                    
+                    fileInfo.innerHTML = `
+                        <strong>Dosya:</strong> ${file.name} <br>
+                        <strong>Boyut:</strong> ${(file.size / 1024).toFixed(2)} KB <br>
+                        <strong>Durum:</strong> İşleniyor...
+                    `;
+                    
+                    emptyMsg.style.display = "none";
+                    editorContainer.style.display = "block";
+                    downloadBtn.disabled = false;
+
+                    // Çökme ihtimaline karşı her iki sistemi de try-catch içine aldık
+                    try {
+                        extractProperties();
+                    } catch(err) {
+                        smartList.innerHTML = `<p style='color:#ef4444; text-align:center;'>Akıllı tarayıcı bu dosyayı okuyamadı. Lütfen üstteki "Hex Editör" sekmesini kullanın.</p>`;
+                    }
+                    
+                    try {
+                        renderHexEditor();
+                    } catch(err) {}
                 };
                 reader.readAsArrayBuffer(file); 
             });
 
-            function processUE4File(file) {
-                fileInfo.innerHTML = `
-                    <strong>Dosya:</strong> ${file.name} <br>
-                    <strong>Boyut:</strong> ${(file.size / 1024).toFixed(2)} KB <br>
-                    <strong>Durum:</strong> <span style="color:var(--success-color)">Çözümleniyor...</span>
-                `;
-
-                emptyMsg.style.display = "none";
-                editorContainer.style.display = "block";
-                smartList.innerHTML = "<p style='text-align:center; margin-top: 20px;'>Ayarlar taranıyor, lütfen bekleyin...</p>";
-                downloadBtn.disabled = false;
-
-                setTimeout(() => extractProperties(), 100);
-            }
-
+            // Geliştirilmiş ve Çökmeye Karşı Korumalı Tarayıcı
             function extractProperties() {
-                const uint8 = new Uint8Array(fileBuffer);
-                const decoder = new TextDecoder('ascii');
-                const str = decoder.decode(uint8); 
+                const decoder = new TextDecoder('ascii', {fatal: false});
+                const str = decoder.decode(uint8Array); 
                 
                 let properties = [];
                 const types = ["IntProperty", "FloatProperty", "BoolProperty"];
@@ -230,20 +194,26 @@
                 types.forEach(type => {
                     let index = 0;
                     while ((index = str.indexOf(type, index)) !== -1) {
-                        
-                        let nameStart = index - 2; 
-                        while (nameStart > 0 && uint8[nameStart] !== 0) { nameStart--; }
-                        nameStart++; 
-                        
-                        let varName = str.substring(nameStart, index - 1).replace(/[^\w]/g, '');
-                        
-                        if (varName.length > 2) {
-                            const valueOffset = index + type.length + 9; 
-                            
-                            if (valueOffset + 4 < uint8.length) {
-                                properties.push({ name: varName, type: type, offset: valueOffset });
+                        try {
+                            let nameStart = index - 2; 
+                            // Sonsuz döngü ve çökme koruması (maksimum 50 karakter geri git)
+                            let attempts = 0;
+                            while (nameStart > 0 && uint8Array[nameStart] !== 0 && attempts < 50) { 
+                                nameStart--; 
+                                attempts++;
                             }
-                        }
+                            nameStart++; 
+                            
+                            let varName = str.substring(nameStart, index - 1).replace(/[^\w]/g, '');
+                            
+                            if (varName.length > 2) {
+                                const valueOffset = index + type.length + 9; 
+                                if (valueOffset + 4 <= uint8Array.length) {
+                                    properties.push({ name: varName, type: type, offset: valueOffset });
+                                }
+                            }
+                        } catch(e) {} // Hata veren ayarı atla, programı çökertme
+                        
                         index += type.length;
                     }
                 });
@@ -255,33 +225,26 @@
                 smartList.innerHTML = "";
                 
                 if(properties.length === 0) {
-                    smartList.innerHTML = "<p style='color:var(--text-muted); text-align:center;'>Bu dosyada okunabilir standart bir ayar bulunamadı.</p>";
-                    fileInfo.innerHTML += `<br><strong>Hata:</strong> <span style="color:#ef4444">Ayar Bulunamadı</span>`;
+                    smartList.innerHTML = `<p style='color:#ef4444; text-align:center; padding: 20px;'>Bu dosyada kolay okunabilir ayar bulunamadı.<br><br>Lütfen üstteki <strong>Hex Editör</strong> sekmesine geçerek manuel düzenleme yapın.</p>`;
+                    fileInfo.innerHTML = fileInfo.innerHTML.replace("İşleniyor...", `<span style="color:#ef4444">Akıllı Okuma Başarısız</span>`);
                     return;
                 }
 
-                fileInfo.innerHTML = fileInfo.innerHTML.replace("Çözümleniyor...", `Hazır (${properties.length} Ayar Bulundu)`);
-
+                fileInfo.innerHTML = fileInfo.innerHTML.replace("İşleniyor...", `<span style="color:var(--success-color)">${properties.length} Ayar Bulundu</span>`);
                 properties.sort((a, b) => a.name.localeCompare(b.name));
 
                 properties.forEach((prop) => {
                     const item = document.createElement("div");
                     item.className = "smart-item";
-                    
-                    let currentValue = 0;
-                    let step = "1";
+                    let currentValue = 0; let step = "1";
                     
                     try {
                         if (prop.type === "IntProperty") {
-                            currentValue = dataView.getInt32(prop.offset, true); 
-                            step = "1";
+                            currentValue = dataView.getInt32(prop.offset, true); step = "1";
                         } else if (prop.type === "FloatProperty") {
-                            currentValue = dataView.getFloat32(prop.offset, true);
-                            currentValue = parseFloat(currentValue.toFixed(6)); // Küsüratları temiz göster
-                            step = "0.01";
+                            currentValue = parseFloat(dataView.getFloat32(prop.offset, true).toFixed(4)); step = "0.01";
                         } else if (prop.type === "BoolProperty") {
-                            currentValue = dataView.getUint8(prop.offset) === 1 ? 1 : 0;
-                            step = "1";
+                            currentValue = dataView.getUint8(prop.offset) === 1 ? 1 : 0; step = "1";
                         }
                     } catch(e) { currentValue = 0; }
 
@@ -292,7 +255,6 @@
                         </div>
                         <input type="number" class="smart-input" step="${step}" value="${currentValue}" data-offset="${prop.offset}" data-type="${prop.type}">
                     `;
-
                     smartList.appendChild(item);
                 });
 
@@ -301,19 +263,63 @@
                         const offset = parseInt(e.target.dataset.offset);
                         const type = e.target.dataset.type;
                         let newVal = Number(e.target.value);
+                        try {
+                            if (type === "IntProperty") dataView.setInt32(offset, newVal, true);
+                            else if (type === "FloatProperty") dataView.setFloat32(offset, newVal, true);
+                            else if (type === "BoolProperty") {
+                                newVal = newVal > 0 ? 1 : 0;
+                                dataView.setUint8(offset, newVal);
+                                e.target.value = newVal; 
+                            }
+                            e.target.style.color = "#ff9e64"; e.target.style.borderColor = "#ff9e64";
+                            renderHexEditor(); // Hex editörü de senkronize et
+                        } catch(err) {}
+                    });
+                });
+            }
 
-                        if (type === "IntProperty") {
-                            dataView.setInt32(offset, newVal, true);
-                        } else if (type === "FloatProperty") {
-                            dataView.setFloat32(offset, newVal, true);
-                        } else if (type === "BoolProperty") {
-                            newVal = newVal > 0 ? 1 : 0;
-                            dataView.setUint8(offset, newVal);
-                            e.target.value = newVal; 
+            // Hex Editör Render Sistemi (Garanti Çözüm)
+            function renderHexEditor() {
+                const hexBody = document.getElementById("hex-body");
+                hexBody.innerHTML = ""; 
+                const maxBytesToRender = Math.min(uint8Array.length, 16384); 
+                let htmlContent = "";
+                
+                for (let i = 0; i < maxBytesToRender; i += 16) {
+                    let hexRow = `<div class="hex-row">`;
+                    hexRow += `<div class="hex-offset-col">${i.toString(16).padStart(8, '0').toUpperCase()}</div>`;
+                    let hexBytes = ""; let asciiChars = "";
+                    
+                    for (let j = 0; j < 16; j++) {
+                        if (i + j < maxBytesToRender) {
+                            const byte = uint8Array[i + j];
+                            const hexValue = byte.toString(16).padStart(2, '0').toUpperCase();
+                            hexBytes += `<span class="hex-byte" data-index="${i+j}" title="Değiştirmek için tıkla">${hexValue}</span> `;
+                            asciiChars += (byte >= 32 && byte <= 126) ? String.fromCharCode(byte) : ".";
+                        } else {
+                            hexBytes += "   "; 
                         }
+                    }
+                    hexRow += `<div class="hex-bytes-col">${hexBytes}</div>`;
+                    asciiChars = asciiChars.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+                    hexRow += `<div class="hex-ascii-col">${asciiChars}</div>`;
+                    hexRow += `</div>`;
+                    htmlContent += hexRow;
+                }
+                hexBody.innerHTML = htmlContent;
+
+                document.querySelectorAll('.hex-byte').forEach(span => {
+                    span.addEventListener('click', function() {
+                        const index = parseInt(this.getAttribute('data-index'));
+                        const currentHex = this.innerText;
+                        const newHex = prompt(`Adres: 0x${index.toString(16).toUpperCase()}\nMevcut Değer: ${currentHex}\nYeni Hex değeri girin (00 - FF):`, currentHex);
                         
-                        e.target.style.color = "#ff9e64"; 
-                        e.target.style.borderColor = "#ff9e64";
+                        if (newHex && /^[0-9A-Fa-f]{1,2}$/.test(newHex)) {
+                            uint8Array[index] = parseInt(newHex, 16); 
+                            this.innerText = newHex.padStart(2, '0').toUpperCase(); 
+                            this.style.color = "var(--success-color)"; 
+                            extractProperties(); // Akıllı listeyi de senkronize et
+                        }
                     });
                 });
             }
@@ -330,10 +336,8 @@
                 const blob = new Blob([fileBuffer], { type: "application/octet-stream" });
                 const url = URL.createObjectURL(blob);
                 const a = document.createElement("a");
-                a.href = url;
-                a.download = "edited_" + currentFileName;
-                document.body.appendChild(a);
-                a.click();
+                a.href = url; a.download = "edited_" + currentFileName;
+                document.body.appendChild(a); a.click();
                 setTimeout(() => { document.body.removeChild(a); URL.revokeObjectURL(url); }, 0);
             });
         });
