@@ -3,8 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SaveMaster - SaveEditOnline Clone</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Fira+Code&display=swap" rel="stylesheet">
+    <title>SaveMaster | Data Editor</title>
     <script src="https://unpkg.com/@phosphor-icons/web"></script>
     <link rel="stylesheet" href="style.css">
 </head>
@@ -13,12 +12,14 @@
     <nav class="navbar">
         <div class="logo">SaveMaster</div>
         <div class="nav-actions">
+            <button class="btn lang-btn" id="lang-toggle">EN</button>
+            <div class="divider"></div>
             <label class="btn primary-btn">
-                <i class="ph-bold ph-upload-simple"></i> DOSYA YÜKLE
+                <i class="ph-bold ph-upload-simple"></i> <span data-i18n="upload_btn">DOSYA YÜKLE</span>
                 <input type="file" id="upload-save" accept=".sav" style="display: none;">
             </label>
-            <button class="btn success-btn" id="download-save" disabled>
-                <i class="ph-bold ph-download-simple"></i> GÜNCELLENMİŞ DOSYAYI İNDİR
+            <button class="btn outline-btn" id="download-save" disabled>
+                <i class="ph-bold ph-download-simple"></i> <span data-i18n="download_btn">KAYDET VE İNDİR</span>
             </button>
         </div>
     </nav>
@@ -26,26 +27,30 @@
     <main class="workspace">
         <aside class="sidebar">
             <div class="file-info" id="file-info">
-                <strong>Aktif Dosya</strong><br><br>
-                <span style="color: #72767d;">Henüz dosya seçilmedi. Düzenlemek için .sav uzantılı bir dosya yükleyin.</span>
+                <strong data-i18n="active_file">Aktif Dosya</strong><br><br>
+                <span style="color: var(--text-muted);" data-i18n="no_file">Henüz dosya seçilmedi. Düzenlemek için .sav uzantılı bir dosya yükleyin.</span>
             </div>
         </aside>
 
         <section class="editor-area">
             <div class="tabs">
-                <button class="tab active" data-target="smart-view"><i class="ph-bold ph-list-numbers"></i> Değerler (Values)</button>
-                <button class="tab" data-target="hex-view"><i class="ph-bold ph-hash"></i> Hex Editör</button>
+                <button class="tab active" data-target="smart-view">
+                    <i class="ph-bold ph-list-numbers"></i> <span data-i18n="tab_values">Değerler</span>
+                </button>
+                <button class="tab" data-target="hex-view">
+                    <i class="ph-bold ph-hash"></i> <span data-i18n="tab_hex">Hex Editör</span>
+                </button>
             </div>
 
             <div class="view-content active" id="smart-view">
                 <div class="empty-state" id="empty-message">
                     <i class="ph-duotone ph-file-dashed"></i>
-                    <p>PUBG Active.sav dosyasını yükleyin.</p>
+                    <p data-i18n="empty_msg">Düzenlemeye başlamak için bir dosya yükleyin.</p>
                 </div>
                 <div id="smart-editor-container" style="display: none;">
                     <div class="search-box">
                         <i class="ph-bold ph-magnifying-glass"></i>
-                        <input type="text" id="search-input" placeholder="Arama yap... (Örn: TotalShoot, FPSLevel)">
+                        <input type="text" id="search-input" data-i18n-placeholder="search_placeholder" placeholder="Arama yap...">
                     </div>
                     <div class="smart-list" id="smart-list"></div>
                 </div>
@@ -54,12 +59,12 @@
             <div class="view-content" id="hex-view">
                 <div class="hex-editor-container">
                     <div class="hex-header">
-                        <div class="hex-offset-col">Offset</div>
+                        <div class="hex-offset-col" data-i18n="offset">Offset</div>
                         <div class="hex-bytes-col">00 01 02 03 04 05 06 07 08 09 0A 0B 0C 0D 0E 0F</div>
-                        <div class="hex-ascii-col">ASCII</div>
+                        <div class="hex-ascii-col" data-i18n="ascii">ASCII</div>
                     </div>
                     <div class="hex-body" id="hex-body">
-                        <div class="empty-state"><p>Dosya yüklenmedi.</p></div>
+                        <div class="empty-state"><p data-i18n="empty_msg">Düzenlemeye başlamak için bir dosya yükleyin.</p></div>
                     </div>
                 </div>
             </div>
