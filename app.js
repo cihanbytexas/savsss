@@ -1,3 +1,88 @@
+const translations = {
+    "tr": {
+        "upload_btn": "DOSYA YÜKLE",
+        "download_btn": "KAYDET VE İNDİR",
+        "active_file": "Aktif Dosya",
+        "no_file": "Henüz dosya seçilmedi. Düzenlemek için .sav uzantılı bir dosya yükleyin.",
+        "tab_values": "Değerler",
+        "tab_hex": "Hex Editör",
+        "empty_msg": "Düzenlemeye başlamak için bir dosya yükleyin.",
+        "search_placeholder": "Arama yap... (Örn: TotalShoot)",
+        "offset": "Offset",
+        "ascii": "ASCII",
+        "file_info_name": "Dosya:",
+        "file_info_size": "Boyut:",
+        "file_info_status": "Durum:",
+        "status_processing": "İşleniyor...",
+        "status_success": "Başarılı",
+        "status_fail": "Okuma Başarısız",
+        "fail_desc": "Bu dosyada okunabilir değer bulunamadı.<br><br>Hex Editör sekmesini kullanın.",
+        "prompt_msg": "Yeni Hex Değeri (00-FF):",
+        "toggle_lang": "EN"
+    },
+    "en": {
+        "upload_btn": "UPLOAD FILE",
+        "download_btn": "SAVE & DOWNLOAD",
+        "active_file": "Active File",
+        "no_file": "No file selected. Upload a .sav file to start editing.",
+        "tab_values": "Values",
+        "tab_hex": "Hex Editor",
+        "empty_msg": "Upload a file to begin editing.",
+        "search_placeholder": "Search... (e.g., TotalShoot)",
+        "offset": "Offset",
+        "ascii": "ASCII",
+        "file_info_name": "File:",
+        "file_info_size": "Size:",
+        "file_info_status": "Status:",
+        "status_processing": "Processing...",
+        "status_success": "Success",
+        "status_fail": "Read Failed",
+        "fail_desc": "No readable values found in this file.<br><br>Please use the Hex Editor.",
+        "prompt_msg": "New Hex Value (00-FF):",
+        "toggle_lang": "TR"
+    }
+};
+
+let currentLang = "tr";
+let totalValuesFound = 0;
+
+function applyTranslations() {
+    const langData = translations[currentLang];
+    
+    // Sabit metinleri çevir
+    document.querySelectorAll('[data-i18n]').forEach(elem => {
+        const key = elem.getAttribute('data-i18n');
+        if (langData[key]) elem.innerHTML = langData[key];
+    });
+
+    // Placeholder'ları çevir
+    document.querySelectorAll('[data-i18n-placeholder]').forEach(elem => {
+        const key = elem.getAttribute('data-i18n-placeholder');
+        if (langData[key]) elem.setAttribute('placeholder', langData[key]);
+    });
+
+    // Buton metnini değiştir
+    document.getElementById('lang-toggle').innerText = langData["toggle_lang"];
+
+    // Dosya info ekranını mevcut duruma göre güncelle (dosya varsa)
+    const fileInfo = document.getElementById("file-info");
+    if (fileInfo.innerHTML.includes(translations[currentLang === "tr" ? "en" : "tr"].file_info_name) || fileInfo.innerHTML.includes(translations[currentLang].file_info_name)) {
+        // Yeniden renderı tetiklemek için basitçe metni değiştiriyoruz, gerçek bir app'te state üzerinden yürütülür
+        const fileNameSpan = document.getElementById("ui-filename");
+        const fileSizeSpan = document.getElementById("ui-filesize");
+        const fileStatusSpan = document.getElementById("ui-filestatus");
+        
+        if(fileNameSpan) {
+            fileInfo.innerHTML = `
+                <strong data-i18n="active_file">${langData.active_file}</strong><br><br>
+                <strong>${langData.file_info_name}</strong> <span id="ui-filename" style="color:var(--text-main)">${fileNameSpan.innerText}</span> <br>
+                <strong>${langData.file_info_size}</strong> <span id="ui-filesize" style="color:var(--text-main)">${fileSizeSpan.innerText}</span> <br>
+                <strong>${langData.file_info_status}</strong> <span id="ui-filestatus" style="color:var(--text-main)">${totalValuesFound > 0 ? langData.status_success + ' ('+totalValuesFound+')' : fileStatusSpan.innerText}</span>
+            `;
+        }
+    }
+}
+
 document.addEventListener("DOMContentLoaded", () => {
     const uploadInput = document.getElementById("upload-save");
     const downloadBtn = document.getElementById("download-save");
@@ -6,6 +91,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const emptyMsg = document.getElementById("empty-message");
     const editorContainer = document.getElementById("smart-editor-container");
     const searchInput = document.getElementById("search-input");
+    const langToggleBtn = document.getElementById("lang-toggle");
     const tabs = document.querySelectorAll(".tab");
     const views = document.querySelectorAll(".view-content");
 
@@ -13,6 +99,12 @@ document.addEventListener("DOMContentLoaded", () => {
     let dataView = null;
     let uint8Array = null;
     let currentFileName = "";
+
+    // Dil Değiştirici
+    langToggleBtn.addEventListener("click", () => {
+        currentLang = currentLang === "tr" ? "en" : "tr";
+        applyTranslations();
+    });
 
     // Sekme Değiştirme
     tabs.forEach(tab => {
@@ -35,15 +127,19 @@ document.addEventListener("DOMContentLoaded", () => {
             dataView = new DataView(fileBuffer);
             uint8Array = new Uint8Array(fileBuffer);
             
+            const lang = translations[currentLang];
             fileInfo.innerHTML = `
-                <strong>Dosya:</strong> <span style="color:#fff">${file.name}</span> <br>
-                <strong>Boyut:</strong> <span style="color:#fff">${(file.size / 1024).toFixed(2)} KB</span> <br>
-                <strong>Durum:</strong> İşleniyor...
+                <strong data-i18n="active_file">${lang.active_file}</strong><br><br>
+                <strong>${lang.file_info_name}</strong> <span id="ui-filename" style="color:var(--text-main)">${file.name}</span> <br>
+                <strong>${lang.file_info_size}</strong> <span id="ui-filesize" style="color:var(--text-main)">${(file.size / 1024).toFixed(2)} KB</span> <br>
+                <strong>${lang.file_info_status}</strong> <span id="ui-filestatus" style="color:var(--text-muted)">${lang.status_processing}</span>
             `;
             
             emptyMsg.style.display = "none";
             editorContainer.style.display = "block";
             downloadBtn.disabled = false;
+            downloadBtn.classList.remove("outline-btn");
+            downloadBtn.classList.add("primary-btn"); // Yüklendikten sonra butonu belirginleştir
 
             setTimeout(() => {
                 extractPropertiesBulletproof();
@@ -53,7 +149,6 @@ document.addEventListener("DOMContentLoaded", () => {
         reader.readAsArrayBuffer(file); 
     });
 
-    // KURŞUN GEÇİRMEZ TARAYICI (Bayt eşleşmesi ile)
     function extractPropertiesBulletproof() {
         let rawStr = "";
         for (let i = 0; i < uint8Array.length; i++) {
@@ -61,7 +156,6 @@ document.addEventListener("DOMContentLoaded", () => {
         }
         
         let properties = [];
-        // UE4 GVAS Dosyaları İçin Tam Ofset Değerleri
         const types = [
             { type: "IntProperty", offsetAdd: 21 },
             { type: "FloatProperty", offsetAdd: 23 },
@@ -72,21 +166,15 @@ document.addEventListener("DOMContentLoaded", () => {
             let index = 0;
             while ((index = rawStr.indexOf(t.type, index)) !== -1) {
                 try {
-                    // İsmi geriye doğru tarayarak bul
                     let i = index - 1;
-                    // Boşlukları ve gereksiz uzunluk baytlarını atla
                     while (i > 0 && !(/[a-zA-Z0-9_]/.test(rawStr[i]))) { i--; }
                     let nameEnd = i;
-                    // Alfanumerik karakterler bitene kadar geri git (İsmi al)
                     while (i > 0 && (/[a-zA-Z0-9_]/.test(rawStr[i]))) { i--; }
                     let nameStart = i + 1;
-
                     let varName = rawStr.substring(nameStart, nameEnd + 1);
 
                     if (varName.length >= 2) {
-                        // Tam değer ofsetini hesapla
                         const valueOffset = index + t.offsetAdd; 
-                        
                         if (valueOffset + 4 <= uint8Array.length) {
                             properties.push({ name: varName, type: t.type, offset: valueOffset });
                         }
@@ -101,16 +189,17 @@ document.addEventListener("DOMContentLoaded", () => {
 
     function renderList(properties) {
         smartList.innerHTML = "";
+        const lang = translations[currentLang];
+        totalValuesFound = properties.length;
         
         if(properties.length === 0) {
-            smartList.innerHTML = `<p style='color:#ed4245; text-align:center; padding: 40px;'>Bu dosyada okunabilir değer bulunamadı.<br><br>Yüksek ihtimalle şifreli bir Config dosyası. Hex Editör sekmesini kullanın.</p>`;
-            fileInfo.innerHTML = fileInfo.innerHTML.replace("İşleniyor...", `<span style="color:#ed4245">Okuma Başarısız</span>`);
+            smartList.innerHTML = `<p style='color:var(--text-muted); text-align:center; padding: 40px;'>${lang.fail_desc}</p>`;
+            document.getElementById("ui-filestatus").innerHTML = `<span style="color:#ff4444">${lang.status_fail}</span>`;
             return;
         }
 
-        fileInfo.innerHTML = fileInfo.innerHTML.replace("İşleniyor...", `<span style="color:var(--success-color)">Başarılı (${properties.length} Değer)</span>`);
+        document.getElementById("ui-filestatus").innerHTML = `<span style="color:var(--text-main)">${lang.status_success} (${properties.length})</span>`;
         
-        // SaveEditOnline gibi sıraya diz
         properties.sort((a, b) => a.offset - b.offset);
 
         properties.forEach((prop) => {
@@ -118,14 +207,12 @@ document.addEventListener("DOMContentLoaded", () => {
             item.className = "smart-item";
             let currentValue = 0; let step = "1";
             
-            // Baytları Okuma
             try {
                 if (prop.type === "IntProperty") {
                     currentValue = dataView.getInt32(prop.offset, true); step = "1";
                 } else if (prop.type === "FloatProperty") {
                     let fVal = dataView.getFloat32(prop.offset, true);
-                    // Küsuratı çok olanları SaveEditOnline gibi uzun göster, tam sayıları temizle
-                    currentValue = Number.isInteger(fVal) ? fVal : fVal.toFixed(16).replace(/\.?0+$/, ''); 
+                    currentValue = Number.isInteger(fVal) ? fVal : fVal.toFixed(6).replace(/\.?0+$/, ''); 
                     step = "0.01";
                 } else if (prop.type === "BoolProperty") {
                     currentValue = dataView.getUint8(prop.offset) === 1 ? 1 : 0; step = "1";
@@ -134,15 +221,14 @@ document.addEventListener("DOMContentLoaded", () => {
 
             item.innerHTML = `
                 <div class="smart-left">
-                    <span class="smart-offset">[${prop.offset}]</span>
-                    <span class="smart-name" title="${prop.name}">> ${prop.name}</span>
+                    <span class="smart-offset">0x${prop.offset.toString(16).toUpperCase()}</span>
+                    <span class="smart-name" title="${prop.name}">${prop.name}</span>
                 </div>
                 <input type="number" class="smart-input" step="${step}" value="${currentValue}" data-offset="${prop.offset}" data-type="${prop.type}">
             `;
             smartList.appendChild(item);
         });
 
-        // Değerleri RAM'e Yazma (Kaydetme)
         document.querySelectorAll(".smart-input").forEach(input => {
             input.addEventListener("change", (e) => {
                 const offset = parseInt(e.target.dataset.offset);
@@ -156,8 +242,7 @@ document.addEventListener("DOMContentLoaded", () => {
                         dataView.setUint8(offset, newVal);
                         e.target.value = newVal; 
                     }
-                    // Düzenlendiğini belirtmek için rengi turuncu yap
-                    e.target.style.color = "#faa61a"; 
+                    e.target.classList.add("edited-val"); 
                     renderHexEditor(); 
                 } catch(err) {}
             });
@@ -179,7 +264,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 if (i + j < maxBytesToRender) {
                     const byte = uint8Array[i + j];
                     const hexValue = byte.toString(16).padStart(2, '0').toUpperCase();
-                    hexBytes += `<span class="hex-byte" data-index="${i+j}" title="Düzenle">${hexValue}</span> `;
+                    hexBytes += `<span class="hex-byte" data-index="${i+j}" title="Edit">${hexValue}</span> `;
                     asciiChars += (byte >= 32 && byte <= 126) ? String.fromCharCode(byte) : ".";
                 } else {
                     hexBytes += "   "; 
@@ -195,14 +280,15 @@ document.addEventListener("DOMContentLoaded", () => {
 
         document.querySelectorAll('.hex-byte').forEach(span => {
             span.addEventListener('click', function() {
+                const lang = translations[currentLang];
                 const index = parseInt(this.getAttribute('data-index'));
                 const currentHex = this.innerText;
-                const newHex = prompt(`Adres: 0x${index.toString(16).toUpperCase()}\nMevcut: ${currentHex}\nYeni (00-FF):`, currentHex);
+                const newHex = prompt(`Address: 0x${index.toString(16).toUpperCase()}\n\n${lang.prompt_msg}`, currentHex);
                 
                 if (newHex && /^[0-9A-Fa-f]{1,2}$/.test(newHex)) {
                     uint8Array[index] = parseInt(newHex, 16); 
                     this.innerText = newHex.padStart(2, '0').toUpperCase(); 
-                    this.style.color = "#faa61a"; 
+                    this.classList.add("edited-val");
                     extractPropertiesBulletproof(); 
                 }
             });
@@ -225,4 +311,7 @@ document.addEventListener("DOMContentLoaded", () => {
         document.body.appendChild(a); a.click();
         setTimeout(() => { document.body.removeChild(a); URL.revokeObjectURL(url); }, 0);
     });
+
+    // Başlangıçta dili uygula
+    applyTranslations();
 });
