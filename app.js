@@ -1,3 +1,12 @@
+// --- YENİ EKLENEN KISIM: Splash Screen ---
+window.addEventListener("load", () => {
+    const splashScreen = document.getElementById("splash-screen");
+    setTimeout(() => {
+        splashScreen.classList.add("hidden");
+    }, 1500); // 1.5 saniye animasyonu izlet ve ekranı aç
+});
+
+// --- MEVCUT İÇERİK ---
 const translations = {
     "tr": {
         "upload_btn": "DOSYA YÜKLE",
@@ -49,25 +58,20 @@ let totalValuesFound = 0;
 function applyTranslations() {
     const langData = translations[currentLang];
     
-    // Sabit metinleri çevir
     document.querySelectorAll('[data-i18n]').forEach(elem => {
         const key = elem.getAttribute('data-i18n');
         if (langData[key]) elem.innerHTML = langData[key];
     });
 
-    // Placeholder'ları çevir
     document.querySelectorAll('[data-i18n-placeholder]').forEach(elem => {
         const key = elem.getAttribute('data-i18n-placeholder');
         if (langData[key]) elem.setAttribute('placeholder', langData[key]);
     });
 
-    // Buton metnini değiştir
     document.getElementById('lang-toggle').innerText = langData["toggle_lang"];
 
-    // Dosya info ekranını mevcut duruma göre güncelle (dosya varsa)
     const fileInfo = document.getElementById("file-info");
     if (fileInfo.innerHTML.includes(translations[currentLang === "tr" ? "en" : "tr"].file_info_name) || fileInfo.innerHTML.includes(translations[currentLang].file_info_name)) {
-        // Yeniden renderı tetiklemek için basitçe metni değiştiriyoruz, gerçek bir app'te state üzerinden yürütülür
         const fileNameSpan = document.getElementById("ui-filename");
         const fileSizeSpan = document.getElementById("ui-filesize");
         const fileStatusSpan = document.getElementById("ui-filestatus");
@@ -100,13 +104,11 @@ document.addEventListener("DOMContentLoaded", () => {
     let uint8Array = null;
     let currentFileName = "";
 
-    // Dil Değiştirici
     langToggleBtn.addEventListener("click", () => {
         currentLang = currentLang === "tr" ? "en" : "tr";
         applyTranslations();
     });
 
-    // Sekme Değiştirme
     tabs.forEach(tab => {
         tab.addEventListener("click", () => {
             tabs.forEach(t => t.classList.remove("active"));
@@ -139,7 +141,7 @@ document.addEventListener("DOMContentLoaded", () => {
             editorContainer.style.display = "block";
             downloadBtn.disabled = false;
             downloadBtn.classList.remove("outline-btn");
-            downloadBtn.classList.add("primary-btn"); // Yüklendikten sonra butonu belirginleştir
+            downloadBtn.classList.add("primary-btn"); 
 
             setTimeout(() => {
                 extractPropertiesBulletproof();
@@ -312,6 +314,5 @@ document.addEventListener("DOMContentLoaded", () => {
         setTimeout(() => { document.body.removeChild(a); URL.revokeObjectURL(url); }, 0);
     });
 
-    // Başlangıçta dili uygula
     applyTranslations();
 });
