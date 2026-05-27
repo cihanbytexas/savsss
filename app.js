@@ -251,50 +251,104 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     }
 
+    // --- YENİ EKLENEN KISIM: Virtual Scrolling Hex Editör ---
     function renderHexEditor() {
         const hexBody = document.getElementById("hex-body");
-        hexBody.innerHTML = ""; 
-        const maxBytesToRender = Math.min(uint8Array.length, 16384); 
-        let htmlContent = "";
         
-        for (let i = 0; i < maxBytesToRender; i += 16) {
-            let hexRow = `<div class="hex-row">`;
-            hexRow += `<div class="hex-offset-col">${i.toString(16).padStart(8, '0').toUpperCase()}</div>`;
-            let hexBytes = ""; let asciiChars = "";
-            
-            for (let j = 0; j < 16; j++) {
-                if (i + j < maxBytesToRender) {
-                    const byte = uint8Array[i + j];
-                    const hexValue = byte.toString(16).padStart(2, '0').toUpperCase();
-                    hexBytes += `<span class="hex-byte" data-index="${i+j}" title="Edit">${hexValue}</span> `;
-                    asciiChars += (byte >= 32 && byte <= 126) ? String.fromCharCode(byte) : ".";
-                } else {
-                    hexBytes += "   "; 
-                }
-            }
-            hexRow += `<div class="hex-bytes-col">${hexBytes}</div>`;
-            asciiChars = asciiChars.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
-            hexRow += `<div class="hex-ascii-col">${asciiChars}</div>`;
-            hexRow += `</div>`;
-            htmlContent += hexRow;
-        }
-        hexBody.innerHTML = htmlContent;
+        // Değerler sekmesinden veri değiştirildiğinde scroll'un en üste zıplamasını engeller
+        const currentScrollTop = hexBody.scrollTop || 0; 
+        hexBody.innerHTML = ""; 
+        
+        if (!uint8Array || uint8Array.length === 0) return;
 
-        document.querySelectorAll('.hex-byte').forEach(span => {
-            span.addEventListener('click', function() {
-                const lang = translations[currentLang];
-                const index = parseInt(this.getAttribute('data-index'));
-                const currentHex = this.innerText;
-                const newHex = prompt(`Address: 0x${index.toString(16).toUpperCase()}\n\n${lang.prompt_msg}`, currentHex);
+        const hexRowHeight = 28; // Sabit satır yüksekliği
+        const totalRows = Math.ceil(uint8Array.length / 16);
+        const totalHeight = totalRows * hexRowHeight;
+        
+        // Sanal kaydırma (Virtual Scroll) için iskelet taşıyıcı
+        const scrollWrapper = document.createElement("div");
+        scrollWrapper.style.height = totalHeight + "px";
+        scrollWrapper.style.position = "relative";
+        
+        // Sadece görünen verilerin ekleneceği aktif katman
+        const contentNode = document.createElement("div");
+        contentNode.style.position = "absolute";
+        contentNode.style.top = "0";
+        contentNode.style.left = "0";
+        contentNode.style.width = "100%";
+        
+        scrollWrapper.appendChild(contentNode);
+        hexBody.appendChild(scrollWrapper);
+
+        let lastRenderedStart = -1;
+
+        // Anlık görünen alanı (Chunk) hesaplayıp HTML'e basan fonksiyon
+        function renderChunk() {
+            const scrollTop = hexBody.scrollTop;
+            const startRow = Math.floor(scrollTop / hexRowHeight);
+            
+            // Kullanıcı sadece birkaç piksel kaydırdıysa DOM'u yorma
+            if (Math.abs(lastRenderedStart - startRow) < 2 && lastRenderedStart !== -1) return;
+            lastRenderedStart = startRow;
+
+            // Ekrana sığan satır sayısını bul, üstten/alttan tampon (buffer) bırak
+            const visibleRows = Math.ceil(hexBody.clientHeight / hexRowHeight);
+            const start = Math.max(0, startRow - 5);
+            const end = Math.min(totalRows, startRow + visibleRows + 5);
+
+            // Görünen katmanı (contentNode) scroll pozisyonuna göre aşağı it
+            contentNode.style.transform = `translateY(${start * hexRowHeight}px)`;
+
+            let htmlContent = "";
+            for (let r = start; r < end; r++) {
+                const i = r * 16;
+                // Satır yüksekliğini inline zorlayarak CSS taşmalarını engelliyoruz
+                let hexRow = `<div class="hex-row" style="height:${hexRowHeight}px; box-sizing: border-box;">`;
+                hexRow += `<div class="hex-offset-col">${i.toString(16).padStart(8, '0').toUpperCase()}</div>`;
+                let hexBytes = ""; let asciiChars = "";
                 
-                if (newHex && /^[0-9A-Fa-f]{1,2}$/.test(newHex)) {
-                    uint8Array[index] = parseInt(newHex, 16); 
-                    this.innerText = newHex.padStart(2, '0').toUpperCase(); 
-                    this.classList.add("edited-val");
-                    extractPropertiesBulletproof(); 
+                for (let j = 0; j < 16; j++) {
+                    if (i + j < uint8Array.length) {
+                        const byte = uint8Array[i + j];
+                        const hexValue = byte.toString(16).padStart(2, '0').toUpperCase();
+                        hexBytes += `<span class="hex-byte" data-index="${i+j}" title="Edit">${hexValue}</span> `;
+                        asciiChars += (byte >= 32 && byte <= 126) ? String.fromCharCode(byte) : ".";
+                    } else {
+                        hexBytes += "   "; 
+                    }
                 }
+                hexRow += `<div class="hex-bytes-col">${hexBytes}</div>`;
+                asciiChars = asciiChars.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+                hexRow += `<div class="hex-ascii-col">${asciiChars}</div>`;
+                hexRow += `</div>`;
+                htmlContent += hexRow;
+            }
+            contentNode.innerHTML = htmlContent;
+
+            // Görünen alan güncellendiği için event listener'ları yeniden bağlıyoruz
+            contentNode.querySelectorAll('.hex-byte').forEach(span => {
+                span.addEventListener('click', function() {
+                    const lang = translations[currentLang];
+                    const index = parseInt(this.getAttribute('data-index'));
+                    const currentHex = this.innerText;
+                    const newHex = prompt(`Address: 0x${index.toString(16).toUpperCase()}\n\n${lang.prompt_msg}`, currentHex);
+                    
+                    if (newHex && /^[0-9A-Fa-f]{1,2}$/.test(newHex)) {
+                        uint8Array[index] = parseInt(newHex, 16); 
+                        this.innerText = newHex.padStart(2, '0').toUpperCase(); 
+                        this.classList.add("edited-val");
+                        extractPropertiesBulletproof(); // Değerler sekmesini senkronize et
+                    }
+                });
             });
-        });
+        }
+
+        // Event listener üst üste binmesin diye onscroll kullanıyoruz
+        hexBody.onscroll = renderChunk;
+        
+        // Başlangıç tetiklemesi ve scroll pozisyonunu koruma
+        hexBody.scrollTop = currentScrollTop;
+        renderChunk();
     }
 
     searchInput.addEventListener("input", (e) => {
