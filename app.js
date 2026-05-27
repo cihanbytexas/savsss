@@ -69,13 +69,11 @@ const translations = {
 let currentLang = "tr";
 let totalValuesFound = 0;
 
-// Sistem Değişkenleri
 let activeHexIndex = -1;
 let activeHexElement = null;
 let searchMatchIndex = -1;
 let searchMatchLength = 0;
 
-// YENİ: Gelişmiş Özellik Değişkenleri
 let compareUint8Array = null; 
 let undoStack = [];
 let redoStack = [];
@@ -126,7 +124,6 @@ document.addEventListener("DOMContentLoaded", () => {
     const tabs = document.querySelectorAll(".tab");
     const views = document.querySelectorAll(".view-content");
 
-    // Modal & Bookmark Elementleri
     const customModal = document.getElementById("custom-modal");
     const modalDesc = document.getElementById("modal-desc");
     const modalInput = document.getElementById("modal-input");
@@ -136,7 +133,6 @@ document.addEventListener("DOMContentLoaded", () => {
     const bookmarksPanel = document.getElementById("bookmarks-panel");
     const bookmarksList = document.getElementById("bookmarks-list");
 
-    // YENİ UI Elementleri
     const hexSearchInput = document.getElementById("hex-search-input");
     const hexSearchBtn = document.getElementById("hex-search-btn");
     const btnUndo = document.getElementById("btn-undo");
@@ -160,8 +156,7 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     });
 
-    // YENİ: Geçmiş Sistemi Fonksiyonları
-    function pushHistory(changes) { // changes = [{index, oldVal, newVal}]
+    function pushHistory(changes) { 
         undoStack.push(changes);
         redoStack = [];
         updateHistoryButtons();
@@ -195,7 +190,6 @@ document.addEventListener("DOMContentLoaded", () => {
         if(e.ctrlKey && e.key.toLowerCase() === 'y') performRedo();
     });
 
-    // Ana Dosya Yükleme
     uploadInput.addEventListener("change", (e) => {
         const file = e.target.files[0];
         if (!file) return;
@@ -207,7 +201,6 @@ document.addEventListener("DOMContentLoaded", () => {
             dataView = new DataView(fileBuffer);
             uint8Array = new Uint8Array(fileBuffer);
             
-            // Yükleme Sıfırlamaları
             compareUint8Array = null; 
             undoStack = []; redoStack = []; updateHistoryButtons();
             searchMatchIndex = -1; searchMatchLength = 0;
@@ -234,14 +227,13 @@ document.addEventListener("DOMContentLoaded", () => {
         reader.readAsArrayBuffer(file); 
     });
 
-    // YENİ: Karşılaştırma Dosyası Yükleme
     uploadCompare.addEventListener("change", (e) => {
         const file = e.target.files[0];
         if (!file || !uint8Array) return;
         const reader = new FileReader();
         reader.onload = (event) => {
             compareUint8Array = new Uint8Array(event.target.result);
-            document.querySelector(".tabs button[data-target='hex-view']").click(); // Hex editöre geçir
+            document.querySelector(".tabs button[data-target='hex-view']").click(); 
             renderHexEditor(); 
         };
         reader.readAsArrayBuffer(file);
@@ -296,7 +288,7 @@ document.addEventListener("DOMContentLoaded", () => {
             try {
                 if (prop.type === "IntProperty") { currentValue = dataView.getInt32(prop.offset, true); step = "1"; } 
                 else if (prop.type === "FloatProperty") { let fVal = dataView.getFloat32(prop.offset, true); currentValue = Number.isInteger(fVal) ? fVal : fVal.toFixed(6).replace(/\.?0+$/, ''); step = "0.01"; } 
-                else if (prop.type === "BoolProperty") { currentValue = dataView.getUint8(prop.offset) === 1 ? 1 : 0; step = "1"; } 
+                else if (prop.type === "BoolProperty") { currentValue = dataView.getUint8(prop.offset) === 1 ? 1 : 0; } 
                 else if (prop.type === "StrProperty" || prop.type === "NameProperty") {
                     inputType = "text"; let str = "";
                     for (let i = 0; i < 64; i++) { let char = uint8Array[prop.offset + i]; if (char === 0) break; if (char >= 32 && char <= 126) str += String.fromCharCode(char); }
@@ -304,22 +296,40 @@ document.addEventListener("DOMContentLoaded", () => {
                 }
             } catch(e) { currentValue = 0; }
 
+            // YENİ: Switch (Aç/Kapat) Mantığı
+            let inputHTML = "";
+            if (prop.type === "BoolProperty") {
+                let isChecked = currentValue === 1 ? "checked" : "";
+                inputHTML = `
+                    <div class="smart-item-right">
+                        <label class="switch">
+                            <input type="checkbox" class="smart-checkbox" data-offset="${prop.offset}" data-type="${prop.type}" ${isChecked}>
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                `;
+            } else {
+                inputHTML = `<input type="${inputType}" class="smart-input" step="${step}" value="${currentValue}" data-offset="${prop.offset}" data-type="${prop.type}">`;
+            }
+
             item.innerHTML = `
                 <div class="smart-left">
                     <span class="smart-offset">0x${prop.offset.toString(16).toUpperCase()}</span>
                     <span class="smart-name" title="${prop.name}">${prop.name}</span>
                 </div>
-                <input type="${inputType}" class="smart-input" step="${step}" value="${currentValue}" data-offset="${prop.offset}" data-type="${prop.type}">
+                ${inputHTML}
             `;
             smartList.appendChild(item);
         });
 
-        document.querySelectorAll(".smart-input").forEach(input => {
+        document.querySelectorAll(".smart-input, .smart-checkbox").forEach(input => {
             input.addEventListener("change", (e) => {
                 const offset = parseInt(e.target.dataset.offset);
                 const type = e.target.dataset.type;
-                let newVal = e.target.value;
-                let changes = []; // History için
+                
+                // Tipe göre değeri oku
+                let newVal = type === "BoolProperty" ? (e.target.checked ? 1 : 0) : e.target.value;
+                let changes = []; 
                 
                 try {
                     if (type === "IntProperty" || type === "FloatProperty" || type === "BoolProperty") {
@@ -328,7 +338,7 @@ document.addEventListener("DOMContentLoaded", () => {
                         
                         if (type === "IntProperty") dataView.setInt32(offset, Number(newVal), true);
                         else if (type === "FloatProperty") dataView.setFloat32(offset, Number(newVal), true);
-                        else if (type === "BoolProperty") { let parsedVal = Number(newVal) > 0 ? 1 : 0; dataView.setUint8(offset, parsedVal); e.target.value = parsedVal; }
+                        else if (type === "BoolProperty") { dataView.setUint8(offset, newVal); }
                         
                         for(let i=0; i<bytesToSave; i++) changes.push({index: offset+i, oldVal: oldBuffer[i], newVal: uint8Array[offset+i]});
                     } else if (type === "StrProperty" || type === "NameProperty") {
@@ -342,13 +352,14 @@ document.addEventListener("DOMContentLoaded", () => {
                         }
                     }
                     if(changes.length > 0) pushHistory(changes);
-                    e.target.classList.add("edited-val"); renderHexEditor(); 
+                    
+                    if (type !== "BoolProperty") e.target.classList.add("edited-val"); 
+                    renderHexEditor(); 
                 } catch(err) { console.warn(err); }
             });
         });
     }
 
-    // YENİ: Bookmark Sistemi
     function loadBookmarks() {
         let stored = localStorage.getItem('savStudio_bookmarks');
         bookmarks = stored ? JSON.parse(stored) : {};
@@ -398,7 +409,6 @@ document.addEventListener("DOMContentLoaded", () => {
     }
     window.removeBookmarkReq = removeBookmark;
 
-    // Modal Yönetimi
     function openModal(index, currentHex, element) {
         activeHexIndex = index; activeHexElement = element;
         const decValue = parseInt(currentHex, 16);
@@ -438,7 +448,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
     modalInput.addEventListener("keyup", (e) => { if (e.key === "Enter") modalSave.click(); if (e.key === "Escape") closeModal(); });
 
-    // Hex Arama
     hexSearchBtn.addEventListener("click", () => {
         const query = hexSearchInput.value.trim(); if (!query || !uint8Array) return;
         let searchBytes = [];
@@ -469,7 +478,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
     hexSearchInput.addEventListener("keyup", (e) => { if (e.key === "Enter") hexSearchBtn.click(); });
 
-    // YENİ: Syntax Highlighting & Diff Geliştirmeli Virtual Scrolling
     window.renderHexEditor = function() {
         const hexBody = document.getElementById("hex-body");
         const currentScrollTop = hexBody.scrollTop || 0; hexBody.innerHTML = ""; 
@@ -506,7 +514,6 @@ document.addEventListener("DOMContentLoaded", () => {
                         const byte = uint8Array[i + j];
                         const hexValue = byte.toString(16).padStart(2, '0').toUpperCase();
                         
-                        // YENİ: Renklendirme ve Kontroller
                         let isHighlighted = searchMatchIndex !== -1 && (i+j >= searchMatchIndex) && (i+j < searchMatchIndex + searchMatchLength);
                         let isDiff = compareUint8Array && compareUint8Array[i+j] !== undefined && compareUint8Array[i+j] !== byte;
                         let isBookmark = bookmarks[currentFileName] && bookmarks[currentFileName][i+j];
