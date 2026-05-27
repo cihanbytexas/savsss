@@ -8,7 +8,8 @@ window.addEventListener("load", () => {
 const translations = {
     "tr": {
         "upload_btn": "DOSYA YÜKLE",
-        "download_btn": "KAYDET VE İNDİR",
+        "download_btn": "KAYDET",
+        "compare_btn": "KARŞILAŞTIR",
         "active_file": "Aktif Dosya",
         "no_file": "Henüz dosya seçilmedi. Düzenlemek için .sav uzantılı bir dosya yükleyin.",
         "tab_values": "Değerler",
@@ -29,12 +30,15 @@ const translations = {
         "modal_title": "Hex Değeri Düzenle",
         "modal_cancel": "İPTAL",
         "modal_save": "KAYDET",
+        "modal_bookmark_ph": "Yer imi adı (Opsiyonel)",
+        "bookmarks_title": "Yer İmleri",
         "search_not_found": "Aranan değer dosyada bulunamadı!",
         "toggle_lang": "EN"
     },
     "en": {
-        "upload_btn": "UPLOAD FILE",
-        "download_btn": "SAVE & DOWNLOAD",
+        "upload_btn": "UPLOAD",
+        "download_btn": "SAVE",
+        "compare_btn": "COMPARE",
         "active_file": "Active File",
         "no_file": "No file selected. Upload a .sav file to start editing.",
         "tab_values": "Values",
@@ -55,6 +59,8 @@ const translations = {
         "modal_title": "Edit Hex Value",
         "modal_cancel": "CANCEL",
         "modal_save": "SAVE",
+        "modal_bookmark_ph": "Bookmark name (Optional)",
+        "bookmarks_title": "Bookmarks",
         "search_not_found": "Value not found in file!",
         "toggle_lang": "TR"
     }
@@ -63,13 +69,17 @@ const translations = {
 let currentLang = "tr";
 let totalValuesFound = 0;
 
-// Modal State Değişkenleri
+// Sistem Değişkenleri
 let activeHexIndex = -1;
 let activeHexElement = null;
-
-// Arama Highlight Değişkenleri
 let searchMatchIndex = -1;
 let searchMatchLength = 0;
+
+// YENİ: Gelişmiş Özellik Değişkenleri
+let compareUint8Array = null; 
+let undoStack = [];
+let redoStack = [];
+let bookmarks = {};
 
 function applyTranslations() {
     const langData = translations[currentLang];
@@ -116,26 +126,30 @@ document.addEventListener("DOMContentLoaded", () => {
     const tabs = document.querySelectorAll(".tab");
     const views = document.querySelectorAll(".view-content");
 
-    // Modal Elementleri
+    // Modal & Bookmark Elementleri
     const customModal = document.getElementById("custom-modal");
     const modalDesc = document.getElementById("modal-desc");
     const modalInput = document.getElementById("modal-input");
+    const modalBookmarkInput = document.getElementById("modal-bookmark-input");
     const modalCancel = document.getElementById("modal-cancel");
     const modalSave = document.getElementById("modal-save");
+    const bookmarksPanel = document.getElementById("bookmarks-panel");
+    const bookmarksList = document.getElementById("bookmarks-list");
 
-    // Hex Arama Elementleri
+    // YENİ UI Elementleri
     const hexSearchInput = document.getElementById("hex-search-input");
     const hexSearchBtn = document.getElementById("hex-search-btn");
+    const btnUndo = document.getElementById("btn-undo");
+    const btnRedo = document.getElementById("btn-redo");
+    const btnCompareLabel = document.getElementById("btn-compare-label");
+    const uploadCompare = document.getElementById("upload-compare");
 
     let fileBuffer = null; 
     let dataView = null;
     let uint8Array = null;
     let currentFileName = "";
 
-    langToggleBtn.addEventListener("click", () => {
-        currentLang = currentLang === "tr" ? "en" : "tr";
-        applyTranslations();
-    });
+    langToggleBtn.addEventListener("click", () => { currentLang = currentLang === "tr" ? "en" : "tr"; applyTranslations(); });
 
     tabs.forEach(tab => {
         tab.addEventListener("click", () => {
@@ -146,6 +160,42 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     });
 
+    // YENİ: Geçmiş Sistemi Fonksiyonları
+    function pushHistory(changes) { // changes = [{index, oldVal, newVal}]
+        undoStack.push(changes);
+        redoStack = [];
+        updateHistoryButtons();
+    }
+
+    function updateHistoryButtons() {
+        btnUndo.disabled = undoStack.length === 0;
+        btnRedo.disabled = redoStack.length === 0;
+    }
+
+    function performUndo() {
+        if (undoStack.length === 0) return;
+        const changes = undoStack.pop();
+        redoStack.push(changes);
+        changes.forEach(c => { uint8Array[c.index] = c.oldVal; });
+        extractPropertiesBulletproof(); renderHexEditor(); updateHistoryButtons();
+    }
+
+    function performRedo() {
+        if (redoStack.length === 0) return;
+        const changes = redoStack.pop();
+        undoStack.push(changes);
+        changes.forEach(c => { uint8Array[c.index] = c.newVal; });
+        extractPropertiesBulletproof(); renderHexEditor(); updateHistoryButtons();
+    }
+
+    btnUndo.addEventListener("click", performUndo);
+    btnRedo.addEventListener("click", performRedo);
+    document.addEventListener("keydown", (e) => {
+        if(e.ctrlKey && e.key.toLowerCase() === 'z') performUndo();
+        if(e.ctrlKey && e.key.toLowerCase() === 'y') performRedo();
+    });
+
+    // Ana Dosya Yükleme
     uploadInput.addEventListener("change", (e) => {
         const file = e.target.files[0];
         if (!file) return;
@@ -157,6 +207,12 @@ document.addEventListener("DOMContentLoaded", () => {
             dataView = new DataView(fileBuffer);
             uint8Array = new Uint8Array(fileBuffer);
             
+            // Yükleme Sıfırlamaları
+            compareUint8Array = null; 
+            undoStack = []; redoStack = []; updateHistoryButtons();
+            searchMatchIndex = -1; searchMatchLength = 0;
+            loadBookmarks();
+
             const lang = translations[currentLang];
             fileInfo.innerHTML = `
                 <strong data-i18n="active_file">${lang.active_file}</strong><br><br>
@@ -168,35 +224,37 @@ document.addEventListener("DOMContentLoaded", () => {
             emptyMsg.style.display = "none";
             editorContainer.style.display = "block";
             hexSearchContainer.style.display = "flex";
+            btnCompareLabel.style.display = "flex";
+            bookmarksPanel.style.display = "block";
             downloadBtn.disabled = false;
-            downloadBtn.classList.remove("outline-btn");
-            downloadBtn.classList.add("primary-btn"); 
+            downloadBtn.classList.remove("outline-btn"); downloadBtn.classList.add("primary-btn"); 
 
-            // Değişkenleri sıfırla
-            searchMatchIndex = -1;
-            searchMatchLength = 0;
-
-            setTimeout(() => {
-                extractPropertiesBulletproof();
-                renderHexEditor();
-            }, 50);
+            setTimeout(() => { extractPropertiesBulletproof(); renderHexEditor(); }, 50);
         };
         reader.readAsArrayBuffer(file); 
     });
 
+    // YENİ: Karşılaştırma Dosyası Yükleme
+    uploadCompare.addEventListener("change", (e) => {
+        const file = e.target.files[0];
+        if (!file || !uint8Array) return;
+        const reader = new FileReader();
+        reader.onload = (event) => {
+            compareUint8Array = new Uint8Array(event.target.result);
+            document.querySelector(".tabs button[data-target='hex-view']").click(); // Hex editöre geçir
+            renderHexEditor(); 
+        };
+        reader.readAsArrayBuffer(file);
+    });
+
     function extractPropertiesBulletproof() {
         let rawStr = "";
-        for (let i = 0; i < uint8Array.length; i++) {
-            rawStr += String.fromCharCode(uint8Array[i]);
-        }
+        for (let i = 0; i < uint8Array.length; i++) { rawStr += String.fromCharCode(uint8Array[i]); }
         
         let properties = [];
         const types = [
-            { type: "IntProperty", offsetAdd: 21 },
-            { type: "FloatProperty", offsetAdd: 23 },
-            { type: "BoolProperty", offsetAdd: 21 },
-            { type: "StrProperty", offsetAdd: 25 }, // YENİ: String desteği eklendi
-            { type: "NameProperty", offsetAdd: 25 }
+            { type: "IntProperty", offsetAdd: 21 }, { type: "FloatProperty", offsetAdd: 23 },
+            { type: "BoolProperty", offsetAdd: 21 }, { type: "StrProperty", offsetAdd: 25 }, { type: "NameProperty", offsetAdd: 25 }
         ];
 
         types.forEach(t => {
@@ -212,58 +270,36 @@ document.addEventListener("DOMContentLoaded", () => {
 
                     if (varName.length >= 2) {
                         const valueOffset = index + t.offsetAdd; 
-                        if (valueOffset + 4 <= uint8Array.length) {
-                            properties.push({ name: varName, type: t.type, offset: valueOffset });
-                        }
+                        if (valueOffset + 4 <= uint8Array.length) properties.push({ name: varName, type: t.type, offset: valueOffset });
                     }
                 } catch(e) {}
                 index += t.type.length;
             }
         });
-
         renderList(properties);
     }
 
     function renderList(properties) {
-        smartList.innerHTML = "";
-        const lang = translations[currentLang];
-        totalValuesFound = properties.length;
-        
+        smartList.innerHTML = ""; const lang = translations[currentLang]; totalValuesFound = properties.length;
         if(properties.length === 0) {
             smartList.innerHTML = `<p style='color:var(--text-muted); text-align:center; padding: 40px;'>${lang.fail_desc}</p>`;
-            document.getElementById("ui-filestatus").innerHTML = `<span style="color:#ff4444">${lang.status_fail}</span>`;
-            return;
+            document.getElementById("ui-filestatus").innerHTML = `<span style="color:#ff4444">${lang.status_fail}</span>`; return;
         }
 
         document.getElementById("ui-filestatus").innerHTML = `<span style="color:var(--text-main)">${lang.status_success} (${properties.length})</span>`;
-        
         properties.sort((a, b) => a.offset - b.offset);
 
         properties.forEach((prop) => {
-            const item = document.createElement("div");
-            item.className = "smart-item";
-            let currentValue = 0; 
-            let step = "1";
-            let inputType = "number";
+            const item = document.createElement("div"); item.className = "smart-item";
+            let currentValue = 0; let step = "1"; let inputType = "number";
             
             try {
-                if (prop.type === "IntProperty") {
-                    currentValue = dataView.getInt32(prop.offset, true); step = "1";
-                } else if (prop.type === "FloatProperty") {
-                    let fVal = dataView.getFloat32(prop.offset, true);
-                    currentValue = Number.isInteger(fVal) ? fVal : fVal.toFixed(6).replace(/\.?0+$/, ''); 
-                    step = "0.01";
-                } else if (prop.type === "BoolProperty") {
-                    currentValue = dataView.getUint8(prop.offset) === 1 ? 1 : 0; step = "1";
-                } else if (prop.type === "StrProperty" || prop.type === "NameProperty") {
-                    inputType = "text";
-                    let str = "";
-                    let maxSafeLen = 64; 
-                    for (let i = 0; i < maxSafeLen; i++) {
-                        let char = uint8Array[prop.offset + i];
-                        if (char === 0) break; // Null byte gördüğünde bitir
-                        if (char >= 32 && char <= 126) str += String.fromCharCode(char);
-                    }
+                if (prop.type === "IntProperty") { currentValue = dataView.getInt32(prop.offset, true); step = "1"; } 
+                else if (prop.type === "FloatProperty") { let fVal = dataView.getFloat32(prop.offset, true); currentValue = Number.isInteger(fVal) ? fVal : fVal.toFixed(6).replace(/\.?0+$/, ''); step = "0.01"; } 
+                else if (prop.type === "BoolProperty") { currentValue = dataView.getUint8(prop.offset) === 1 ? 1 : 0; step = "1"; } 
+                else if (prop.type === "StrProperty" || prop.type === "NameProperty") {
+                    inputType = "text"; let str = "";
+                    for (let i = 0; i < 64; i++) { let char = uint8Array[prop.offset + i]; if (char === 0) break; if (char >= 32 && char <= 126) str += String.fromCharCode(char); }
                     currentValue = str;
                 }
             } catch(e) { currentValue = 0; }
@@ -283,185 +319,179 @@ document.addEventListener("DOMContentLoaded", () => {
                 const offset = parseInt(e.target.dataset.offset);
                 const type = e.target.dataset.type;
                 let newVal = e.target.value;
+                let changes = []; // History için
+                
                 try {
-                    if (type === "IntProperty") dataView.setInt32(offset, Number(newVal), true);
-                    else if (type === "FloatProperty") dataView.setFloat32(offset, Number(newVal), true);
-                    else if (type === "BoolProperty") {
-                        let parsedVal = Number(newVal) > 0 ? 1 : 0;
-                        dataView.setUint8(offset, parsedVal);
-                        e.target.value = parsedVal; 
+                    if (type === "IntProperty" || type === "FloatProperty" || type === "BoolProperty") {
+                        let bytesToSave = type === "BoolProperty" ? 1 : 4;
+                        let oldBuffer = new Uint8Array(fileBuffer.slice(offset, offset + bytesToSave));
+                        
+                        if (type === "IntProperty") dataView.setInt32(offset, Number(newVal), true);
+                        else if (type === "FloatProperty") dataView.setFloat32(offset, Number(newVal), true);
+                        else if (type === "BoolProperty") { let parsedVal = Number(newVal) > 0 ? 1 : 0; dataView.setUint8(offset, parsedVal); e.target.value = parsedVal; }
+                        
+                        for(let i=0; i<bytesToSave; i++) changes.push({index: offset+i, oldVal: oldBuffer[i], newVal: uint8Array[offset+i]});
                     } else if (type === "StrProperty" || type === "NameProperty") {
-                        // Dosya bozulmasını önlemek için String uzunluğu sabit tutulur (Boşlukları null ile doldur)
-                        let origLen = 0;
-                        while(uint8Array[offset + origLen] !== 0 && origLen < 128) origLen++;
+                        let origLen = 0; while(uint8Array[offset + origLen] !== 0 && origLen < 128) origLen++;
+                        let oldBuffer = new Uint8Array(fileBuffer.slice(offset, offset + origLen));
                         
                         for (let i=0; i<origLen; i++) {
-                            if (i < newVal.length) {
-                                dataView.setUint8(offset + i, newVal.charCodeAt(i));
-                            } else {
-                                dataView.setUint8(offset + i, 0); // Kalanı null bayt yap
-                            }
+                            let newByte = i < newVal.length ? newVal.charCodeAt(i) : 0;
+                            dataView.setUint8(offset + i, newByte);
+                            changes.push({index: offset+i, oldVal: oldBuffer[i], newVal: newByte});
                         }
                     }
-                    e.target.classList.add("edited-val"); 
-                    renderHexEditor(); 
-                } catch(err) { console.warn("Edit error:", err); }
+                    if(changes.length > 0) pushHistory(changes);
+                    e.target.classList.add("edited-val"); renderHexEditor(); 
+                } catch(err) { console.warn(err); }
             });
         });
     }
 
+    // YENİ: Bookmark Sistemi
+    function loadBookmarks() {
+        let stored = localStorage.getItem('savStudio_bookmarks');
+        bookmarks = stored ? JSON.parse(stored) : {};
+        renderBookmarksList();
+    }
+    
+    function saveBookmark(index, name) {
+        if(!bookmarks[currentFileName]) bookmarks[currentFileName] = {};
+        bookmarks[currentFileName][index] = name || `Offset 0x${index.toString(16).toUpperCase()}`;
+        localStorage.setItem('savStudio_bookmarks', JSON.stringify(bookmarks));
+        renderBookmarksList(); renderHexEditor();
+    }
+
+    function removeBookmark(index) {
+        if(bookmarks[currentFileName]) {
+            delete bookmarks[currentFileName][index];
+            localStorage.setItem('savStudio_bookmarks', JSON.stringify(bookmarks));
+            renderBookmarksList(); renderHexEditor();
+        }
+    }
+
+    function renderBookmarksList() {
+        bookmarksList.innerHTML = "";
+        let fileBookmarks = bookmarks[currentFileName] || {};
+        let keys = Object.keys(fileBookmarks).sort((a,b) => a-b);
+        
+        keys.forEach(indexStr => {
+            const index = parseInt(indexStr);
+            const item = document.createElement("div");
+            item.className = "bookmark-item";
+            item.innerHTML = `
+                <div class="bookmark-info" onclick="scrollToHex(${index})">
+                    <span class="bookmark-name">${fileBookmarks[indexStr]}</span>
+                    <span class="bookmark-offset">0x${index.toString(16).toUpperCase()}</span>
+                </div>
+                <button class="bookmark-remove" onclick="removeBookmarkReq(${index})"><i class="ph-bold ph-x"></i></button>
+            `;
+            bookmarksList.appendChild(item);
+        });
+    }
+
+    window.scrollToHex = function(index) {
+        document.querySelector(".tabs button[data-target='hex-view']").click();
+        const hexBody = document.getElementById("hex-body");
+        const row = Math.floor(index / 16);
+        hexBody.scrollTop = row * 28;
+    }
+    window.removeBookmarkReq = removeBookmark;
+
     // Modal Yönetimi
     function openModal(index, currentHex, element) {
-        activeHexIndex = index;
-        activeHexElement = element;
+        activeHexIndex = index; activeHexElement = element;
         const decValue = parseInt(currentHex, 16);
-        
         modalDesc.innerHTML = `Address: <strong style="color:var(--text-main)">0x${index.toString(16).toUpperCase()}</strong> <br> Decimal: <strong style="color:var(--text-main)">${decValue}</strong>`;
         modalInput.value = currentHex;
         
+        let existingBookmark = bookmarks[currentFileName] && bookmarks[currentFileName][index];
+        modalBookmarkInput.value = existingBookmark || "";
+
         customModal.classList.remove("hidden");
-        setTimeout(() => {
-            modalInput.focus();
-            modalInput.select();
-        }, 50);
+        setTimeout(() => { modalInput.focus(); modalInput.select(); }, 50);
     }
 
-    function closeModal() {
-        customModal.classList.add("hidden");
-        activeHexIndex = -1;
-        activeHexElement = null;
-    }
+    function closeModal() { customModal.classList.add("hidden"); activeHexIndex = -1; activeHexElement = null; }
 
     modalCancel.addEventListener("click", closeModal);
     modalSave.addEventListener("click", () => {
         if (activeHexIndex !== -1) {
             let newHex = modalInput.value.trim().toUpperCase();
             if (/^[0-9A-F]{1,2}$/.test(newHex)) {
-                uint8Array[activeHexIndex] = parseInt(newHex, 16);
-                if (activeHexElement) {
-                    activeHexElement.innerText = newHex.padStart(2, '0');
-                    activeHexElement.classList.add("edited-val");
+                let oldVal = uint8Array[activeHexIndex];
+                let newVal = parseInt(newHex, 16);
+                
+                if(oldVal !== newVal) {
+                    pushHistory([{index: activeHexIndex, oldVal: oldVal, newVal: newVal}]);
+                    uint8Array[activeHexIndex] = newVal;
+                    if (activeHexElement) { activeHexElement.innerText = newHex.padStart(2, '0'); activeHexElement.classList.add("edited-val"); }
+                    extractPropertiesBulletproof();
                 }
-                extractPropertiesBulletproof(); // Veriler sekmesini de güncelle
             }
+            
+            let bName = modalBookmarkInput.value.trim();
+            if(bName) saveBookmark(activeHexIndex, bName);
         }
         closeModal();
     });
 
-    // Modal Input'ta Enter'a basılırsa kaydet
-    modalInput.addEventListener("keyup", (e) => {
-        if (e.key === "Enter") modalSave.click();
-        if (e.key === "Escape") closeModal();
-    });
+    modalInput.addEventListener("keyup", (e) => { if (e.key === "Enter") modalSave.click(); if (e.key === "Escape") closeModal(); });
 
-    // Hex Arama İşlevi
+    // Hex Arama
     hexSearchBtn.addEventListener("click", () => {
-        const query = hexSearchInput.value.trim();
-        if (!query || !uint8Array) return;
-
+        const query = hexSearchInput.value.trim(); if (!query || !uint8Array) return;
         let searchBytes = [];
-        // Eğer arama sadece hex (örn: A1 2B veya a12b) formatındaysa
         if (/^[0-9A-Fa-f\s]+$/.test(query) && query.length >= 2) {
             const cleanQuery = query.replace(/\s/g, "");
-            for(let i=0; i<cleanQuery.length; i+=2) {
-                searchBytes.push(parseInt(cleanQuery.substring(i, i+2), 16));
-            }
-        } else {
-            // Değilse ASCII metin olarak arat
-            for(let i=0; i<query.length; i++) {
-                searchBytes.push(query.charCodeAt(i));
-            }
-        }
+            for(let i=0; i<cleanQuery.length; i+=2) searchBytes.push(parseInt(cleanQuery.substring(i, i+2), 16));
+        } else { for(let i=0; i<query.length; i++) searchBytes.push(query.charCodeAt(i)); }
 
-        // Bulunduğu yerden sonrasını ara (Find Next özelliği)
-        let startIdx = (searchMatchIndex !== -1) ? searchMatchIndex + 1 : 0;
-        let foundIdx = -1;
-
+        let startIdx = (searchMatchIndex !== -1) ? searchMatchIndex + 1 : 0; let foundIdx = -1;
         for (let i = startIdx; i <= uint8Array.length - searchBytes.length; i++) {
-            let match = true;
-            for (let j = 0; j < searchBytes.length; j++) {
-                if (uint8Array[i + j] !== searchBytes[j]) {
-                    match = false;
-                    break;
-                }
-            }
-            if (match) {
-                foundIdx = i;
-                break;
-            }
+            let match = true; for (let j = 0; j < searchBytes.length; j++) { if (uint8Array[i + j] !== searchBytes[j]) { match = false; break; } }
+            if (match) { foundIdx = i; break; }
         }
-
-        // Bulamazsa baştan tekrar ara
         if (foundIdx === -1 && startIdx > 0) {
             for (let i = 0; i < startIdx; i++) {
-                let match = true;
-                for (let j = 0; j < searchBytes.length; j++) {
-                    if (uint8Array[i + j] !== searchBytes[j]) { match = false; break; }
-                }
+                let match = true; for (let j = 0; j < searchBytes.length; j++) { if (uint8Array[i + j] !== searchBytes[j]) { match = false; break; } }
                 if (match) { foundIdx = i; break; }
             }
         }
 
         if (foundIdx !== -1) {
-            searchMatchIndex = foundIdx;
-            searchMatchLength = searchBytes.length;
-            
-            // Satıra kaydır (Scroll)
-            const hexBody = document.getElementById("hex-body");
-            const row = Math.floor(foundIdx / 16);
-            hexBody.scrollTop = row * 28; // hexRowHeight
-            
-            renderHexEditor(); // Highlight için yeniden çiz
+            searchMatchIndex = foundIdx; searchMatchLength = searchBytes.length;
+            scrollToHex(foundIdx); renderHexEditor();
         } else {
-            alert(translations[currentLang].search_not_found);
-            searchMatchIndex = -1;
-            searchMatchLength = 0;
-            renderHexEditor();
+            alert(translations[currentLang].search_not_found); searchMatchIndex = -1; searchMatchLength = 0; renderHexEditor();
         }
     });
 
-    hexSearchInput.addEventListener("keyup", (e) => {
-        if (e.key === "Enter") hexSearchBtn.click();
-    });
+    hexSearchInput.addEventListener("keyup", (e) => { if (e.key === "Enter") hexSearchBtn.click(); });
 
-    // Virtual Scrolling Hex Editör
+    // YENİ: Syntax Highlighting & Diff Geliştirmeli Virtual Scrolling
     window.renderHexEditor = function() {
         const hexBody = document.getElementById("hex-body");
-        const currentScrollTop = hexBody.scrollTop || 0; 
-        hexBody.innerHTML = ""; 
-        
+        const currentScrollTop = hexBody.scrollTop || 0; hexBody.innerHTML = ""; 
         if (!uint8Array || uint8Array.length === 0) return;
 
         const hexRowHeight = 28; 
         const totalRows = Math.ceil(uint8Array.length / 16);
-        const totalHeight = totalRows * hexRowHeight;
-        
         const scrollWrapper = document.createElement("div");
-        scrollWrapper.style.height = totalHeight + "px";
-        scrollWrapper.style.position = "relative";
+        scrollWrapper.style.height = (totalRows * hexRowHeight) + "px"; scrollWrapper.style.position = "relative";
         
         const contentNode = document.createElement("div");
-        contentNode.style.position = "absolute";
-        contentNode.style.top = "0";
-        contentNode.style.left = "0";
-        contentNode.style.width = "100%";
-        
-        scrollWrapper.appendChild(contentNode);
-        hexBody.appendChild(scrollWrapper);
+        contentNode.style.position = "absolute"; contentNode.style.top = "0"; contentNode.style.left = "0"; contentNode.style.width = "100%";
+        scrollWrapper.appendChild(contentNode); hexBody.appendChild(scrollWrapper);
 
         let lastRenderedStart = -1;
-
         function renderChunk() {
-            const scrollTop = hexBody.scrollTop;
-            const startRow = Math.floor(scrollTop / hexRowHeight);
-            
+            const startRow = Math.floor(hexBody.scrollTop / hexRowHeight);
             if (Math.abs(lastRenderedStart - startRow) < 2 && lastRenderedStart !== -1) return;
             lastRenderedStart = startRow;
 
             const visibleRows = Math.ceil(hexBody.clientHeight / hexRowHeight);
-            const start = Math.max(0, startRow - 5);
-            const end = Math.min(totalRows, startRow + visibleRows + 5);
-
+            const start = Math.max(0, startRow - 5); const end = Math.min(totalRows, startRow + visibleRows + 5);
             contentNode.style.transform = `translateY(${start * hexRowHeight}px)`;
 
             let htmlContent = "";
@@ -476,53 +506,52 @@ document.addEventListener("DOMContentLoaded", () => {
                         const byte = uint8Array[i + j];
                         const hexValue = byte.toString(16).padStart(2, '0').toUpperCase();
                         
-                        // Arama Highlight Mantığı
+                        // YENİ: Renklendirme ve Kontroller
                         let isHighlighted = searchMatchIndex !== -1 && (i+j >= searchMatchIndex) && (i+j < searchMatchIndex + searchMatchLength);
-                        let highlightClass = isHighlighted ? " hex-highlight" : "";
+                        let isDiff = compareUint8Array && compareUint8Array[i+j] !== undefined && compareUint8Array[i+j] !== byte;
+                        let isBookmark = bookmarks[currentFileName] && bookmarks[currentFileName][i+j];
+                        let isNull = byte === 0;
+                        let isAscii = byte >= 32 && byte <= 126;
+
+                        let classNames = "hex-byte";
+                        if(isHighlighted) classNames += " hex-highlight";
+                        if(isDiff) classNames += " hex-diff";
+                        if(isBookmark) classNames += " hex-bookmark";
+                        if(!isHighlighted && !isDiff) {
+                            if(isNull) classNames += " hex-null";
+                            else if(isAscii) classNames += " hex-ascii";
+                        }
                         
-                        hexBytes += `<span class="hex-byte${highlightClass}" data-index="${i+j}" title="Edit">${hexValue}</span> `;
-                        asciiChars += (byte >= 32 && byte <= 126) ? String.fromCharCode(byte) : ".";
-                    } else {
-                        hexBytes += "   "; 
-                    }
+                        hexBytes += `<span class="${classNames}" data-index="${i+j}" title="Edit">${hexValue}</span> `;
+                        asciiChars += isAscii ? String.fromCharCode(byte) : ".";
+                    } else { hexBytes += "   "; }
                 }
                 hexRow += `<div class="hex-bytes-col">${hexBytes}</div>`;
                 asciiChars = asciiChars.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
-                hexRow += `<div class="hex-ascii-col">${asciiChars}</div>`;
-                hexRow += `</div>`;
+                hexRow += `<div class="hex-ascii-col">${asciiChars}</div>`; hexRow += `</div>`;
                 htmlContent += hexRow;
             }
             contentNode.innerHTML = htmlContent;
 
-            // Tıklayınca Custom Modalı aç
             contentNode.querySelectorAll('.hex-byte').forEach(span => {
                 span.addEventListener('click', function() {
                     const index = parseInt(this.getAttribute('data-index'));
-                    const currentHex = this.innerText;
-                    openModal(index, currentHex, this);
+                    openModal(index, this.innerText, this);
                 });
             });
         }
-
-        hexBody.onscroll = renderChunk;
-        hexBody.scrollTop = currentScrollTop;
-        renderChunk();
+        hexBody.onscroll = renderChunk; hexBody.scrollTop = currentScrollTop; renderChunk();
     }
 
     searchInput.addEventListener("input", (e) => {
         const term = e.target.value.toLowerCase();
-        document.querySelectorAll(".smart-item").forEach(item => {
-            const name = item.querySelector(".smart-name").innerText.toLowerCase();
-            item.style.display = name.includes(term) ? "flex" : "none";
-        });
+        document.querySelectorAll(".smart-item").forEach(item => { item.style.display = item.querySelector(".smart-name").innerText.toLowerCase().includes(term) ? "flex" : "none"; });
     });
 
     downloadBtn.addEventListener("click", () => {
         const blob = new Blob([fileBuffer], { type: "application/octet-stream" });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement("a");
-        a.href = url; a.download = "edited_" + currentFileName;
-        document.body.appendChild(a); a.click();
+        const url = URL.createObjectURL(blob); const a = document.createElement("a");
+        a.href = url; a.download = "edited_" + currentFileName; document.body.appendChild(a); a.click();
         setTimeout(() => { document.body.removeChild(a); URL.revokeObjectURL(url); }, 0);
     });
 
