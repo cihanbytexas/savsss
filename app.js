@@ -1,12 +1,10 @@
-// --- YENİ EKLENEN KISIM: Splash Screen ---
 window.addEventListener("load", () => {
     const splashScreen = document.getElementById("splash-screen");
     setTimeout(() => {
         splashScreen.classList.add("hidden");
-    }, 1500); // 1.5 saniye animasyonu izlet ve ekranı aç
+    }, 1500); 
 });
 
-// --- MEVCUT İÇERİK ---
 const translations = {
     "tr": {
         "upload_btn": "DOSYA YÜKLE",
@@ -17,6 +15,8 @@ const translations = {
         "tab_hex": "Hex Editör",
         "empty_msg": "Düzenlemeye başlamak için bir dosya yükleyin.",
         "search_placeholder": "Arama yap... (Örn: TotalShoot)",
+        "hex_search_placeholder": "Hex (örn: A1 2B) veya Metin (örn: Player) arat...",
+        "search_btn": "BUL",
         "offset": "Offset",
         "ascii": "ASCII",
         "file_info_name": "Dosya:",
@@ -26,7 +26,10 @@ const translations = {
         "status_success": "Başarılı",
         "status_fail": "Okuma Başarısız",
         "fail_desc": "Bu dosyada okunabilir değer bulunamadı.<br><br>Hex Editör sekmesini kullanın.",
-        "prompt_msg": "Yeni Hex Değeri (00-FF):",
+        "modal_title": "Hex Değeri Düzenle",
+        "modal_cancel": "İPTAL",
+        "modal_save": "KAYDET",
+        "search_not_found": "Aranan değer dosyada bulunamadı!",
         "toggle_lang": "EN"
     },
     "en": {
@@ -38,6 +41,8 @@ const translations = {
         "tab_hex": "Hex Editor",
         "empty_msg": "Upload a file to begin editing.",
         "search_placeholder": "Search... (e.g., TotalShoot)",
+        "hex_search_placeholder": "Search Hex (e.g., A1 2B) or Text (e.g., Player)...",
+        "search_btn": "FIND",
         "offset": "Offset",
         "ascii": "ASCII",
         "file_info_name": "File:",
@@ -47,13 +52,24 @@ const translations = {
         "status_success": "Success",
         "status_fail": "Read Failed",
         "fail_desc": "No readable values found in this file.<br><br>Please use the Hex Editor.",
-        "prompt_msg": "New Hex Value (00-FF):",
+        "modal_title": "Edit Hex Value",
+        "modal_cancel": "CANCEL",
+        "modal_save": "SAVE",
+        "search_not_found": "Value not found in file!",
         "toggle_lang": "TR"
     }
 };
 
 let currentLang = "tr";
 let totalValuesFound = 0;
+
+// Modal State Değişkenleri
+let activeHexIndex = -1;
+let activeHexElement = null;
+
+// Arama Highlight Değişkenleri
+let searchMatchIndex = -1;
+let searchMatchLength = 0;
 
 function applyTranslations() {
     const langData = translations[currentLang];
@@ -94,10 +110,22 @@ document.addEventListener("DOMContentLoaded", () => {
     const smartList = document.getElementById("smart-list");
     const emptyMsg = document.getElementById("empty-message");
     const editorContainer = document.getElementById("smart-editor-container");
+    const hexSearchContainer = document.getElementById("hex-search-container");
     const searchInput = document.getElementById("search-input");
     const langToggleBtn = document.getElementById("lang-toggle");
     const tabs = document.querySelectorAll(".tab");
     const views = document.querySelectorAll(".view-content");
+
+    // Modal Elementleri
+    const customModal = document.getElementById("custom-modal");
+    const modalDesc = document.getElementById("modal-desc");
+    const modalInput = document.getElementById("modal-input");
+    const modalCancel = document.getElementById("modal-cancel");
+    const modalSave = document.getElementById("modal-save");
+
+    // Hex Arama Elementleri
+    const hexSearchInput = document.getElementById("hex-search-input");
+    const hexSearchBtn = document.getElementById("hex-search-btn");
 
     let fileBuffer = null; 
     let dataView = null;
@@ -139,9 +167,14 @@ document.addEventListener("DOMContentLoaded", () => {
             
             emptyMsg.style.display = "none";
             editorContainer.style.display = "block";
+            hexSearchContainer.style.display = "flex";
             downloadBtn.disabled = false;
             downloadBtn.classList.remove("outline-btn");
             downloadBtn.classList.add("primary-btn"); 
+
+            // Değişkenleri sıfırla
+            searchMatchIndex = -1;
+            searchMatchLength = 0;
 
             setTimeout(() => {
                 extractPropertiesBulletproof();
@@ -161,7 +194,9 @@ document.addEventListener("DOMContentLoaded", () => {
         const types = [
             { type: "IntProperty", offsetAdd: 21 },
             { type: "FloatProperty", offsetAdd: 23 },
-            { type: "BoolProperty", offsetAdd: 21 }
+            { type: "BoolProperty", offsetAdd: 21 },
+            { type: "StrProperty", offsetAdd: 25 }, // YENİ: String desteği eklendi
+            { type: "NameProperty", offsetAdd: 25 }
         ];
 
         types.forEach(t => {
@@ -207,7 +242,9 @@ document.addEventListener("DOMContentLoaded", () => {
         properties.forEach((prop) => {
             const item = document.createElement("div");
             item.className = "smart-item";
-            let currentValue = 0; let step = "1";
+            let currentValue = 0; 
+            let step = "1";
+            let inputType = "number";
             
             try {
                 if (prop.type === "IntProperty") {
@@ -218,6 +255,16 @@ document.addEventListener("DOMContentLoaded", () => {
                     step = "0.01";
                 } else if (prop.type === "BoolProperty") {
                     currentValue = dataView.getUint8(prop.offset) === 1 ? 1 : 0; step = "1";
+                } else if (prop.type === "StrProperty" || prop.type === "NameProperty") {
+                    inputType = "text";
+                    let str = "";
+                    let maxSafeLen = 64; 
+                    for (let i = 0; i < maxSafeLen; i++) {
+                        let char = uint8Array[prop.offset + i];
+                        if (char === 0) break; // Null byte gördüğünde bitir
+                        if (char >= 32 && char <= 126) str += String.fromCharCode(char);
+                    }
+                    currentValue = str;
                 }
             } catch(e) { currentValue = 0; }
 
@@ -226,7 +273,7 @@ document.addEventListener("DOMContentLoaded", () => {
                     <span class="smart-offset">0x${prop.offset.toString(16).toUpperCase()}</span>
                     <span class="smart-name" title="${prop.name}">${prop.name}</span>
                 </div>
-                <input type="number" class="smart-input" step="${step}" value="${currentValue}" data-offset="${prop.offset}" data-type="${prop.type}">
+                <input type="${inputType}" class="smart-input" step="${step}" value="${currentValue}" data-offset="${prop.offset}" data-type="${prop.type}">
             `;
             smartList.appendChild(item);
         });
@@ -235,42 +282,164 @@ document.addEventListener("DOMContentLoaded", () => {
             input.addEventListener("change", (e) => {
                 const offset = parseInt(e.target.dataset.offset);
                 const type = e.target.dataset.type;
-                let newVal = Number(e.target.value);
+                let newVal = e.target.value;
                 try {
-                    if (type === "IntProperty") dataView.setInt32(offset, newVal, true);
-                    else if (type === "FloatProperty") dataView.setFloat32(offset, newVal, true);
+                    if (type === "IntProperty") dataView.setInt32(offset, Number(newVal), true);
+                    else if (type === "FloatProperty") dataView.setFloat32(offset, Number(newVal), true);
                     else if (type === "BoolProperty") {
-                        newVal = newVal > 0 ? 1 : 0;
-                        dataView.setUint8(offset, newVal);
-                        e.target.value = newVal; 
+                        let parsedVal = Number(newVal) > 0 ? 1 : 0;
+                        dataView.setUint8(offset, parsedVal);
+                        e.target.value = parsedVal; 
+                    } else if (type === "StrProperty" || type === "NameProperty") {
+                        // Dosya bozulmasını önlemek için String uzunluğu sabit tutulur (Boşlukları null ile doldur)
+                        let origLen = 0;
+                        while(uint8Array[offset + origLen] !== 0 && origLen < 128) origLen++;
+                        
+                        for (let i=0; i<origLen; i++) {
+                            if (i < newVal.length) {
+                                dataView.setUint8(offset + i, newVal.charCodeAt(i));
+                            } else {
+                                dataView.setUint8(offset + i, 0); // Kalanı null bayt yap
+                            }
+                        }
                     }
                     e.target.classList.add("edited-val"); 
                     renderHexEditor(); 
-                } catch(err) {}
+                } catch(err) { console.warn("Edit error:", err); }
             });
         });
     }
 
-    // --- YENİ EKLENEN KISIM: Virtual Scrolling Hex Editör ---
-    function renderHexEditor() {
-        const hexBody = document.getElementById("hex-body");
+    // Modal Yönetimi
+    function openModal(index, currentHex, element) {
+        activeHexIndex = index;
+        activeHexElement = element;
+        const decValue = parseInt(currentHex, 16);
         
-        // Değerler sekmesinden veri değiştirildiğinde scroll'un en üste zıplamasını engeller
+        modalDesc.innerHTML = `Address: <strong style="color:var(--text-main)">0x${index.toString(16).toUpperCase()}</strong> <br> Decimal: <strong style="color:var(--text-main)">${decValue}</strong>`;
+        modalInput.value = currentHex;
+        
+        customModal.classList.remove("hidden");
+        setTimeout(() => {
+            modalInput.focus();
+            modalInput.select();
+        }, 50);
+    }
+
+    function closeModal() {
+        customModal.classList.add("hidden");
+        activeHexIndex = -1;
+        activeHexElement = null;
+    }
+
+    modalCancel.addEventListener("click", closeModal);
+    modalSave.addEventListener("click", () => {
+        if (activeHexIndex !== -1) {
+            let newHex = modalInput.value.trim().toUpperCase();
+            if (/^[0-9A-F]{1,2}$/.test(newHex)) {
+                uint8Array[activeHexIndex] = parseInt(newHex, 16);
+                if (activeHexElement) {
+                    activeHexElement.innerText = newHex.padStart(2, '0');
+                    activeHexElement.classList.add("edited-val");
+                }
+                extractPropertiesBulletproof(); // Veriler sekmesini de güncelle
+            }
+        }
+        closeModal();
+    });
+
+    // Modal Input'ta Enter'a basılırsa kaydet
+    modalInput.addEventListener("keyup", (e) => {
+        if (e.key === "Enter") modalSave.click();
+        if (e.key === "Escape") closeModal();
+    });
+
+    // Hex Arama İşlevi
+    hexSearchBtn.addEventListener("click", () => {
+        const query = hexSearchInput.value.trim();
+        if (!query || !uint8Array) return;
+
+        let searchBytes = [];
+        // Eğer arama sadece hex (örn: A1 2B veya a12b) formatındaysa
+        if (/^[0-9A-Fa-f\s]+$/.test(query) && query.length >= 2) {
+            const cleanQuery = query.replace(/\s/g, "");
+            for(let i=0; i<cleanQuery.length; i+=2) {
+                searchBytes.push(parseInt(cleanQuery.substring(i, i+2), 16));
+            }
+        } else {
+            // Değilse ASCII metin olarak arat
+            for(let i=0; i<query.length; i++) {
+                searchBytes.push(query.charCodeAt(i));
+            }
+        }
+
+        // Bulunduğu yerden sonrasını ara (Find Next özelliği)
+        let startIdx = (searchMatchIndex !== -1) ? searchMatchIndex + 1 : 0;
+        let foundIdx = -1;
+
+        for (let i = startIdx; i <= uint8Array.length - searchBytes.length; i++) {
+            let match = true;
+            for (let j = 0; j < searchBytes.length; j++) {
+                if (uint8Array[i + j] !== searchBytes[j]) {
+                    match = false;
+                    break;
+                }
+            }
+            if (match) {
+                foundIdx = i;
+                break;
+            }
+        }
+
+        // Bulamazsa baştan tekrar ara
+        if (foundIdx === -1 && startIdx > 0) {
+            for (let i = 0; i < startIdx; i++) {
+                let match = true;
+                for (let j = 0; j < searchBytes.length; j++) {
+                    if (uint8Array[i + j] !== searchBytes[j]) { match = false; break; }
+                }
+                if (match) { foundIdx = i; break; }
+            }
+        }
+
+        if (foundIdx !== -1) {
+            searchMatchIndex = foundIdx;
+            searchMatchLength = searchBytes.length;
+            
+            // Satıra kaydır (Scroll)
+            const hexBody = document.getElementById("hex-body");
+            const row = Math.floor(foundIdx / 16);
+            hexBody.scrollTop = row * 28; // hexRowHeight
+            
+            renderHexEditor(); // Highlight için yeniden çiz
+        } else {
+            alert(translations[currentLang].search_not_found);
+            searchMatchIndex = -1;
+            searchMatchLength = 0;
+            renderHexEditor();
+        }
+    });
+
+    hexSearchInput.addEventListener("keyup", (e) => {
+        if (e.key === "Enter") hexSearchBtn.click();
+    });
+
+    // Virtual Scrolling Hex Editör
+    window.renderHexEditor = function() {
+        const hexBody = document.getElementById("hex-body");
         const currentScrollTop = hexBody.scrollTop || 0; 
         hexBody.innerHTML = ""; 
         
         if (!uint8Array || uint8Array.length === 0) return;
 
-        const hexRowHeight = 28; // Sabit satır yüksekliği
+        const hexRowHeight = 28; 
         const totalRows = Math.ceil(uint8Array.length / 16);
         const totalHeight = totalRows * hexRowHeight;
         
-        // Sanal kaydırma (Virtual Scroll) için iskelet taşıyıcı
         const scrollWrapper = document.createElement("div");
         scrollWrapper.style.height = totalHeight + "px";
         scrollWrapper.style.position = "relative";
         
-        // Sadece görünen verilerin ekleneceği aktif katman
         const contentNode = document.createElement("div");
         contentNode.style.position = "absolute";
         contentNode.style.top = "0";
@@ -282,27 +451,22 @@ document.addEventListener("DOMContentLoaded", () => {
 
         let lastRenderedStart = -1;
 
-        // Anlık görünen alanı (Chunk) hesaplayıp HTML'e basan fonksiyon
         function renderChunk() {
             const scrollTop = hexBody.scrollTop;
             const startRow = Math.floor(scrollTop / hexRowHeight);
             
-            // Kullanıcı sadece birkaç piksel kaydırdıysa DOM'u yorma
             if (Math.abs(lastRenderedStart - startRow) < 2 && lastRenderedStart !== -1) return;
             lastRenderedStart = startRow;
 
-            // Ekrana sığan satır sayısını bul, üstten/alttan tampon (buffer) bırak
             const visibleRows = Math.ceil(hexBody.clientHeight / hexRowHeight);
             const start = Math.max(0, startRow - 5);
             const end = Math.min(totalRows, startRow + visibleRows + 5);
 
-            // Görünen katmanı (contentNode) scroll pozisyonuna göre aşağı it
             contentNode.style.transform = `translateY(${start * hexRowHeight}px)`;
 
             let htmlContent = "";
             for (let r = start; r < end; r++) {
                 const i = r * 16;
-                // Satır yüksekliğini inline zorlayarak CSS taşmalarını engelliyoruz
                 let hexRow = `<div class="hex-row" style="height:${hexRowHeight}px; box-sizing: border-box;">`;
                 hexRow += `<div class="hex-offset-col">${i.toString(16).padStart(8, '0').toUpperCase()}</div>`;
                 let hexBytes = ""; let asciiChars = "";
@@ -311,7 +475,12 @@ document.addEventListener("DOMContentLoaded", () => {
                     if (i + j < uint8Array.length) {
                         const byte = uint8Array[i + j];
                         const hexValue = byte.toString(16).padStart(2, '0').toUpperCase();
-                        hexBytes += `<span class="hex-byte" data-index="${i+j}" title="Edit">${hexValue}</span> `;
+                        
+                        // Arama Highlight Mantığı
+                        let isHighlighted = searchMatchIndex !== -1 && (i+j >= searchMatchIndex) && (i+j < searchMatchIndex + searchMatchLength);
+                        let highlightClass = isHighlighted ? " hex-highlight" : "";
+                        
+                        hexBytes += `<span class="hex-byte${highlightClass}" data-index="${i+j}" title="Edit">${hexValue}</span> `;
                         asciiChars += (byte >= 32 && byte <= 126) ? String.fromCharCode(byte) : ".";
                     } else {
                         hexBytes += "   "; 
@@ -325,28 +494,17 @@ document.addEventListener("DOMContentLoaded", () => {
             }
             contentNode.innerHTML = htmlContent;
 
-            // Görünen alan güncellendiği için event listener'ları yeniden bağlıyoruz
+            // Tıklayınca Custom Modalı aç
             contentNode.querySelectorAll('.hex-byte').forEach(span => {
                 span.addEventListener('click', function() {
-                    const lang = translations[currentLang];
                     const index = parseInt(this.getAttribute('data-index'));
                     const currentHex = this.innerText;
-                    const newHex = prompt(`Address: 0x${index.toString(16).toUpperCase()}\n\n${lang.prompt_msg}`, currentHex);
-                    
-                    if (newHex && /^[0-9A-Fa-f]{1,2}$/.test(newHex)) {
-                        uint8Array[index] = parseInt(newHex, 16); 
-                        this.innerText = newHex.padStart(2, '0').toUpperCase(); 
-                        this.classList.add("edited-val");
-                        extractPropertiesBulletproof(); // Değerler sekmesini senkronize et
-                    }
+                    openModal(index, currentHex, this);
                 });
             });
         }
 
-        // Event listener üst üste binmesin diye onscroll kullanıyoruz
         hexBody.onscroll = renderChunk;
-        
-        // Başlangıç tetiklemesi ve scroll pozisyonunu koruma
         hexBody.scrollTop = currentScrollTop;
         renderChunk();
     }
