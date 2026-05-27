@@ -66,14 +66,14 @@ body { font-family: var(--font-ui); background: var(--bg-base); color: var(--tex
 .smart-offset { font-family: var(--font-mono); font-size: 0.75rem; color: #555; margin-right: 15px; width: 80px; }
 .smart-name { font-size: 0.9rem; color: var(--text-main); font-weight: 500; }
 .smart-input { background: var(--bg-panel); border: 1px solid var(--border-color); color: var(--text-main); padding: 8px 12px; font-family: var(--font-mono); font-size: 0.9rem; width: 160px; text-align: right; border-radius: 2px; transition: border 0.2s; }
-.smart-input[type="text"] { text-align: left; width: 220px; } /* String input için genişletildi */
+.smart-input[type="text"] { text-align: left; width: 220px; } 
 .smart-input:focus { outline: none; border-color: var(--text-muted); }
 
 /* Arama */
 .search-box { width: 100%; max-width: 850px; margin: 0 auto 30px auto; display: flex; align-items: center; background: var(--bg-panel); border: 1px solid var(--border-color); border-radius: 2px; padding: 0 16px; }
 .search-box i { color: var(--text-muted); }
 .search-box input { flex: 1; background: transparent; border: none; color: var(--text-main); padding: 14px; font-family: var(--font-ui); font-size: 0.9rem; outline: none; }
-.hex-search-bar { max-width: 1000px; padding-right: 6px; } /* Buton payı */
+.hex-search-bar { max-width: 1000px; padding-right: 6px; }
 
 /* Hex Editör */
 .hex-editor-container { font-family: var(--font-mono); font-size: 0.85rem; height: 100%; display: flex; flex-direction: column; max-width: 1000px; margin: 0 auto; }
@@ -99,13 +99,13 @@ body { font-family: var(--font-ui); background: var(--bg-base); color: var(--tex
 #modal-input:focus { border-color: var(--accent-bg); }
 .modal-actions { display: flex; justify-content: flex-end; gap: 10px; }
 
-/* YENİ: Renklendirme, Diff, Bookmark ve Buton Sınıfları */
+/* Özel Butonlar ve Özellikler */
 .icon-btn { padding: 8px 10px; font-size: 1rem; }
 .icon-btn:disabled { opacity: 0.5; }
 
 /* Syntax Highlighting */
-.hex-null { color: #3a3a3a; } /* 00 Baytları Soluk Gri */
-.hex-ascii { color: #00e676; } /* Metin Baytları Yeşil */
+.hex-null { color: #3a3a3a; }
+.hex-ascii { color: #00e676; }
 
 /* Diff & Bookmark Vurguları */
 .hex-diff { background: #ff4444 !important; color: #ffffff !important; font-weight: bold; border-radius: 2px; }
@@ -121,3 +121,12 @@ body { font-family: var(--font-ui); background: var(--bg-base); color: var(--tex
 .bookmark-remove { color: #ff4444; background: transparent; border: none; cursor: pointer; font-size: 1rem; padding: 4px; opacity: 0.7; transition: 0.2s; }
 .bookmark-remove:hover { opacity: 1; }
 #modal-bookmark-input:focus { border-color: var(--accent-bg); }
+
+/* YENİ: Switch (Aç/Kapat) Düğmesi Tasarımı */
+.switch { position: relative; display: inline-block; width: 44px; height: 24px; flex-shrink: 0; margin-right: 12px; }
+.switch input { opacity: 0; width: 0; height: 0; }
+.slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: var(--bg-panel); border: 1px solid var(--border-color); transition: .3s; border-radius: 24px; }
+.slider:before { position: absolute; content: ""; height: 16px; width: 16px; left: 3px; bottom: 3px; background-color: var(--text-muted); transition: .3s; border-radius: 50%; }
+input:checked + .slider { background-color: var(--accent-bg); border-color: var(--accent-bg); }
+input:checked + .slider:before { transform: translateX(20px); background-color: var(--accent-text); }
+.smart-item-right { display: flex; align-items: center; justify-content: flex-end; width: 160px; }
