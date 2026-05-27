@@ -21,6 +21,9 @@
             <h3 id="modal-title" data-i18n="modal_title">Hex Değerini Düzenle</h3>
             <p id="modal-desc" class="modal-desc"></p>
             <input type="text" id="modal-input" maxlength="2" autocomplete="off">
+            
+            <input type="text" id="modal-bookmark-input" data-i18n-placeholder="modal_bookmark_ph" placeholder="Yer imi adı (Opsiyonel)" style="width: 100%; background: var(--bg-base); border: 1px solid var(--border-color); color: var(--text-main); padding: 10px; font-family: var(--font-ui); font-size: 0.85rem; margin-bottom: 20px; outline: none; border-radius: 2px;">
+
             <div class="modal-actions">
                 <button class="btn outline-btn" id="modal-cancel" data-i18n="modal_cancel">İPTAL</button>
                 <button class="btn primary-btn" id="modal-save" data-i18n="modal_save">KAYDET</button>
@@ -31,8 +34,16 @@
     <nav class="navbar">
         <div class="logo">SavStudio</div>
         <div class="nav-actions">
-            <button class="btn lang-btn" id="lang-toggle">EN</button>
+            <button class="btn outline-btn icon-btn" id="btn-undo" title="Geri Al (Ctrl+Z)" disabled><i class="ph-bold ph-arrow-u-up-left"></i></button>
+            <button class="btn outline-btn icon-btn" id="btn-redo" title="İleri Al (Ctrl+Y)" disabled><i class="ph-bold ph-arrow-u-up-right"></i></button>
             <div class="divider"></div>
+            
+            <label class="btn outline-btn" id="btn-compare-label" style="display:none;">
+                <i class="ph-bold ph-file-dashed"></i> <span data-i18n="compare_btn">KARŞILAŞTIR</span>
+                <input type="file" id="upload-compare" accept=".sav" style="display: none;">
+            </label>
+            
+            <button class="btn lang-btn" id="lang-toggle">EN</button>
             <label class="btn primary-btn">
                 <i class="ph-bold ph-upload-simple"></i> <span data-i18n="upload_btn">DOSYA YÜKLE</span>
                 <input type="file" id="upload-save" accept=".sav" style="display: none;">
@@ -48,6 +59,11 @@
             <div class="file-info" id="file-info">
                 <strong data-i18n="active_file">Aktif Dosya</strong><br><br>
                 <span style="color: var(--text-muted);" data-i18n="no_file">Henüz dosya seçilmedi. Düzenlemek için .sav uzantılı bir dosya yükleyin.</span>
+            </div>
+            
+            <div class="bookmarks-panel" id="bookmarks-panel" style="display:none; margin-top: 24px;">
+                <h4 style="color:var(--text-main); margin-bottom: 12px; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 1px;" data-i18n="bookmarks_title">Yer İmleri</h4>
+                <div id="bookmarks-list" class="bookmarks-list"></div>
             </div>
         </aside>
 
