@@ -9,11 +9,22 @@
 </head>
 <body>
 
-    <!-- Yükleme Animasyonu (Splash Screen) -->
     <div id="splash-screen" class="splash-screen">
         <div class="splash-content">
             <div class="splash-logo">SavStudio</div>
             <div class="splash-loader"></div>
+        </div>
+    </div>
+
+    <div id="custom-modal" class="modal-overlay hidden">
+        <div class="modal-content">
+            <h3 id="modal-title" data-i18n="modal_title">Hex Değerini Düzenle</h3>
+            <p id="modal-desc" class="modal-desc"></p>
+            <input type="text" id="modal-input" maxlength="2" autocomplete="off">
+            <div class="modal-actions">
+                <button class="btn outline-btn" id="modal-cancel" data-i18n="modal_cancel">İPTAL</button>
+                <button class="btn primary-btn" id="modal-save" data-i18n="modal_save">KAYDET</button>
+            </div>
         </div>
     </div>
 
@@ -66,6 +77,12 @@
 
             <div class="view-content" id="hex-view">
                 <div class="hex-editor-container">
+                    <div class="search-box hex-search-bar" id="hex-search-container" style="display: none; margin-bottom: 20px;">
+                        <i class="ph-bold ph-magnifying-glass"></i>
+                        <input type="text" id="hex-search-input" data-i18n-placeholder="hex_search_placeholder" placeholder="Hex (A1 2B) veya Metin (Player) ara...">
+                        <button id="hex-search-btn" class="btn primary-btn" style="padding: 6px 16px; margin-left: 10px;" data-i18n="search_btn">BUL</button>
+                    </div>
+
                     <div class="hex-header">
                         <div class="hex-offset-col" data-i18n="offset">Offset</div>
                         <div class="hex-bytes-col">00 01 02 03 04 05 06 07 08 09 0A 0B 0C 0D 0E 0F</div>
