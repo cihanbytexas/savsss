@@ -26,14 +26,14 @@ body { font-family: var(--font-ui); background: var(--bg-base); color: var(--tex
 @keyframes pulseLogo { 0% { opacity: 0.4; } 100% { opacity: 1; } }
 @keyframes loadLine { 0% { left: -50%; } 100% { left: 100%; } }
 
-/* YENİ: Toast Bildirimi Tasarımı */
+/* Toast Bildirimi Tasarımı */
 .toast { position: fixed; bottom: 40px; left: 50%; transform: translateX(-50%); background: #ff4444; color: #fff; padding: 12px 24px; border-radius: 4px; font-size: 0.85rem; font-weight: 600; z-index: 10001; opacity: 1; transition: all 0.3s ease; box-shadow: 0 4px 15px rgba(0,0,0,0.5); text-transform: uppercase; letter-spacing: 0.5px; white-space: nowrap; pointer-events: none; }
 .toast.hidden { opacity: 0; bottom: 20px; }
 
 /* Navbar & Buttons */
 .navbar { min-height: 65px; display: flex; justify-content: space-between; align-items: center; padding: 0 24px; background: var(--bg-panel); border-bottom: 1px solid var(--border-color); flex-shrink: 0; width: 100%; }
 .logo { font-size: 1.1rem; font-weight: 600; letter-spacing: 1px; text-transform: uppercase; color: var(--text-main); }
-.nav-actions { display: flex; align-items: center; gap: 10px; }
+.nav-actions { display: flex; align-items: center; gap: 8px; }
 .divider { width: 1px; height: 24px; background: var(--border-color); margin: 0 4px; }
 .btn { white-space: nowrap; padding: 8px 18px; border-radius: 2px; font-weight: 500; cursor: pointer; display: flex; align-items: center; gap: 8px; font-size: 0.8rem; letter-spacing: 0.5px; transition: all 0.2s ease; font-family: var(--font-ui); text-transform: uppercase; }
 .primary-btn { background: var(--accent-bg); color: var(--accent-text); border: 1px solid var(--accent-bg); }
@@ -97,7 +97,7 @@ input:checked + .slider:before { transform: translateX(20px); background-color: 
 .search-box input { flex: 1; background: transparent; border: none; color: var(--text-main); padding: 12px; font-family: var(--font-ui); font-size: 0.9rem; outline: none; }
 .hex-search-bar { max-width: 1000px; padding-right: 6px; }
 
-/* YENİ: Hex Editör Mobil Düzeni (Kaymayı ve Bozulmayı Engeller) */
+/* Hex Editör Mobil Düzeni */
 .hex-editor-container { font-family: var(--font-mono); font-size: 0.85rem; flex: 1; display: flex; flex-direction: column; min-height: 0; width: 100%; max-width: 1000px; margin: 0 auto; overflow-x: auto; }
 .hex-header { display: flex; color: var(--text-muted); font-weight: bold; padding-bottom: 12px; border-bottom: 1px solid var(--border-color); margin-bottom: 12px; flex-shrink: 0; min-width: 620px; }
 .hex-body { flex: 1; overflow-y: auto; overflow-x: hidden; position: relative; min-width: 620px; }
@@ -127,9 +127,9 @@ input:checked + .slider:before { transform: translateX(20px); background-color: 
 
 /* Mobil (Telefon) Özelleştirmeleri */
 @media (max-width: 600px) {
-    .navbar { padding: 0 10px; gap: 5px; }
-    .logo { font-size: 0.95rem; }
-    .nav-actions { gap: 5px; }
+    .navbar { padding: 0 10px; gap: 4px; }
+    .logo { font-size: 0.95rem; display: none; } /* Dar ekranda butonlara yer açmak için logoyu gizledik */
+    .nav-actions { width: 100%; justify-content: space-between; }
     .btn > span span { display: none; } 
     .btn { padding: 8px 10px; justify-content: center; } 
     .smart-offset { width: 55px; font-size: 0.65rem; margin-right: 5px; }
