@@ -40,7 +40,7 @@
             
             <div class="divider" id="patch-divider" style="display: none;"></div>
             
-            <!-- YENİ: Yama Uygula ve Yama Kaydet Araçları -->
+            <!-- Yama Araçları -->
             <label class="btn outline-btn icon-btn" id="btn-import-patch" data-i18n-title="patch_import" title="Yama Uygula" style="display:none; cursor: pointer;">
                 <i class="ph-bold ph-file-arrow-down"></i>
                 <input type="file" id="upload-patch" accept=".json,.patch" style="display: none;">
@@ -51,12 +51,14 @@
 
             <div class="divider"></div>
             <button class="btn lang-btn" id="lang-toggle">EN</button>
+            
+            <!-- Ana Butonlar -->
             <label class="btn primary-btn">
-                <i class="ph-bold ph-upload-simple"></i> <span><span data-i18n="upload_btn">DOSYA YÜKLE</span></span>
+                <i class="ph-bold ph-upload-simple"></i> <span data-i18n="upload_btn">DOSYA YÜKLE</span>
                 <input type="file" id="upload-save" accept=".sav" style="display: none;">
             </label>
             <button class="btn outline-btn" id="download-save" disabled>
-                <i class="ph-bold ph-download-simple"></i> <span><span data-i18n="download_btn">KAYDET</span></span>
+                <i class="ph-bold ph-download-simple"></i> <span data-i18n="download_btn">KAYDET</span>
             </button>
         </div>
     </nav>
