@@ -30,6 +30,14 @@ const translations = {
         "modal_cancel": "İPTAL",
         "modal_save": "KAYDET",
         "search_not_found": "Aranan değer bulunamadı!",
+        "patch_import": "Yama Uygula (.json)",
+        "patch_export": "Yamayı Dışa Aktar",
+        "patch_empty": "Değişiklik bulunamadı!",
+        "patch_success_export": "Yama başarıyla kaydedildi!",
+        "patch_success_import": "Yama başarıyla uygulandı!",
+        "patch_error": "Geçersiz yama dosyası!",
+        "undo": "Geri Al",
+        "redo": "İleri Al",
         "toggle_lang": "EN"
     },
     "en": {
@@ -56,6 +64,14 @@ const translations = {
         "modal_cancel": "CANCEL",
         "modal_save": "SAVE",
         "search_not_found": "Value not found!",
+        "patch_import": "Import Patch (.json)",
+        "patch_export": "Export Patch",
+        "patch_empty": "No changes found!",
+        "patch_success_export": "Patch exported successfully!",
+        "patch_success_import": "Patch applied successfully!",
+        "patch_error": "Invalid patch file!",
+        "undo": "Undo",
+        "redo": "Redo",
         "toggle_lang": "TR"
     }
 };
@@ -71,7 +87,9 @@ let searchMatchLength = 0;
 let undoStack = [];
 let redoStack = [];
 
-// YENİ: Şık Toast Bildirim Fonksiyonu
+// YENİ: Yamanın hesaplanması için orijinal dosyanın yedeği
+let originalUint8Array = null;
+
 function showToast(message) {
     const toast = document.getElementById("toast-container");
     toast.innerText = message;
@@ -92,6 +110,12 @@ function applyTranslations() {
     document.querySelectorAll('[data-i18n-placeholder]').forEach(elem => {
         const key = elem.getAttribute('data-i18n-placeholder');
         if (langData[key]) elem.setAttribute('placeholder', langData[key]);
+    });
+
+    // YENİ: Title çevirileri (Buton üstüne gelince çıkan yazılar)
+    document.querySelectorAll('[data-i18n-title]').forEach(elem => {
+        const key = elem.getAttribute('data-i18n-title');
+        if (langData[key]) elem.setAttribute('title', langData[key]);
     });
 
     document.getElementById('lang-toggle').innerText = langData["toggle_lang"];
@@ -136,6 +160,12 @@ document.addEventListener("DOMContentLoaded", () => {
     const hexSearchBtn = document.getElementById("hex-search-btn");
     const btnUndo = document.getElementById("btn-undo");
     const btnRedo = document.getElementById("btn-redo");
+
+    // YENİ: Patch Butonları
+    const btnExportPatch = document.getElementById("btn-export-patch");
+    const btnImportPatch = document.getElementById("btn-import-patch");
+    const patchDivider = document.getElementById("patch-divider");
+    const uploadPatch = document.getElementById("upload-patch");
 
     let fileBuffer = null; 
     let dataView = null;
@@ -198,6 +228,9 @@ document.addEventListener("DOMContentLoaded", () => {
             dataView = new DataView(fileBuffer);
             uint8Array = new Uint8Array(fileBuffer);
             
+            // Yamanın referansı için orijinal kopyayı sakla
+            originalUint8Array = new Uint8Array(fileBuffer.slice(0)); 
+
             undoStack = []; redoStack = []; updateHistoryButtons();
             searchMatchIndex = -1; searchMatchLength = 0;
 
@@ -214,10 +247,78 @@ document.addEventListener("DOMContentLoaded", () => {
             hexSearchContainer.style.display = "flex";
             downloadBtn.disabled = false;
             downloadBtn.classList.remove("outline-btn"); downloadBtn.classList.add("primary-btn"); 
+            
+            // Patch UI gösterimi
+            btnExportPatch.style.display = "flex";
+            btnImportPatch.style.display = "flex";
+            patchDivider.style.display = "block";
 
             setTimeout(() => { extractPropertiesBulletproof(); renderHexEditor(); }, 50);
         };
         reader.readAsArrayBuffer(file); 
+    });
+
+    // YENİ: Yama (Patch) Çıkartma Mantığı
+    btnExportPatch.addEventListener("click", () => {
+        if (!uint8Array || !originalUint8Array) return;
+        let changes = [];
+        for (let i = 0; i < uint8Array.length; i++) {
+            if (uint8Array[i] !== originalUint8Array[i]) {
+                changes.push({ o: i, v: uint8Array[i] }); 
+            }
+        }
+        
+        if (changes.length === 0) {
+            showToast(translations[currentLang].patch_empty);
+            return;
+        }
+        
+        const patchData = { savstudio: true, version: 1, changes: changes };
+        const blob = new Blob([JSON.stringify(patchData)], { type: "application/json" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = currentFileName.replace(".sav", "") + "_patch.json";
+        document.body.appendChild(a); a.click();
+        setTimeout(() => { document.body.removeChild(a); URL.revokeObjectURL(url); }, 0);
+        showToast(translations[currentLang].patch_success_export);
+    });
+
+    // YENİ: Yama (Patch) Uygulama Mantığı
+    uploadPatch.addEventListener("change", (e) => {
+        const file = e.target.files[0];
+        if (!file || !uint8Array) return;
+        const reader = new FileReader();
+        reader.onload = (event) => {
+            try {
+                const patchData = JSON.parse(event.target.result);
+                if (!patchData.savstudio || !patchData.changes) throw new Error("Invalid format");
+                
+                let historyChanges = [];
+                patchData.changes.forEach(c => {
+                    if (c.o < uint8Array.length) {
+                        let oldVal = uint8Array[c.o];
+                        if(oldVal !== c.v) {
+                            historyChanges.push({ index: c.o, oldVal: oldVal, newVal: c.v });
+                            uint8Array[c.o] = c.v;
+                        }
+                    }
+                });
+                
+                if (historyChanges.length > 0) {
+                    pushHistory(historyChanges);
+                    extractPropertiesBulletproof();
+                    renderHexEditor();
+                    showToast(translations[currentLang].patch_success_import);
+                } else {
+                    showToast(translations[currentLang].patch_empty);
+                }
+            } catch(err) {
+                showToast(translations[currentLang].patch_error);
+            }
+            e.target.value = ""; // Aynı dosyayı bir daha yükleyebilmek için inputu sıfırla
+        };
+        reader.readAsText(file);
     });
 
     function extractPropertiesBulletproof() {
@@ -403,7 +504,6 @@ document.addEventListener("DOMContentLoaded", () => {
             searchMatchIndex = foundIdx; searchMatchLength = searchBytes.length;
             scrollToHex(foundIdx); renderHexEditor();
         } else {
-            // YENİ: Tarayıcı alerti yerine şık Toast mesajı
             showToast(translations[currentLang].search_not_found); 
             searchMatchIndex = -1; searchMatchLength = 0; renderHexEditor();
         }
