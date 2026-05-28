@@ -12,7 +12,9 @@
 }
 
 * { margin: 0; padding: 0; box-sizing: border-box; }
-body { font-family: var(--font-ui); background: var(--bg-base); color: var(--text-main); height: 100vh; display: flex; flex-direction: column; overflow: hidden; letter-spacing: 0.3px; }
+
+/* Temel yapı: Siyah boşlukları engelleyen katı Flex düzeni */
+body { font-family: var(--font-ui); background: var(--bg-base); color: var(--text-main); height: 100vh; width: 100vw; display: flex; flex-direction: column; overflow: hidden; letter-spacing: 0.3px; }
 
 /* Splash Screen */
 .splash-screen { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--bg-base); display: flex; justify-content: center; align-items: center; z-index: 9999; transition: opacity 0.8s ease, visibility 0.8s ease; }
@@ -26,7 +28,7 @@ body { font-family: var(--font-ui); background: var(--bg-base); color: var(--tex
 @keyframes loadLine { 0% { left: -50%; } 100% { left: 100%; } }
 
 /* Navbar & Buttons */
-.navbar { height: 65px; display: flex; justify-content: space-between; align-items: center; padding: 0 24px; background: var(--bg-panel); border-bottom: 1px solid var(--border-color); flex-shrink: 0; }
+.navbar { height: 65px; display: flex; justify-content: space-between; align-items: center; padding: 0 24px; background: var(--bg-panel); border-bottom: 1px solid var(--border-color); flex-shrink: 0; width: 100%; }
 .logo { font-size: 1.1rem; font-weight: 600; letter-spacing: 1px; text-transform: uppercase; color: var(--text-main); }
 .nav-actions { display: flex; align-items: center; gap: 12px; }
 .divider { width: 1px; height: 24px; background: var(--border-color); margin: 0 8px; }
@@ -38,56 +40,77 @@ body { font-family: var(--font-ui); background: var(--bg-base); color: var(--tex
 .outline-btn:disabled { color: var(--text-muted); border-color: #1a1a1a; cursor: not-allowed; }
 .lang-btn { background: transparent; color: var(--text-muted); border: none; padding: 8px; font-weight: 600; }
 .lang-btn:hover { color: var(--text-main); }
+.icon-btn { padding: 8px 10px; font-size: 1rem; }
+.icon-btn:disabled { opacity: 0.5; }
 
-/* Workspace */
-.workspace { display: flex; flex: 1; overflow: hidden; flex-direction: column; }
+/* Workspace (Çalışma Alanı Ana Düzeni) */
+.workspace { display: flex; flex: 1; width: 100%; overflow: hidden; flex-direction: column; }
 @media (min-width: 768px) { .workspace { flex-direction: row; } }
-.sidebar { width: 100%; padding: 24px; background: var(--bg-panel); border-bottom: 1px solid var(--border-color); }
-@media (min-width: 768px) { .sidebar { width: 280px; border-bottom: none; border-right: 1px solid var(--border-color); } }
+
+.sidebar { width: 100%; padding: 24px; background: var(--bg-panel); border-bottom: 1px solid var(--border-color); flex-shrink: 0; overflow-y: auto; }
+@media (min-width: 768px) { .sidebar { width: 280px; border-bottom: none; border-right: 1px solid var(--border-color); height: 100%; } }
+
 .file-info { font-size: 0.85rem; padding: 20px; border: 1px solid var(--border-color); background: var(--bg-base); line-height: 2; color: var(--text-muted); border-radius: 2px; }
 .file-info strong { color: var(--text-main); font-weight: 600; text-transform: uppercase; font-size: 0.75rem; letter-spacing: 1px; }
 
 /* Tabs & Editor */
-.editor-area { flex: 1; display: flex; flex-direction: column; background: var(--bg-base); overflow: hidden; }
+.editor-area { flex: 1; display: flex; flex-direction: column; background: var(--bg-base); overflow: hidden; height: 100%; }
 .tabs { display: flex; border-bottom: 1px solid var(--border-color); background: var(--bg-panel); flex-shrink: 0; padding: 0 10px; }
 .tab { padding: 16px 20px; background: transparent; border: none; border-bottom: 2px solid transparent; color: var(--text-muted); font-weight: 500; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.5px; display: flex; align-items: center; gap: 8px; cursor: pointer; transition: 0.2s; }
 .tab:hover { color: var(--text-main); }
 .tab.active { color: var(--accent-bg); border-bottom: 2px solid var(--accent-bg); }
+
 .view-content { flex: 1; overflow-y: auto; padding: 30px; display: none; }
-.view-content.active { display: block; }
-.empty-state { text-align: center; color: var(--text-muted); margin-top: 20vh; font-size: 0.9rem; }
+.view-content.active { display: flex; flex-direction: column; }
+
+.empty-state { text-align: center; color: var(--text-muted); margin-top: 20vh; font-size: 0.9rem; width: 100%; }
 .empty-state i { font-size: 3rem; opacity: 0.2; margin-bottom: 20px; }
 
-/* Smart List */
-.smart-list { max-width: 850px; margin: 0 auto; padding-bottom: 40px; }
+/* Smart List (Değerler Sekmesi) */
+#smart-editor-container { flex: 1; display: flex; flex-direction: column; }
+.smart-list { width: 100%; max-width: 850px; margin: 0 auto; padding-bottom: 40px; }
 .smart-item { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid var(--border-color); }
 .smart-item:hover { background: rgba(255,255,255,0.02); }
 .smart-left { display: flex; align-items: center; flex: 1; overflow: hidden; padding-right: 20px; }
-.smart-offset { font-family: var(--font-mono); font-size: 0.75rem; color: #555; margin-right: 15px; width: 80px; }
-.smart-name { font-size: 0.9rem; color: var(--text-main); font-weight: 500; }
-.smart-input { background: var(--bg-panel); border: 1px solid var(--border-color); color: var(--text-main); padding: 8px 12px; font-family: var(--font-mono); font-size: 0.9rem; width: 160px; text-align: right; border-radius: 2px; transition: border 0.2s; }
+.smart-offset { font-family: var(--font-mono); font-size: 0.75rem; color: #555; margin-right: 15px; width: 80px; flex-shrink: 0; }
+.smart-name { font-size: 0.9rem; color: var(--text-main); font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+.smart-input { background: var(--bg-panel); border: 1px solid var(--border-color); color: var(--text-main); padding: 8px 12px; font-family: var(--font-mono); font-size: 0.9rem; width: 160px; text-align: right; border-radius: 2px; transition: border 0.2s; flex-shrink: 0; }
 .smart-input[type="text"] { text-align: left; width: 220px; } 
 .smart-input:focus { outline: none; border-color: var(--text-muted); }
 
-/* Arama */
-.search-box { width: 100%; max-width: 850px; margin: 0 auto 30px auto; display: flex; align-items: center; background: var(--bg-panel); border: 1px solid var(--border-color); border-radius: 2px; padding: 0 16px; }
+/* YENİ: Switch (Aç/Kapat) Düğmesi Tasarımı */
+.switch { position: relative; display: inline-block; width: 44px; height: 24px; flex-shrink: 0; margin-right: 12px; }
+.switch input { opacity: 0; width: 0; height: 0; }
+.slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: var(--bg-panel); border: 1px solid var(--border-color); transition: .3s; border-radius: 24px; }
+.slider:before { position: absolute; content: ""; height: 16px; width: 16px; left: 3px; bottom: 3px; background-color: var(--text-muted); transition: .3s; border-radius: 50%; }
+input:checked + .slider { background-color: var(--accent-bg); border-color: var(--accent-bg); }
+input:checked + .slider:before { transform: translateX(20px); background-color: var(--accent-text); }
+.smart-item-right { display: flex; align-items: center; justify-content: flex-end; width: 160px; flex-shrink: 0; }
+
+/* Arama Kutuları */
+.search-box { width: 100%; max-width: 850px; margin: 0 auto 30px auto; display: flex; align-items: center; background: var(--bg-panel); border: 1px solid var(--border-color); border-radius: 2px; padding: 0 16px; flex-shrink: 0; }
 .search-box i { color: var(--text-muted); }
 .search-box input { flex: 1; background: transparent; border: none; color: var(--text-main); padding: 14px; font-family: var(--font-ui); font-size: 0.9rem; outline: none; }
 .hex-search-bar { max-width: 1000px; padding-right: 6px; }
 
 /* Hex Editör */
-.hex-editor-container { font-family: var(--font-mono); font-size: 0.85rem; height: 100%; display: flex; flex-direction: column; max-width: 1000px; margin: 0 auto; }
-.hex-header { display: flex; color: var(--text-muted); font-weight: bold; padding-bottom: 12px; border-bottom: 1px solid var(--border-color); margin-bottom: 12px; }
-.hex-body { flex: 1; overflow-y: auto; }
+.hex-editor-container { font-family: var(--font-mono); font-size: 0.85rem; height: 100%; display: flex; flex-direction: column; width: 100%; max-width: 1000px; margin: 0 auto; }
+.hex-header { display: flex; color: var(--text-muted); font-weight: bold; padding-bottom: 12px; border-bottom: 1px solid var(--border-color); margin-bottom: 12px; flex-shrink: 0; }
+.hex-body { flex: 1; overflow-y: auto; position: relative; }
 .hex-row { display: flex; padding: 4px 0; }
 .hex-row:hover { background: rgba(255,255,255,0.03); }
-.hex-offset-col { width: 100px; color: #666; user-select: none; }
+.hex-offset-col { width: 100px; color: #666; user-select: none; flex-shrink: 0; }
 .hex-bytes-col { flex: 1; display: flex; gap: 8px; color: #ccc; }
-.hex-ascii-col { width: 180px; color: #888; letter-spacing: 2px; overflow: hidden; white-space: nowrap; }
+.hex-ascii-col { width: 180px; color: #888; letter-spacing: 2px; overflow: hidden; white-space: nowrap; flex-shrink: 0; }
 .hex-byte { cursor: pointer; padding: 0 2px; transition: 0.1s; }
 .hex-byte:hover { background: var(--accent-bg); color: var(--accent-text); }
+
+/* Vurgu ve Renklendirmeler */
 .edited-val { color: #ffffff; font-weight: bold; text-decoration: underline; }
 .hex-highlight { background: var(--highlight-bg) !important; color: #000 !important; font-weight: bold; border-radius: 2px; }
+.hex-null { color: #3a3a3a; }
+.hex-ascii { color: #00e676; }
 
 /* Modal Tasarımı */
 .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); display: flex; justify-content: center; align-items: center; z-index: 10000; opacity: 1; transition: opacity 0.2s; backdrop-filter: blur(2px); }
@@ -98,35 +121,3 @@ body { font-family: var(--font-ui); background: var(--bg-base); color: var(--tex
 #modal-input { width: 100%; background: var(--bg-base); border: 1px solid var(--border-color); color: var(--text-main); padding: 12px; font-family: var(--font-mono); font-size: 1.2rem; text-align: center; text-transform: uppercase; margin-bottom: 24px; outline: none; }
 #modal-input:focus { border-color: var(--accent-bg); }
 .modal-actions { display: flex; justify-content: flex-end; gap: 10px; }
-
-/* Özel Butonlar ve Özellikler */
-.icon-btn { padding: 8px 10px; font-size: 1rem; }
-.icon-btn:disabled { opacity: 0.5; }
-
-/* Syntax Highlighting */
-.hex-null { color: #3a3a3a; }
-.hex-ascii { color: #00e676; }
-
-/* Diff & Bookmark Vurguları */
-.hex-diff { background: #ff4444 !important; color: #ffffff !important; font-weight: bold; border-radius: 2px; }
-.hex-bookmark { border-bottom: 2px solid #00e676; }
-
-/* Sidebar Bookmark Listesi */
-.bookmarks-list { display: flex; flex-direction: column; gap: 8px; }
-.bookmark-item { background: var(--bg-base); border: 1px solid var(--border-color); padding: 10px 12px; font-size: 0.8rem; cursor: pointer; display: flex; justify-content: space-between; align-items: center; border-radius: 2px; transition: 0.2s; }
-.bookmark-item:hover { border-color: var(--text-muted); background: rgba(255,255,255,0.02); }
-.bookmark-info { display: flex; flex-direction: column; gap: 4px; }
-.bookmark-name { color: var(--text-main); font-weight: 500; }
-.bookmark-offset { color: var(--text-muted); font-family: var(--font-mono); font-size: 0.75rem; }
-.bookmark-remove { color: #ff4444; background: transparent; border: none; cursor: pointer; font-size: 1rem; padding: 4px; opacity: 0.7; transition: 0.2s; }
-.bookmark-remove:hover { opacity: 1; }
-#modal-bookmark-input:focus { border-color: var(--accent-bg); }
-
-/* YENİ: Switch (Aç/Kapat) Düğmesi Tasarımı */
-.switch { position: relative; display: inline-block; width: 44px; height: 24px; flex-shrink: 0; margin-right: 12px; }
-.switch input { opacity: 0; width: 0; height: 0; }
-.slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: var(--bg-panel); border: 1px solid var(--border-color); transition: .3s; border-radius: 24px; }
-.slider:before { position: absolute; content: ""; height: 16px; width: 16px; left: 3px; bottom: 3px; background-color: var(--text-muted); transition: .3s; border-radius: 50%; }
-input:checked + .slider { background-color: var(--accent-bg); border-color: var(--accent-bg); }
-input:checked + .slider:before { transform: translateX(20px); background-color: var(--accent-text); }
-.smart-item-right { display: flex; align-items: center; justify-content: flex-end; width: 160px; }
