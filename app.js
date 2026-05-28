@@ -86,8 +86,6 @@ let searchMatchLength = 0;
 
 let undoStack = [];
 let redoStack = [];
-
-// YENİ: Yamanın hesaplanması için orijinal dosyanın yedeği
 let originalUint8Array = null;
 
 function showToast(message) {
@@ -112,7 +110,6 @@ function applyTranslations() {
         if (langData[key]) elem.setAttribute('placeholder', langData[key]);
     });
 
-    // YENİ: Title çevirileri (Buton üstüne gelince çıkan yazılar)
     document.querySelectorAll('[data-i18n-title]').forEach(elem => {
         const key = elem.getAttribute('data-i18n-title');
         if (langData[key]) elem.setAttribute('title', langData[key]);
@@ -161,7 +158,6 @@ document.addEventListener("DOMContentLoaded", () => {
     const btnUndo = document.getElementById("btn-undo");
     const btnRedo = document.getElementById("btn-redo");
 
-    // YENİ: Patch Butonları
     const btnExportPatch = document.getElementById("btn-export-patch");
     const btnImportPatch = document.getElementById("btn-import-patch");
     const patchDivider = document.getElementById("patch-divider");
@@ -228,7 +224,6 @@ document.addEventListener("DOMContentLoaded", () => {
             dataView = new DataView(fileBuffer);
             uint8Array = new Uint8Array(fileBuffer);
             
-            // Yamanın referansı için orijinal kopyayı sakla
             originalUint8Array = new Uint8Array(fileBuffer.slice(0)); 
 
             undoStack = []; redoStack = []; updateHistoryButtons();
@@ -248,7 +243,6 @@ document.addEventListener("DOMContentLoaded", () => {
             downloadBtn.disabled = false;
             downloadBtn.classList.remove("outline-btn"); downloadBtn.classList.add("primary-btn"); 
             
-            // Patch UI gösterimi
             btnExportPatch.style.display = "flex";
             btnImportPatch.style.display = "flex";
             patchDivider.style.display = "block";
@@ -258,7 +252,6 @@ document.addEventListener("DOMContentLoaded", () => {
         reader.readAsArrayBuffer(file); 
     });
 
-    // YENİ: Yama (Patch) Çıkartma Mantığı
     btnExportPatch.addEventListener("click", () => {
         if (!uint8Array || !originalUint8Array) return;
         let changes = [];
@@ -284,7 +277,6 @@ document.addEventListener("DOMContentLoaded", () => {
         showToast(translations[currentLang].patch_success_export);
     });
 
-    // YENİ: Yama (Patch) Uygulama Mantığı
     uploadPatch.addEventListener("change", (e) => {
         const file = e.target.files[0];
         if (!file || !uint8Array) return;
@@ -316,7 +308,7 @@ document.addEventListener("DOMContentLoaded", () => {
             } catch(err) {
                 showToast(translations[currentLang].patch_error);
             }
-            e.target.value = ""; // Aynı dosyayı bir daha yükleyebilmek için inputu sıfırla
+            e.target.value = ""; 
         };
         reader.readAsText(file);
     });
