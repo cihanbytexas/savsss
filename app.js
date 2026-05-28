@@ -29,7 +29,7 @@ const translations = {
         "modal_title": "Hex Değeri Düzenle",
         "modal_cancel": "İPTAL",
         "modal_save": "KAYDET",
-        "search_not_found": "Aranan değer dosyada bulunamadı!",
+        "search_not_found": "Aranan değer bulunamadı!",
         "toggle_lang": "EN"
     },
     "en": {
@@ -55,7 +55,7 @@ const translations = {
         "modal_title": "Edit Hex Value",
         "modal_cancel": "CANCEL",
         "modal_save": "SAVE",
-        "search_not_found": "Value not found in file!",
+        "search_not_found": "Value not found!",
         "toggle_lang": "TR"
     }
 };
@@ -70,6 +70,16 @@ let searchMatchLength = 0;
 
 let undoStack = [];
 let redoStack = [];
+
+// YENİ: Şık Toast Bildirim Fonksiyonu
+function showToast(message) {
+    const toast = document.getElementById("toast-container");
+    toast.innerText = message;
+    toast.classList.remove("hidden");
+    setTimeout(() => {
+        toast.classList.add("hidden");
+    }, 3000);
+}
 
 function applyTranslations() {
     const langData = translations[currentLang];
@@ -393,7 +403,9 @@ document.addEventListener("DOMContentLoaded", () => {
             searchMatchIndex = foundIdx; searchMatchLength = searchBytes.length;
             scrollToHex(foundIdx); renderHexEditor();
         } else {
-            alert(translations[currentLang].search_not_found); searchMatchIndex = -1; searchMatchLength = 0; renderHexEditor();
+            // YENİ: Tarayıcı alerti yerine şık Toast mesajı
+            showToast(translations[currentLang].search_not_found); 
+            searchMatchIndex = -1; searchMatchLength = 0; renderHexEditor();
         }
     });
 
