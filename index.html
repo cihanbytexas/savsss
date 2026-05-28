@@ -16,6 +16,7 @@
         </div>
     </div>
 
+    <!-- Şık Bildirim (Toast) Kutusu -->
     <div id="toast-container" class="toast hidden"></div>
 
     <div id="custom-modal" class="modal-overlay hidden">
@@ -33,8 +34,21 @@
     <nav class="navbar">
         <div class="logo">SavStudio</div>
         <div class="nav-actions">
-            <button class="btn outline-btn icon-btn" id="btn-undo" title="Geri Al" disabled><i class="ph-bold ph-arrow-u-up-left"></i></button>
-            <button class="btn outline-btn icon-btn" id="btn-redo" title="İleri Al" disabled><i class="ph-bold ph-arrow-u-up-right"></i></button>
+            <!-- Geçmiş Araçları -->
+            <button class="btn outline-btn icon-btn" id="btn-undo" data-i18n-title="undo" title="Geri Al" disabled><i class="ph-bold ph-arrow-u-up-left"></i></button>
+            <button class="btn outline-btn icon-btn" id="btn-redo" data-i18n-title="redo" title="İleri Al" disabled><i class="ph-bold ph-arrow-u-up-right"></i></button>
+            
+            <div class="divider" id="patch-divider" style="display: none;"></div>
+            
+            <!-- YENİ: Yama Uygula ve Yama Kaydet Araçları -->
+            <label class="btn outline-btn icon-btn" id="btn-import-patch" data-i18n-title="patch_import" title="Yama Uygula" style="display:none; cursor: pointer;">
+                <i class="ph-bold ph-file-arrow-down"></i>
+                <input type="file" id="upload-patch" accept=".json,.patch" style="display: none;">
+            </label>
+            <button class="btn outline-btn icon-btn" id="btn-export-patch" data-i18n-title="patch_export" title="Yama Dışa Aktar" style="display:none;">
+                <i class="ph-bold ph-file-arrow-up"></i>
+            </button>
+
             <div class="divider"></div>
             <button class="btn lang-btn" id="lang-toggle">EN</button>
             <label class="btn primary-btn">
