@@ -8,8 +8,7 @@ window.addEventListener("load", () => {
 const translations = {
     "tr": {
         "upload_btn": "DOSYA YÜKLE",
-        "download_btn": "KAYDET",
-        "compare_btn": "KARŞILAŞTIR",
+        "download_btn": "KAYDET VE İNDİR",
         "active_file": "Aktif Dosya",
         "no_file": "Henüz dosya seçilmedi. Düzenlemek için .sav uzantılı bir dosya yükleyin.",
         "tab_values": "Değerler",
@@ -30,15 +29,12 @@ const translations = {
         "modal_title": "Hex Değeri Düzenle",
         "modal_cancel": "İPTAL",
         "modal_save": "KAYDET",
-        "modal_bookmark_ph": "Yer imi adı (Opsiyonel)",
-        "bookmarks_title": "Yer İmleri",
         "search_not_found": "Aranan değer dosyada bulunamadı!",
         "toggle_lang": "EN"
     },
     "en": {
-        "upload_btn": "UPLOAD",
-        "download_btn": "SAVE",
-        "compare_btn": "COMPARE",
+        "upload_btn": "UPLOAD FILE",
+        "download_btn": "SAVE & DOWNLOAD",
         "active_file": "Active File",
         "no_file": "No file selected. Upload a .sav file to start editing.",
         "tab_values": "Values",
@@ -59,8 +55,6 @@ const translations = {
         "modal_title": "Edit Hex Value",
         "modal_cancel": "CANCEL",
         "modal_save": "SAVE",
-        "modal_bookmark_ph": "Bookmark name (Optional)",
-        "bookmarks_title": "Bookmarks",
         "search_not_found": "Value not found in file!",
         "toggle_lang": "TR"
     }
@@ -74,10 +68,8 @@ let activeHexElement = null;
 let searchMatchIndex = -1;
 let searchMatchLength = 0;
 
-let compareUint8Array = null; 
 let undoStack = [];
 let redoStack = [];
-let bookmarks = {};
 
 function applyTranslations() {
     const langData = translations[currentLang];
@@ -127,18 +119,13 @@ document.addEventListener("DOMContentLoaded", () => {
     const customModal = document.getElementById("custom-modal");
     const modalDesc = document.getElementById("modal-desc");
     const modalInput = document.getElementById("modal-input");
-    const modalBookmarkInput = document.getElementById("modal-bookmark-input");
     const modalCancel = document.getElementById("modal-cancel");
     const modalSave = document.getElementById("modal-save");
-    const bookmarksPanel = document.getElementById("bookmarks-panel");
-    const bookmarksList = document.getElementById("bookmarks-list");
 
     const hexSearchInput = document.getElementById("hex-search-input");
     const hexSearchBtn = document.getElementById("hex-search-btn");
     const btnUndo = document.getElementById("btn-undo");
     const btnRedo = document.getElementById("btn-redo");
-    const btnCompareLabel = document.getElementById("btn-compare-label");
-    const uploadCompare = document.getElementById("upload-compare");
 
     let fileBuffer = null; 
     let dataView = null;
@@ -201,10 +188,8 @@ document.addEventListener("DOMContentLoaded", () => {
             dataView = new DataView(fileBuffer);
             uint8Array = new Uint8Array(fileBuffer);
             
-            compareUint8Array = null; 
             undoStack = []; redoStack = []; updateHistoryButtons();
             searchMatchIndex = -1; searchMatchLength = 0;
-            loadBookmarks();
 
             const lang = translations[currentLang];
             fileInfo.innerHTML = `
@@ -215,28 +200,14 @@ document.addEventListener("DOMContentLoaded", () => {
             `;
             
             emptyMsg.style.display = "none";
-            editorContainer.style.display = "block";
+            editorContainer.style.display = "flex";
             hexSearchContainer.style.display = "flex";
-            btnCompareLabel.style.display = "flex";
-            bookmarksPanel.style.display = "block";
             downloadBtn.disabled = false;
             downloadBtn.classList.remove("outline-btn"); downloadBtn.classList.add("primary-btn"); 
 
             setTimeout(() => { extractPropertiesBulletproof(); renderHexEditor(); }, 50);
         };
         reader.readAsArrayBuffer(file); 
-    });
-
-    uploadCompare.addEventListener("change", (e) => {
-        const file = e.target.files[0];
-        if (!file || !uint8Array) return;
-        const reader = new FileReader();
-        reader.onload = (event) => {
-            compareUint8Array = new Uint8Array(event.target.result);
-            document.querySelector(".tabs button[data-target='hex-view']").click(); 
-            renderHexEditor(); 
-        };
-        reader.readAsArrayBuffer(file);
     });
 
     function extractPropertiesBulletproof() {
@@ -296,7 +267,6 @@ document.addEventListener("DOMContentLoaded", () => {
                 }
             } catch(e) { currentValue = 0; }
 
-            // YENİ: Switch (Aç/Kapat) Mantığı
             let inputHTML = "";
             if (prop.type === "BoolProperty") {
                 let isChecked = currentValue === 1 ? "checked" : "";
@@ -327,7 +297,6 @@ document.addEventListener("DOMContentLoaded", () => {
                 const offset = parseInt(e.target.dataset.offset);
                 const type = e.target.dataset.type;
                 
-                // Tipe göre değeri oku
                 let newVal = type === "BoolProperty" ? (e.target.checked ? 1 : 0) : e.target.value;
                 let changes = []; 
                 
@@ -360,54 +329,12 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     }
 
-    function loadBookmarks() {
-        let stored = localStorage.getItem('savStudio_bookmarks');
-        bookmarks = stored ? JSON.parse(stored) : {};
-        renderBookmarksList();
-    }
-    
-    function saveBookmark(index, name) {
-        if(!bookmarks[currentFileName]) bookmarks[currentFileName] = {};
-        bookmarks[currentFileName][index] = name || `Offset 0x${index.toString(16).toUpperCase()}`;
-        localStorage.setItem('savStudio_bookmarks', JSON.stringify(bookmarks));
-        renderBookmarksList(); renderHexEditor();
-    }
-
-    function removeBookmark(index) {
-        if(bookmarks[currentFileName]) {
-            delete bookmarks[currentFileName][index];
-            localStorage.setItem('savStudio_bookmarks', JSON.stringify(bookmarks));
-            renderBookmarksList(); renderHexEditor();
-        }
-    }
-
-    function renderBookmarksList() {
-        bookmarksList.innerHTML = "";
-        let fileBookmarks = bookmarks[currentFileName] || {};
-        let keys = Object.keys(fileBookmarks).sort((a,b) => a-b);
-        
-        keys.forEach(indexStr => {
-            const index = parseInt(indexStr);
-            const item = document.createElement("div");
-            item.className = "bookmark-item";
-            item.innerHTML = `
-                <div class="bookmark-info" onclick="scrollToHex(${index})">
-                    <span class="bookmark-name">${fileBookmarks[indexStr]}</span>
-                    <span class="bookmark-offset">0x${index.toString(16).toUpperCase()}</span>
-                </div>
-                <button class="bookmark-remove" onclick="removeBookmarkReq(${index})"><i class="ph-bold ph-x"></i></button>
-            `;
-            bookmarksList.appendChild(item);
-        });
-    }
-
-    window.scrollToHex = function(index) {
+    function scrollToHex(index) {
         document.querySelector(".tabs button[data-target='hex-view']").click();
         const hexBody = document.getElementById("hex-body");
         const row = Math.floor(index / 16);
         hexBody.scrollTop = row * 28;
     }
-    window.removeBookmarkReq = removeBookmark;
 
     function openModal(index, currentHex, element) {
         activeHexIndex = index; activeHexElement = element;
@@ -415,9 +342,6 @@ document.addEventListener("DOMContentLoaded", () => {
         modalDesc.innerHTML = `Address: <strong style="color:var(--text-main)">0x${index.toString(16).toUpperCase()}</strong> <br> Decimal: <strong style="color:var(--text-main)">${decValue}</strong>`;
         modalInput.value = currentHex;
         
-        let existingBookmark = bookmarks[currentFileName] && bookmarks[currentFileName][index];
-        modalBookmarkInput.value = existingBookmark || "";
-
         customModal.classList.remove("hidden");
         setTimeout(() => { modalInput.focus(); modalInput.select(); }, 50);
     }
@@ -439,9 +363,6 @@ document.addEventListener("DOMContentLoaded", () => {
                     extractPropertiesBulletproof();
                 }
             }
-            
-            let bName = modalBookmarkInput.value.trim();
-            if(bName) saveBookmark(activeHexIndex, bName);
         }
         closeModal();
     });
@@ -515,16 +436,12 @@ document.addEventListener("DOMContentLoaded", () => {
                         const hexValue = byte.toString(16).padStart(2, '0').toUpperCase();
                         
                         let isHighlighted = searchMatchIndex !== -1 && (i+j >= searchMatchIndex) && (i+j < searchMatchIndex + searchMatchLength);
-                        let isDiff = compareUint8Array && compareUint8Array[i+j] !== undefined && compareUint8Array[i+j] !== byte;
-                        let isBookmark = bookmarks[currentFileName] && bookmarks[currentFileName][i+j];
                         let isNull = byte === 0;
                         let isAscii = byte >= 32 && byte <= 126;
 
                         let classNames = "hex-byte";
                         if(isHighlighted) classNames += " hex-highlight";
-                        if(isDiff) classNames += " hex-diff";
-                        if(isBookmark) classNames += " hex-bookmark";
-                        if(!isHighlighted && !isDiff) {
+                        if(!isHighlighted) {
                             if(isNull) classNames += " hex-null";
                             else if(isAscii) classNames += " hex-ascii";
                         }
