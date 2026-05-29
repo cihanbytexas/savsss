@@ -6,11 +6,8 @@
     <title>SavStudio | Data Editor</title>
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#0a0a0a">
-    
     <script src="https://unpkg.com/@phosphor-icons/web"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    
-    <link rel="stylesheet" href="style.css?v=2026">
+    <link rel="stylesheet" href="style.css?v=rollback1">
 </head>
 <body>
 
@@ -35,44 +32,12 @@
         </div>
     </div>
 
-    <div id="share-modal" class="modal-overlay hidden">
-        <div class="modal-content" style="width: 320px;">
-            <h3 data-i18n="share_title">Toplulukta Paylaş</h3>
-            <p class="modal-desc" data-i18n="share_desc">Yaptığınız değişiklikleri diğer oyuncularla paylaşın.</p>
-            <input type="text" id="share-author" data-i18n-placeholder="share_author_ph" placeholder="Yazar Adı (Örn: Texas)" style="width: 100%; margin-bottom: 10px;" class="smart-input">
-            <input type="text" id="share-game" data-i18n-placeholder="share_game_ph" placeholder="Oyun Adı (Örn: PUBG)" style="width: 100%; margin-bottom: 10px;" class="smart-input">
-            <input type="text" id="share-title-input" data-i18n-placeholder="share_title_ph" placeholder="Yama Başlığı (Örn: Aim Active)" style="width: 100%; margin-bottom: 20px;" class="smart-input">
-            <div class="modal-actions">
-                <button class="btn outline-btn" id="share-cancel" data-i18n="modal_cancel">İPTAL</button>
-                <button class="btn primary-btn" id="share-save" data-i18n="share_btn">PAYLAŞ</button>
-            </div>
-        </div>
-    </div>
-
     <nav class="navbar">
         <div class="logo">SavStudio</div>
         <div class="nav-actions">
-            <button class="btn outline-btn" id="btn-community" data-i18n-title="community" title="Topluluk">
-                <i class="ph-bold ph-globe"></i> <span class="hide-mobile" data-i18n="community">Topluluk</span>
-            </button>
-            <div class="divider"></div>
-
             <button class="btn outline-btn icon-btn" id="btn-undo" data-i18n-title="undo" title="Geri Al" disabled><i class="ph-bold ph-arrow-u-up-left"></i></button>
             <button class="btn outline-btn icon-btn" id="btn-redo" data-i18n-title="redo" title="İleri Al" disabled><i class="ph-bold ph-arrow-u-up-right"></i></button>
             
-            <div class="divider" id="patch-divider" style="display: none;"></div>
-            
-            <label class="btn outline-btn icon-btn" id="btn-import-patch" data-i18n-title="patch_import" title="Yama Uygula" style="display:none; cursor: pointer;">
-                <i class="ph-bold ph-file-arrow-down"></i>
-                <input type="file" id="upload-patch" accept=".json,.patch" style="display: none;">
-            </label>
-            <button class="btn outline-btn icon-btn" id="btn-export-patch" data-i18n-title="patch_export" title="Yama Dışa Aktar" style="display:none;">
-                <i class="ph-bold ph-file-arrow-up"></i>
-            </button>
-            <button class="btn primary-btn icon-btn" id="btn-share-patch" data-i18n-title="share_patch" title="Toplulukta Paylaş" style="display:none; background: #ffcc00; color: #000; border-color: #ffcc00;">
-                <i class="ph-bold ph-share-network"></i>
-            </button>
-
             <div class="divider"></div>
             <button class="btn lang-btn" id="lang-toggle">EN</button>
             
@@ -104,21 +69,6 @@
         </aside>
 
         <section class="editor-area">
-            
-            <div id="community-view" style="display: none; padding: 20px; flex-direction: column; height: 100%;">
-                <h2 style="margin-bottom: 20px; border-bottom: 1px solid var(--border-color); padding-bottom: 10px; font-size: 1.2rem;">
-                    <i class="ph-bold ph-globe"></i> <span data-i18n="community">Topluluk</span>
-                </h2>
-                
-                <div id="community-loader" style="text-align: center; margin-top: 40px; color: var(--text-muted);">
-                    <div class="splash-loader" style="width: 40px; margin-bottom: 10px;"></div>
-                    <p>Yükleniyor...</p>
-                </div>
-
-                <div id="community-list" style="display: none; flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 10px;">
-                    </div>
-            </div>
-
             <div id="editor-wrapper" style="display: flex; flex-direction: column; flex: 1; height: 100%;">
                 <div class="tabs">
                     <button class="tab active" data-target="smart-view">
@@ -161,16 +111,21 @@
                     </div>
                 </div>
             </div>
-
         </section>
     </main>
 
     <script>
-        // DİKKAT: Cache kırmak için sw.js sonuna v=2026 eklendi
+        window.addEventListener('load', function() {
+            setTimeout(function() {
+                var splash = document.getElementById('splash-screen');
+                if(splash) { splash.style.opacity = '0'; setTimeout(() => splash.style.display = 'none', 500); }
+            }, 600);
+        });
+        
         if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.register('sw.js?v=2026').catch(err => console.error("SW Registration failed:", err));
+            navigator.serviceWorker.register('sw.js?v=rollback1').catch(err => console.error(err));
         }
     </script>
-    <script src="app.js?v=2026"></script>
+    <script src="app.js?v=rollback1"></script>
 </body>
 </html>
