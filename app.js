@@ -5,6 +5,16 @@ window.addEventListener("load", () => {
     }, 1500); 
 });
 
+// ==========================================
+// 🔴 BURAYA KENDİ SUPABASE ANAHTARLARINI GİR
+// ==========================================
+const SUPABASE_URL = 'https://svuimwapedjuozkrgyov.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InN2dWltd2FwZWRqdW96a3JneW92Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAwNTU0MTgsImV4cCI6MjA5NTYzMTQxOH0.DjgZ5gEbHKnLAbhP7EWrGc4-5cWIl4O2rjDOopUs83k';
+
+// Supabase Başlat
+const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+// ==========================================
+
 const translations = {
     "tr": {
         "upload_btn": "DOSYA YÜKLE",
@@ -35,12 +45,23 @@ const translations = {
         "search_not_found": "Aranan değer bulunamadı!",
         "patch_import": "Yama Uygula (.json)",
         "patch_export": "Yamayı Dışa Aktar",
+        "share_patch": "Toplulukta Paylaş",
         "patch_empty": "Değişiklik bulunamadı!",
         "patch_success_export": "Yama başarıyla kaydedildi!",
         "patch_success_import": "Yama başarıyla uygulandı!",
         "patch_error": "Geçersiz yama dosyası!",
         "undo": "Geri Al",
         "redo": "İleri Al",
+        "community": "Topluluk",
+        "share_title": "Toplulukta Paylaş",
+        "share_desc": "Yaptığınız değişiklikleri diğer oyuncularla paylaşın.",
+        "share_author_ph": "Yazar Adı (Örn: Texas)",
+        "share_game_ph": "Oyun Adı (Örn: PUBG)",
+        "share_title_ph": "Yama Başlığı (Örn: Aim Active)",
+        "share_btn": "PAYLAŞ",
+        "share_success": "Yamanız başarıyla paylaşıldı!",
+        "share_fail": "Paylaşım başarısız oldu.",
+        "apply_btn": "UYGULA",
         "toggle_lang": "EN"
     },
     "en": {
@@ -72,12 +93,23 @@ const translations = {
         "search_not_found": "Value not found!",
         "patch_import": "Import Patch (.json)",
         "patch_export": "Export Patch",
+        "share_patch": "Share to Community",
         "patch_empty": "No changes found!",
         "patch_success_export": "Patch exported successfully!",
         "patch_success_import": "Patch applied successfully!",
         "patch_error": "Invalid patch file!",
         "undo": "Undo",
         "redo": "Redo",
+        "community": "Community",
+        "share_title": "Share to Community",
+        "share_desc": "Share your modifications with other players.",
+        "share_author_ph": "Author Name (e.g., Texas)",
+        "share_game_ph": "Game Name (e.g., PUBG)",
+        "share_title_ph": "Patch Title (e.g., Aim Active)",
+        "share_btn": "SHARE",
+        "share_success": "Patch shared successfully!",
+        "share_fail": "Failed to share patch.",
+        "apply_btn": "APPLY",
         "toggle_lang": "TR"
     }
 };
@@ -94,7 +126,6 @@ let undoStack = [];
 let redoStack = [];
 let originalUint8Array = null;
 
-// YENİ: Karşılaştırma verileri
 let compareUint8Array = null;
 let compareFileName = "";
 
@@ -143,7 +174,6 @@ function applyTranslations() {
         }
     }
     
-    // Karşılaştırma UI Çevirisi Güncelleme
     if(compareUint8Array) {
         document.getElementById("compare-details").innerHTML = `
             <strong style="color:var(--text-main)">${langData.main_file}</strong> ${currentFileName} <br>
@@ -178,13 +208,28 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const btnExportPatch = document.getElementById("btn-export-patch");
     const btnImportPatch = document.getElementById("btn-import-patch");
+    const btnSharePatch = document.getElementById("btn-share-patch");
     const patchDivider = document.getElementById("patch-divider");
     const uploadPatch = document.getElementById("upload-patch");
     
-    // Karşılaştırma (Diff) Elementleri
     const compareSection = document.getElementById("compare-section");
     const uploadCompare = document.getElementById("upload-compare");
     const compareDetails = document.getElementById("compare-details");
+
+    // YENİ: Topluluk Elementleri
+    const btnCommunity = document.getElementById("btn-community");
+    const editorWrapper = document.getElementById("editor-wrapper");
+    const communityView = document.getElementById("community-view");
+    const communityLoader = document.getElementById("community-loader");
+    const communityList = document.getElementById("community-list");
+
+    // YENİ: Paylaşım Modal Elementleri
+    const shareModal = document.getElementById("share-modal");
+    const shareAuthor = document.getElementById("share-author");
+    const shareGame = document.getElementById("share-game");
+    const shareTitle = document.getElementById("share-title-input");
+    const shareCancel = document.getElementById("share-cancel");
+    const shareSave = document.getElementById("share-save");
 
     let fileBuffer = null; 
     let dataView = null;
@@ -192,6 +237,24 @@ document.addEventListener("DOMContentLoaded", () => {
     let currentFileName = "";
 
     langToggleBtn.addEventListener("click", () => { currentLang = currentLang === "tr" ? "en" : "tr"; applyTranslations(); });
+
+    // YENİ: Sekme Yönetimi (Editör vs Topluluk)
+    let isCommunityOpen = false;
+    btnCommunity.addEventListener("click", () => {
+        isCommunityOpen = !isCommunityOpen;
+        if(isCommunityOpen) {
+            btnCommunity.classList.remove("outline-btn");
+            btnCommunity.classList.add("primary-btn");
+            editorWrapper.style.display = "none";
+            communityView.style.display = "flex";
+            loadCommunityPatches(); // Supabase'den verileri çek
+        } else {
+            btnCommunity.classList.add("outline-btn");
+            btnCommunity.classList.remove("primary-btn");
+            editorWrapper.style.display = "flex";
+            communityView.style.display = "none";
+        }
+    });
 
     tabs.forEach(tab => {
         tab.addEventListener("click", () => {
@@ -240,6 +303,9 @@ document.addEventListener("DOMContentLoaded", () => {
         const file = e.target.files[0];
         if (!file) return;
 
+        // Dosya yüklenince Topluluk sekmesindeyse Editöre geri dön
+        if(isCommunityOpen) btnCommunity.click();
+
         currentFileName = file.name;
         const reader = new FileReader();
         reader.onload = (event) => {
@@ -249,7 +315,6 @@ document.addEventListener("DOMContentLoaded", () => {
             
             originalUint8Array = new Uint8Array(fileBuffer.slice(0)); 
 
-            // Yeni dosya yüklendiğinde eski Karşılaştırmayı sıfırla
             compareUint8Array = null;
             compareFileName = "";
             compareDetails.style.display = "none";
@@ -273,9 +338,9 @@ document.addEventListener("DOMContentLoaded", () => {
             
             btnExportPatch.style.display = "flex";
             btnImportPatch.style.display = "flex";
+            btnSharePatch.style.display = "flex"; // Paylaş butonu aktif!
             patchDivider.style.display = "block";
             
-            // Karşılaştırma butonunu göster
             compareSection.style.display = "block";
 
             setTimeout(() => { extractPropertiesBulletproof(); renderHexEditor(); }, 50);
@@ -283,7 +348,6 @@ document.addEventListener("DOMContentLoaded", () => {
         reader.readAsArrayBuffer(file); 
     });
 
-    // YENİ: İkinci dosyayı yükleme ve Karşılaştırma İşlemi
     uploadCompare.addEventListener("change", (e) => {
         const file = e.target.files[0];
         if (!file || !uint8Array) return;
@@ -300,13 +364,147 @@ document.addEventListener("DOMContentLoaded", () => {
             `;
             compareDetails.style.display = "block";
             
-            // Hex Editör Sekmesine Otomatik Geçiş Yap
             document.querySelector(".tabs button[data-target='hex-view']").click(); 
             renderHexEditor(); 
         };
         reader.readAsArrayBuffer(file);
     });
 
+    // YENİ: Toplulukta Paylaşma İşlemi (Supabase'e Yazma)
+    btnSharePatch.addEventListener("click", () => {
+        if (!uint8Array || !originalUint8Array) return;
+        let changes = [];
+        for (let i = 0; i < uint8Array.length; i++) {
+            if (uint8Array[i] !== originalUint8Array[i]) {
+                changes.push({ o: i, v: uint8Array[i] }); 
+            }
+        }
+        
+        if (changes.length === 0) {
+            showToast(translations[currentLang].patch_empty);
+            return;
+        }
+
+        // Değişiklik varsa Modalı Aç
+        shareModal.classList.remove("hidden");
+    });
+
+    shareCancel.addEventListener("click", () => { shareModal.classList.add("hidden"); });
+
+    shareSave.addEventListener("click", async () => {
+        const author = shareAuthor.value.trim() || "Anonim";
+        const game = shareGame.value.trim() || "Bilinmiyor";
+        const title = shareTitle.value.trim() || "İsimsiz Yama";
+
+        // Değişiklikleri tekrar hesapla
+        let changes = [];
+        for (let i = 0; i < uint8Array.length; i++) {
+            if (uint8Array[i] !== originalUint8Array[i]) {
+                changes.push({ o: i, v: uint8Array[i] }); 
+            }
+        }
+
+        const patchData = { savstudio: true, version: 1, changes: changes };
+
+        shareSave.disabled = true;
+        shareSave.innerText = "...";
+
+        // Supabase'e Gönder
+        const { data, error } = await supabase
+            .from('community_patches')
+            .insert([
+                { title: title, author: author, game_name: game, patch_data: patchData }
+            ]);
+
+        shareSave.disabled = false;
+        shareSave.innerText = translations[currentLang].share_btn;
+        shareModal.classList.add("hidden");
+
+        if (error) {
+            console.error(error);
+            showToast(translations[currentLang].share_fail);
+        } else {
+            showToast(translations[currentLang].share_success);
+            shareAuthor.value = ""; shareGame.value = ""; shareTitle.value = "";
+        }
+    });
+
+    // YENİ: Topluluk Yamalarını Çekme (Supabase'den Okuma)
+    async function loadCommunityPatches() {
+        communityLoader.style.display = "block";
+        communityList.style.display = "none";
+        communityList.innerHTML = "";
+
+        const { data, error } = await supabase
+            .from('community_patches')
+            .select('*')
+            .order('created_at', { ascending: false })
+            .limit(20);
+
+        communityLoader.style.display = "none";
+        communityList.style.display = "flex";
+
+        if (error || !data || data.length === 0) {
+            communityList.innerHTML = `<p style="text-align:center; color:var(--text-muted); margin-top:20px;">Henüz paylaşılan yama yok.</p>`;
+            return;
+        }
+
+        data.forEach(patch => {
+            const date = new Date(patch.created_at).toLocaleDateString();
+            const changesCount = patch.patch_data.changes ? patch.patch_data.changes.length : 0;
+            
+            const card = document.createElement("div");
+            card.className = "community-card";
+            card.innerHTML = `
+                <div class="community-info">
+                    <span class="community-title">${patch.title}</span>
+                    <span class="community-meta">${patch.game_name} | Yazar: ${patch.author}</span>
+                    <span class="community-meta" style="color:var(--text-main)">${changesCount} değişiklik | ${date}</span>
+                </div>
+                <button class="btn primary-btn apply-cloud-patch" data-id="${patch.id}">
+                    <i class="ph-bold ph-download-simple"></i> <span class="hide-mobile">${translations[currentLang].apply_btn}</span>
+                </button>
+            `;
+            communityList.appendChild(card);
+        });
+
+        // Bulut yamasını kendi dosyasına uygulama (Supabase'den indirip parse etme)
+        document.querySelectorAll(".apply-cloud-patch").forEach(btn => {
+            btn.addEventListener("click", (e) => {
+                if(!uint8Array) {
+                    showToast(translations[currentLang].no_file);
+                    return;
+                }
+                const patchId = e.currentTarget.getAttribute("data-id");
+                const patchObj = data.find(p => p.id == patchId);
+                
+                if(patchObj && patchObj.patch_data && patchObj.patch_data.changes) {
+                    let historyChanges = [];
+                    patchObj.patch_data.changes.forEach(c => {
+                        if (c.o < uint8Array.length) {
+                            let oldVal = uint8Array[c.o];
+                            if(oldVal !== c.v) {
+                                historyChanges.push({ index: c.o, oldVal: oldVal, newVal: c.v });
+                                uint8Array[c.o] = c.v;
+                            }
+                        }
+                    });
+                    
+                    if (historyChanges.length > 0) {
+                        pushHistory(historyChanges);
+                        extractPropertiesBulletproof();
+                        renderHexEditor();
+                        btnCommunity.click(); // Editöre geri dön
+                        showToast(translations[currentLang].patch_success_import);
+                    } else {
+                        showToast(translations[currentLang].patch_empty);
+                    }
+                }
+            });
+        });
+    }
+
+    // Eski JSON İndirme Mantığı
     btnExportPatch.addEventListener("click", () => {
         if (!uint8Array || !originalUint8Array) return;
         let changes = [];
@@ -595,15 +793,13 @@ document.addEventListener("DOMContentLoaded", () => {
                         const hexValue = byte.toString(16).padStart(2, '0').toUpperCase();
                         
                         let isHighlighted = searchMatchIndex !== -1 && (i+j >= searchMatchIndex) && (i+j < searchMatchIndex + searchMatchLength);
-                        
-                        // YENİ: Karşılaştırma Diff Kontrolü (İkinci dosya varsa ve baytlar eşleşmiyorsa Kırmızı yap)
                         let isDiff = compareUint8Array && compareUint8Array[i+j] !== undefined && compareUint8Array[i+j] !== byte;
                         
                         let isNull = byte === 0;
                         let isAscii = byte >= 32 && byte <= 126;
 
                         let classNames = "hex-byte";
-                        if(isDiff) classNames += " hex-diff"; // Kırmızı Fark Sınıfı
+                        if(isDiff) classNames += " hex-diff"; 
                         else if(isHighlighted) classNames += " hex-highlight";
                         else {
                             if(isNull) classNames += " hex-null";
