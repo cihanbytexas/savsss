@@ -6,17 +6,113 @@ const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBh
 
 let supabase = null;
 
-// GÜVENLİK ÖNLEMİ: AdBlocker engelini aşmak ve çöküşü önlemek için koruma bloğu
-try {
-    if (window.supabase) {
-        supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-    } else {
-        console.warn("Supabase CDN yüklenemedi. Reklam engelleyici (AdBlock) aktif olabilir.");
+function initSupabase() {
+    try {
+        if (window.supabase && window.supabase.createClient) {
+            supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+            console.log("Supabase başarıyla başlatıldı.");
+        } else {
+            console.warn("Supabase kütüphanesi hazır değil.");
+        }
+    } catch (err) {
+        console.error("Supabase başlatma hatası:", err);
     }
-} catch (err) {
-    console.error("Supabase başlatma hatası:", err);
 }
 // ==========================================
+
+const translations = {
+    "tr": { "upload_btn": "DOSYA YÜKLE", "download_btn": "KAYDET", "community": "Topluluk", "share_btn": "PAYLAŞ", "apply_btn": "UYGULA", "share_success": "Paylaşıldı!", "share_fail": "Hata!", "conn_error": "Bağlantı Hatası!", "no_file": "Dosya seçilmedi.", "patch_empty": "Değişiklik yok!", "patch_success_import": "Uygulandı!", "search_not_found": "Bulunamadı!", "patch_error": "Hata!" },
+    "en": { "upload_btn": "UPLOAD", "download_btn": "SAVE", "community": "Community", "share_btn": "SHARE", "apply_btn": "APPLY", "share_success": "Shared!", "share_fail": "Error!", "conn_error": "Connection Error!", "no_file": "No file selected.", "patch_empty": "No changes!", "patch_success_import": "Applied!", "search_not_found": "Not found!", "patch_error": "Error!" }
+};
+
+let currentLang = "tr", totalValuesFound = 0, activeHexIndex = -1, activeHexElement = null, searchMatchIndex = -1, searchMatchLength = 0, undoStack = [], redoStack = [], originalUint8Array = null, compareUint8Array = null, compareFileName = "", fileBuffer = null, dataView = null, uint8Array = null, currentFileName = "";
+
+function showToast(message) {
+    const toast = document.getElementById("toast-container");
+    toast.innerText = message;
+    toast.classList.remove("hidden");
+    setTimeout(() => { toast.classList.add("hidden"); }, 3000);
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+    // Splash screen'i garantili kapat
+    const splashScreen = document.getElementById("splash-screen");
+    if (splashScreen) {
+        setTimeout(() => {
+            splashScreen.classList.add("hidden");
+            initSupabase(); // Veritabanını arka planda başlat
+        }, 800);
+    }
+
+    const uploadInput = document.getElementById("upload-save");
+    const downloadBtn = document.getElementById("download-save");
+    const btnCommunity = document.getElementById("btn-community");
+    const editorWrapper = document.getElementById("editor-wrapper");
+    const communityView = document.getElementById("community-view");
+    const btnSharePatch = document.getElementById("btn-share-patch");
+    const shareModal = document.getElementById("share-modal");
+    const shareSave = document.getElementById("share-save");
+
+    let isCommunityOpen = false;
+
+    btnCommunity.addEventListener("click", () => {
+        isCommunityOpen = !isCommunityOpen;
+        if(isCommunityOpen) {
+            editorWrapper.style.display = "none";
+            communityView.style.display = "flex";
+            loadCommunityPatches();
+        } else {
+            editorWrapper.style.display = "flex";
+            communityView.style.display = "none";
+        }
+    });
+
+    uploadInput.addEventListener("change", (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+        currentFileName = file.name;
+        const reader = new FileReader();
+        reader.onload = (event) => {
+            fileBuffer = event.target.result;
+            dataView = new DataView(fileBuffer);
+            uint8Array = new Uint8Array(fileBuffer);
+            originalUint8Array = new Uint8Array(fileBuffer.slice(0));
+            downloadBtn.disabled = false;
+            btnSharePatch.style.display = "flex";
+            showToast("Dosya yüklendi!");
+        };
+        reader.readAsArrayBuffer(file);
+    });
+
+    shareSave.addEventListener("click", async () => {
+        if (!supabase) return showToast("Bağlantı yok!");
+        const author = document.getElementById("share-author").value;
+        const game = document.getElementById("share-game").value;
+        const title = document.getElementById("share-title-input").value;
+        
+        let changes = [];
+        for (let i = 0; i < uint8Array.length; i++) {
+            if (uint8Array[i] !== originalUint8Array[i]) changes.push({ o: i, v: uint8Array[i] });
+        }
+
+        const { error } = await supabase.from('community_patches').insert([{ title, author, game_name: game, patch_data: { changes } }]);
+        if (error) showToast("Paylaşılamadı!");
+        else { showToast("Paylaşıldı!"); shareModal.classList.add("hidden"); }
+    });
+
+    async function loadCommunityPatches() {
+        if (!supabase) return;
+        const { data } = await supabase.from('community_patches').select('*').order('created_at', { ascending: false });
+        const list = document.getElementById("community-list");
+        list.innerHTML = "";
+        data.forEach(patch => {
+            const card = document.createElement("div");
+            card.className = "community-card";
+            card.innerHTML = `<span>${patch.title}</span><button class="btn primary-btn">Uygula</button>`;
+            list.appendChild(card);
+        });
+    }
+});
 
 const translations = {
     "tr": {
