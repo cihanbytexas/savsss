@@ -6,13 +6,23 @@ window.addEventListener("load", () => {
 });
 
 // ==========================================
-// 🔴 BURAYA KENDİ SUPABASE ANAHTARLARINI GİR
+// 🔴 SUPABASE BULUT BAĞLANTI AYARLARI
 // ==========================================
 const SUPABASE_URL = 'https://svuimwapedjuozkrgyov.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InN2dWltd2FwZWRqdW96a3JneW92Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAwNTU0MTgsImV4cCI6MjA5NTYzMTQxOH0.DjgZ5gEbHKnLAbhP7EWrGc4-5cWIl4O2rjDOopUs83k';
 
-// Supabase Başlat
-const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+let supabase = null;
+
+// GÜVENLİK ÖNLEMİ: AdBlocker engelini aşmak ve çöküşü önlemek için koruma bloğu
+try {
+    if (window.supabase) {
+        supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    } else {
+        console.warn("Supabase CDN yüklenemedi. Reklam engelleyici (AdBlock) aktif olabilir.");
+    }
+} catch (err) {
+    console.error("Supabase başlatma hatası:", err);
+}
 // ==========================================
 
 const translations = {
@@ -62,6 +72,7 @@ const translations = {
         "share_success": "Yamanız başarıyla paylaşıldı!",
         "share_fail": "Paylaşım başarısız oldu.",
         "apply_btn": "UYGULA",
+        "conn_error": "Bağlantı Hatası! Lütfen varsa AdBlock / Reklam Engelleyicinizi kapatıp sayfayı yenileyin.",
         "toggle_lang": "EN"
     },
     "en": {
@@ -110,6 +121,7 @@ const translations = {
         "share_success": "Patch shared successfully!",
         "share_fail": "Failed to share patch.",
         "apply_btn": "APPLY",
+        "conn_error": "Connection Error! Please disable AdBlock / Content Blockers and refresh.",
         "toggle_lang": "TR"
     }
 };
@@ -216,14 +228,12 @@ document.addEventListener("DOMContentLoaded", () => {
     const uploadCompare = document.getElementById("upload-compare");
     const compareDetails = document.getElementById("compare-details");
 
-    // YENİ: Topluluk Elementleri
     const btnCommunity = document.getElementById("btn-community");
     const editorWrapper = document.getElementById("editor-wrapper");
     const communityView = document.getElementById("community-view");
     const communityLoader = document.getElementById("community-loader");
     const communityList = document.getElementById("community-list");
 
-    // YENİ: Paylaşım Modal Elementleri
     const shareModal = document.getElementById("share-modal");
     const shareAuthor = document.getElementById("share-author");
     const shareGame = document.getElementById("share-game");
@@ -238,7 +248,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
     langToggleBtn.addEventListener("click", () => { currentLang = currentLang === "tr" ? "en" : "tr"; applyTranslations(); });
 
-    // YENİ: Sekme Yönetimi (Editör vs Topluluk)
     let isCommunityOpen = false;
     btnCommunity.addEventListener("click", () => {
         isCommunityOpen = !isCommunityOpen;
@@ -247,7 +256,7 @@ document.addEventListener("DOMContentLoaded", () => {
             btnCommunity.classList.add("primary-btn");
             editorWrapper.style.display = "none";
             communityView.style.display = "flex";
-            loadCommunityPatches(); // Supabase'den verileri çek
+            loadCommunityPatches(); 
         } else {
             btnCommunity.classList.add("outline-btn");
             btnCommunity.classList.remove("primary-btn");
@@ -303,7 +312,6 @@ document.addEventListener("DOMContentLoaded", () => {
         const file = e.target.files[0];
         if (!file) return;
 
-        // Dosya yüklenince Topluluk sekmesindeyse Editöre geri dön
         if(isCommunityOpen) btnCommunity.click();
 
         currentFileName = file.name;
@@ -338,7 +346,7 @@ document.addEventListener("DOMContentLoaded", () => {
             
             btnExportPatch.style.display = "flex";
             btnImportPatch.style.display = "flex";
-            btnSharePatch.style.display = "flex"; // Paylaş butonu aktif!
+            btnSharePatch.style.display = "flex"; 
             patchDivider.style.display = "block";
             
             compareSection.style.display = "block";
@@ -370,7 +378,6 @@ document.addEventListener("DOMContentLoaded", () => {
         reader.readAsArrayBuffer(file);
     });
 
-    // YENİ: Toplulukta Paylaşma İşlemi (Supabase'e Yazma)
     btnSharePatch.addEventListener("click", () => {
         if (!uint8Array || !originalUint8Array) return;
         let changes = [];
@@ -385,18 +392,26 @@ document.addEventListener("DOMContentLoaded", () => {
             return;
         }
 
-        // Değişiklik varsa Modalı Aç
+        if (!supabase) {
+            showToast(translations[currentLang].conn_error);
+            return;
+        }
+
         shareModal.classList.remove("hidden");
     });
 
     shareCancel.addEventListener("click", () => { shareModal.classList.add("hidden"); });
 
     shareSave.addEventListener("click", async () => {
+        if (!supabase) {
+            showToast(translations[currentLang].conn_error);
+            return;
+        }
+
         const author = shareAuthor.value.trim() || "Anonim";
         const game = shareGame.value.trim() || "Bilinmiyor";
         const title = shareTitle.value.trim() || "İsimsiz Yama";
 
-        // Değişiklikleri tekrar hesapla
         let changes = [];
         for (let i = 0; i < uint8Array.length; i++) {
             if (uint8Array[i] !== originalUint8Array[i]) {
@@ -409,7 +424,6 @@ document.addEventListener("DOMContentLoaded", () => {
         shareSave.disabled = true;
         shareSave.innerText = "...";
 
-        // Supabase'e Gönder
         const { data, error } = await supabase
             .from('community_patches')
             .insert([
@@ -429,11 +443,17 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     });
 
-    // YENİ: Topluluk Yamalarını Çekme (Supabase'den Okuma)
     async function loadCommunityPatches() {
         communityLoader.style.display = "block";
         communityList.style.display = "none";
         communityList.innerHTML = "";
+
+        if (!supabase) {
+            communityLoader.style.display = "none";
+            communityList.style.display = "flex";
+            communityList.innerHTML = `<p style="text-align:center; color:#ff4444; padding:20px; font-size:0.85rem;">${translations[currentLang].conn_error}</p>`;
+            return;
+        }
 
         const { data, error } = await supabase
             .from('community_patches')
@@ -468,7 +488,6 @@ document.addEventListener("DOMContentLoaded", () => {
             communityList.appendChild(card);
         });
 
-        // Bulut yamasını kendi dosyasına uygulama (Supabase'den indirip parse etme)
         document.querySelectorAll(".apply-cloud-patch").forEach(btn => {
             btn.addEventListener("click", (e) => {
                 if(!uint8Array) {
@@ -494,7 +513,7 @@ document.addEventListener("DOMContentLoaded", () => {
                         pushHistory(historyChanges);
                         extractPropertiesBulletproof();
                         renderHexEditor();
-                        btnCommunity.click(); // Editöre geri dön
+                        btnCommunity.click(); 
                         showToast(translations[currentLang].patch_success_import);
                     } else {
                         showToast(translations[currentLang].patch_empty);
@@ -504,7 +523,6 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     }
 
-    // Eski JSON İndirme Mantığı
     btnExportPatch.addEventListener("click", () => {
         if (!uint8Array || !originalUint8Array) return;
         let changes = [];
