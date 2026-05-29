@@ -1,13 +1,23 @@
+const CACHE_NAME = 'savstudio-v2';
+
 self.addEventListener('install', (e) => {
+    self.skipWaiting(); // Bekleme, anında yeni versiyona geç
+});
+
+self.addEventListener('activate', (e) => {
+    // Eski hatalı önbellekleri tamamen temizle
     e.waitUntil(
-        caches.open('savstudio-v1').then((cache) => cache.addAll([
-            './',
-            './index.html',
-            './style.css',
-            './app.js'
-        ]))
+        caches.keys().then((keys) => {
+            return Promise.all(keys.map((key) => {
+                if (key !== CACHE_NAME) return caches.delete(key);
+            }));
+        })
     );
 });
+
 self.addEventListener('fetch', (e) => {
-    e.respondWith(caches.match(e.request).then((response) => response || fetch(e.request)));
+    // ÖNCE İNTERNET (Taze kod) -> EĞER İNTERNET YOKSA HAFIZA (Cache)
+    e.respondWith(
+        fetch(e.request).catch(() => caches.match(e.request))
+    );
 });
