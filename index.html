@@ -6,8 +6,9 @@
     <title>SavStudio | Data Editor</title>
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#0a0a0a">
+    
     <script src="https://unpkg.com/@phosphor-icons/web"></script>
-    <link rel="stylesheet" href="style.css?v=rollback1">
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
@@ -38,15 +39,25 @@
             <button class="btn outline-btn icon-btn" id="btn-undo" data-i18n-title="undo" title="Geri Al" disabled><i class="ph-bold ph-arrow-u-up-left"></i></button>
             <button class="btn outline-btn icon-btn" id="btn-redo" data-i18n-title="redo" title="İleri Al" disabled><i class="ph-bold ph-arrow-u-up-right"></i></button>
             
+            <div class="divider" id="patch-divider" style="display: none;"></div>
+            
+            <label class="btn outline-btn icon-btn" id="btn-import-patch" data-i18n-title="patch_import" title="Yama Uygula" style="display:none; cursor: pointer;">
+                <i class="ph-bold ph-file-arrow-down"></i>
+                <input type="file" id="upload-patch" accept=".json,.patch" style="display: none;">
+            </label>
+            <button class="btn outline-btn icon-btn" id="btn-export-patch" data-i18n-title="patch_export" title="Yama Dışa Aktar" style="display:none;">
+                <i class="ph-bold ph-file-arrow-up"></i>
+            </button>
+
             <div class="divider"></div>
             <button class="btn lang-btn" id="lang-toggle">EN</button>
             
             <label class="btn primary-btn">
-                <i class="ph-bold ph-upload-simple"></i> <span data-i18n="upload_btn" class="hide-mobile">DOSYA YÜKLE</span>
+                <i class="ph-bold ph-upload-simple"></i> <span data-i18n="upload_btn">DOSYA YÜKLE</span>
                 <input type="file" id="upload-save" accept=".sav" style="display: none;">
             </label>
             <button class="btn outline-btn" id="download-save" disabled>
-                <i class="ph-bold ph-download-simple"></i> <span data-i18n="download_btn" class="hide-mobile">KAYDET</span>
+                <i class="ph-bold ph-download-simple"></i> <span data-i18n="download_btn">KAYDET</span>
             </button>
         </div>
     </nav>
@@ -64,50 +75,48 @@
                     <input type="file" id="upload-compare" accept=".sav" style="display: none;">
                 </label>
                 <div id="compare-details" style="display: none; margin-top: 15px; font-size: 0.8rem; color: var(--text-muted); line-height: 1.8;">
-                </div>
+                    </div>
             </div>
         </aside>
 
         <section class="editor-area">
-            <div id="editor-wrapper" style="display: flex; flex-direction: column; flex: 1; height: 100%;">
-                <div class="tabs">
-                    <button class="tab active" data-target="smart-view">
-                        <i class="ph-bold ph-list-numbers"></i> <span data-i18n="tab_values">Değerler</span>
-                    </button>
-                    <button class="tab" data-target="hex-view">
-                        <i class="ph-bold ph-hash"></i> <span data-i18n="tab_hex">Hex Editör</span>
-                    </button>
-                </div>
+            <div class="tabs">
+                <button class="tab active" data-target="smart-view">
+                    <i class="ph-bold ph-list-numbers"></i> <span data-i18n="tab_values">Değerler</span>
+                </button>
+                <button class="tab" data-target="hex-view">
+                    <i class="ph-bold ph-hash"></i> <span data-i18n="tab_hex">Hex Editör</span>
+                </button>
+            </div>
 
-                <div class="view-content active" id="smart-view">
-                    <div class="empty-state" id="empty-message">
-                        <i class="ph-duotone ph-file-dashed"></i>
-                        <p data-i18n="empty_msg">Düzenlemeye başlamak için bir dosya yükleyin.</p>
-                    </div>
-                    <div id="smart-editor-container" style="display: none;">
-                        <div class="search-box">
-                            <i class="ph-bold ph-magnifying-glass"></i>
-                            <input type="text" id="search-input" data-i18n-placeholder="search_placeholder" placeholder="Arama yap...">
-                        </div>
-                        <div class="smart-list" id="smart-list"></div>
-                    </div>
+            <div class="view-content active" id="smart-view">
+                <div class="empty-state" id="empty-message">
+                    <i class="ph-duotone ph-file-dashed"></i>
+                    <p data-i18n="empty_msg">Düzenlemeye başlamak için bir dosya yükleyin.</p>
                 </div>
-
-                <div class="view-content" id="hex-view">
-                    <div class="search-box hex-search-bar" id="hex-search-container" style="display: none; margin-bottom: 20px;">
+                <div id="smart-editor-container" style="display: none;">
+                    <div class="search-box">
                         <i class="ph-bold ph-magnifying-glass"></i>
-                        <input type="text" id="hex-search-input" data-i18n-placeholder="hex_search_placeholder" placeholder="Hex veya Metin arat...">
-                        <button id="hex-search-btn" class="btn primary-btn" style="padding: 6px 16px; margin-left: 10px;" data-i18n="search_btn">BUL</button>
+                        <input type="text" id="search-input" data-i18n-placeholder="search_placeholder" placeholder="Arama yap...">
                     </div>
-                    <div class="hex-editor-container">
-                        <div class="hex-header">
-                            <div class="hex-offset-col" data-i18n="offset">Offset</div>
-                            <div class="hex-bytes-col">00 01 02 03 04 05 06 07 08 09 0A 0B 0C 0D 0E 0F</div>
-                            <div class="hex-ascii-col" data-i18n="ascii">ASCII</div>
-                        </div>
-                        <div class="hex-body" id="hex-body">
-                            <div class="empty-state"><p data-i18n="empty_msg">Düzenlemeye başlamak için bir dosya yükleyin.</p></div>
-                        </div>
+                    <div class="smart-list" id="smart-list"></div>
+                </div>
+            </div>
+
+            <div class="view-content" id="hex-view">
+                <div class="search-box hex-search-bar" id="hex-search-container" style="display: none; margin-bottom: 20px;">
+                    <i class="ph-bold ph-magnifying-glass"></i>
+                    <input type="text" id="hex-search-input" data-i18n-placeholder="hex_search_placeholder" placeholder="Hex veya Metin arat...">
+                    <button id="hex-search-btn" class="btn primary-btn" style="padding: 6px 16px; margin-left: 10px;" data-i18n="search_btn">BUL</button>
+                </div>
+                <div class="hex-editor-container">
+                    <div class="hex-header">
+                        <div class="hex-offset-col" data-i18n="offset">Offset</div>
+                        <div class="hex-bytes-col">00 01 02 03 04 05 06 07 08 09 0A 0B 0C 0D 0E 0F</div>
+                        <div class="hex-ascii-col" data-i18n="ascii">ASCII</div>
+                    </div>
+                    <div class="hex-body" id="hex-body">
+                        <div class="empty-state"><p data-i18n="empty_msg">Düzenlemeye başlamak için bir dosya yükleyin.</p></div>
                     </div>
                 </div>
             </div>
@@ -115,17 +124,10 @@
     </main>
 
     <script>
-        window.addEventListener('load', function() {
-            setTimeout(function() {
-                var splash = document.getElementById('splash-screen');
-                if(splash) { splash.style.opacity = '0'; setTimeout(() => splash.style.display = 'none', 500); }
-            }, 600);
-        });
-        
         if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.register('sw.js?v=rollback1').catch(err => console.error(err));
+            navigator.serviceWorker.register('sw.js').catch(err => console.error("SW Registration failed:", err));
         }
     </script>
-    <script src="app.js?v=rollback1"></script>
+    <script src="app.js"></script>
 </body>
 </html>
