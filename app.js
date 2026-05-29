@@ -9,6 +9,9 @@ const translations = {
     "tr": {
         "upload_btn": "DOSYA YÜKLE",
         "download_btn": "KAYDET",
+        "compare_btn": "KARŞILAŞTIR",
+        "compared_file": "Karşılaştırılan:",
+        "main_file": "Ana Dosya:",
         "active_file": "Aktif Dosya",
         "no_file": "Henüz dosya seçilmedi. Düzenlemek için .sav uzantılı bir dosya yükleyin.",
         "tab_values": "Değerler",
@@ -43,6 +46,9 @@ const translations = {
     "en": {
         "upload_btn": "UPLOAD",
         "download_btn": "SAVE",
+        "compare_btn": "COMPARE",
+        "compared_file": "Compared:",
+        "main_file": "Main File:",
         "active_file": "Active File",
         "no_file": "No file selected. Upload a .sav file to start editing.",
         "tab_values": "Values",
@@ -88,6 +94,10 @@ let undoStack = [];
 let redoStack = [];
 let originalUint8Array = null;
 
+// YENİ: Karşılaştırma verileri
+let compareUint8Array = null;
+let compareFileName = "";
+
 function showToast(message) {
     const toast = document.getElementById("toast-container");
     toast.innerText = message;
@@ -132,6 +142,14 @@ function applyTranslations() {
             `;
         }
     }
+    
+    // Karşılaştırma UI Çevirisi Güncelleme
+    if(compareUint8Array) {
+        document.getElementById("compare-details").innerHTML = `
+            <strong style="color:var(--text-main)">${langData.main_file}</strong> ${currentFileName} <br>
+            <strong style="color:#ff4444">${langData.compared_file}</strong> ${compareFileName}
+        `;
+    }
 }
 
 document.addEventListener("DOMContentLoaded", () => {
@@ -162,6 +180,11 @@ document.addEventListener("DOMContentLoaded", () => {
     const btnImportPatch = document.getElementById("btn-import-patch");
     const patchDivider = document.getElementById("patch-divider");
     const uploadPatch = document.getElementById("upload-patch");
+    
+    // Karşılaştırma (Diff) Elementleri
+    const compareSection = document.getElementById("compare-section");
+    const uploadCompare = document.getElementById("upload-compare");
+    const compareDetails = document.getElementById("compare-details");
 
     let fileBuffer = null; 
     let dataView = null;
@@ -226,6 +249,11 @@ document.addEventListener("DOMContentLoaded", () => {
             
             originalUint8Array = new Uint8Array(fileBuffer.slice(0)); 
 
+            // Yeni dosya yüklendiğinde eski Karşılaştırmayı sıfırla
+            compareUint8Array = null;
+            compareFileName = "";
+            compareDetails.style.display = "none";
+
             undoStack = []; redoStack = []; updateHistoryButtons();
             searchMatchIndex = -1; searchMatchLength = 0;
 
@@ -246,10 +274,37 @@ document.addEventListener("DOMContentLoaded", () => {
             btnExportPatch.style.display = "flex";
             btnImportPatch.style.display = "flex";
             patchDivider.style.display = "block";
+            
+            // Karşılaştırma butonunu göster
+            compareSection.style.display = "block";
 
             setTimeout(() => { extractPropertiesBulletproof(); renderHexEditor(); }, 50);
         };
         reader.readAsArrayBuffer(file); 
+    });
+
+    // YENİ: İkinci dosyayı yükleme ve Karşılaştırma İşlemi
+    uploadCompare.addEventListener("change", (e) => {
+        const file = e.target.files[0];
+        if (!file || !uint8Array) return;
+        compareFileName = file.name;
+        
+        const reader = new FileReader();
+        reader.onload = (event) => {
+            compareUint8Array = new Uint8Array(event.target.result);
+            
+            const lang = translations[currentLang];
+            compareDetails.innerHTML = `
+                <strong style="color:var(--text-main)">${lang.main_file}</strong> ${currentFileName} <br>
+                <strong style="color:#ff4444">${lang.compared_file}</strong> ${compareFileName}
+            `;
+            compareDetails.style.display = "block";
+            
+            // Hex Editör Sekmesine Otomatik Geçiş Yap
+            document.querySelector(".tabs button[data-target='hex-view']").click(); 
+            renderHexEditor(); 
+        };
+        reader.readAsArrayBuffer(file);
     });
 
     btnExportPatch.addEventListener("click", () => {
@@ -540,12 +595,17 @@ document.addEventListener("DOMContentLoaded", () => {
                         const hexValue = byte.toString(16).padStart(2, '0').toUpperCase();
                         
                         let isHighlighted = searchMatchIndex !== -1 && (i+j >= searchMatchIndex) && (i+j < searchMatchIndex + searchMatchLength);
+                        
+                        // YENİ: Karşılaştırma Diff Kontrolü (İkinci dosya varsa ve baytlar eşleşmiyorsa Kırmızı yap)
+                        let isDiff = compareUint8Array && compareUint8Array[i+j] !== undefined && compareUint8Array[i+j] !== byte;
+                        
                         let isNull = byte === 0;
                         let isAscii = byte >= 32 && byte <= 126;
 
                         let classNames = "hex-byte";
-                        if(isHighlighted) classNames += " hex-highlight";
-                        if(!isHighlighted) {
+                        if(isDiff) classNames += " hex-diff"; // Kırmızı Fark Sınıfı
+                        else if(isHighlighted) classNames += " hex-highlight";
+                        else {
                             if(isNull) classNames += " hex-null";
                             else if(isAscii) classNames += " hex-ascii";
                         }
