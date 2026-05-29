@@ -4,6 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>SavStudio | Data Editor</title>
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#0a0a0a">
+    
     <script src="https://unpkg.com/@phosphor-icons/web"></script>
     <link rel="stylesheet" href="style.css">
 </head>
@@ -16,7 +19,6 @@
         </div>
     </div>
 
-    <!-- Şık Bildirim (Toast) Kutusu -->
     <div id="toast-container" class="toast hidden"></div>
 
     <div id="custom-modal" class="modal-overlay hidden">
@@ -34,13 +36,11 @@
     <nav class="navbar">
         <div class="logo">SavStudio</div>
         <div class="nav-actions">
-            <!-- Geçmiş Araçları -->
             <button class="btn outline-btn icon-btn" id="btn-undo" data-i18n-title="undo" title="Geri Al" disabled><i class="ph-bold ph-arrow-u-up-left"></i></button>
             <button class="btn outline-btn icon-btn" id="btn-redo" data-i18n-title="redo" title="İleri Al" disabled><i class="ph-bold ph-arrow-u-up-right"></i></button>
             
             <div class="divider" id="patch-divider" style="display: none;"></div>
             
-            <!-- Yama Araçları -->
             <label class="btn outline-btn icon-btn" id="btn-import-patch" data-i18n-title="patch_import" title="Yama Uygula" style="display:none; cursor: pointer;">
                 <i class="ph-bold ph-file-arrow-down"></i>
                 <input type="file" id="upload-patch" accept=".json,.patch" style="display: none;">
@@ -52,7 +52,6 @@
             <div class="divider"></div>
             <button class="btn lang-btn" id="lang-toggle">EN</button>
             
-            <!-- Ana Butonlar -->
             <label class="btn primary-btn">
                 <i class="ph-bold ph-upload-simple"></i> <span data-i18n="upload_btn">DOSYA YÜKLE</span>
                 <input type="file" id="upload-save" accept=".sav" style="display: none;">
@@ -68,6 +67,15 @@
             <div class="file-info" id="file-info">
                 <strong data-i18n="active_file">Aktif Dosya</strong><br><br>
                 <span style="color: var(--text-muted);" data-i18n="no_file">Henüz dosya seçilmedi.</span>
+            </div>
+            
+            <div class="compare-info" id="compare-section" style="display: none; margin-top: 15px; padding: 15px; border: 1px solid var(--border-color); background: var(--bg-base); border-radius: 2px;">
+                <label class="btn outline-btn" style="width: 100%; justify-content: center; font-size: 0.75rem;">
+                    <i class="ph-bold ph-git-diff"></i> <span data-i18n="compare_btn">KARŞILAŞTIR</span>
+                    <input type="file" id="upload-compare" accept=".sav" style="display: none;">
+                </label>
+                <div id="compare-details" style="display: none; margin-top: 15px; font-size: 0.8rem; color: var(--text-muted); line-height: 1.8;">
+                    </div>
             </div>
         </aside>
 
@@ -114,6 +122,12 @@
             </div>
         </section>
     </main>
+
+    <script>
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('sw.js').catch(err => console.error("SW Registration failed:", err));
+        }
+    </script>
     <script src="app.js"></script>
 </body>
 </html>
