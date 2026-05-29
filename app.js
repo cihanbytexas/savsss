@@ -1,10 +1,3 @@
-window.addEventListener("load", () => {
-    const splashScreen = document.getElementById("splash-screen");
-    setTimeout(() => {
-        splashScreen.classList.add("hidden");
-    }, 1500); 
-});
-
 // ==========================================
 // 🔴 SUPABASE BULUT BAĞLANTI AYARLARI
 // ==========================================
@@ -126,20 +119,24 @@ const translations = {
     }
 };
 
+// GLOBAL DEĞİŞKENLER (Kapsam hatasını çözmek için dışarıya alındı)
 let currentLang = "tr";
 let totalValuesFound = 0;
-
 let activeHexIndex = -1;
 let activeHexElement = null;
 let searchMatchIndex = -1;
 let searchMatchLength = 0;
-
 let undoStack = [];
 let redoStack = [];
-let originalUint8Array = null;
 
+let originalUint8Array = null;
 let compareUint8Array = null;
 let compareFileName = "";
+
+let fileBuffer = null; 
+let dataView = null;
+let uint8Array = null;
+let currentFileName = "";
 
 function showToast(message) {
     const toast = document.getElementById("toast-container");
@@ -195,6 +192,14 @@ function applyTranslations() {
 }
 
 document.addEventListener("DOMContentLoaded", () => {
+    // YÜKLEME EKRANINI BURAYA ALDIK (Dış sunucular takılsa bile anında ekranı açar)
+    const splashScreen = document.getElementById("splash-screen");
+    if(splashScreen) {
+        setTimeout(() => {
+            splashScreen.classList.add("hidden");
+        }, 800); 
+    }
+
     const uploadInput = document.getElementById("upload-save");
     const downloadBtn = document.getElementById("download-save");
     const fileInfo = document.getElementById("file-info");
@@ -240,11 +245,6 @@ document.addEventListener("DOMContentLoaded", () => {
     const shareTitle = document.getElementById("share-title-input");
     const shareCancel = document.getElementById("share-cancel");
     const shareSave = document.getElementById("share-save");
-
-    let fileBuffer = null; 
-    let dataView = null;
-    let uint8Array = null;
-    let currentFileName = "";
 
     langToggleBtn.addEventListener("click", () => { currentLang = currentLang === "tr" ? "en" : "tr"; applyTranslations(); });
 
