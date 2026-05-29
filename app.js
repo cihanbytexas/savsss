@@ -1,32 +1,18 @@
-// ==========================================
-// 🔴 SUPABASE BULUT BAĞLANTI AYARLARI
-// ==========================================
-const SUPABASE_URL = 'https://svuimwapedjuozkrgyov.supabase.co';
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InN2dWltd2FwZWRqdW96a3JneW92Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAwNTU0MTgsImV4cCI6MjA5NTYzMTQxOH0.DjgZ5gEbHKnLAbhP7EWrGc4-5cWIl4O2rjDOopUs83k';
-
-let supabase = null;
-
-function initSupabase() {
-    try {
-        if (window.supabase && window.supabase.createClient) {
-            supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-            console.log("Supabase başarıyla başlatıldı.");
-        }
-    } catch (err) { console.error("Supabase hatası:", err); }
-}
-// ==========================================
-
 const translations = {
-    "tr": { "upload_btn": "DOSYA YÜKLE", "download_btn": "KAYDET", "compare_btn": "KARŞILAŞTIR", "compared_file": "Karşılaştırılan:", "main_file": "Ana Dosya:", "active_file": "Aktif Dosya", "no_file": "Henüz dosya seçilmedi. Düzenlemek için .sav uzantılı bir dosya yükleyin.", "tab_values": "Değerler", "tab_hex": "Hex Editör", "empty_msg": "Düzenlemeye başlamak için bir dosya yükleyin.", "search_placeholder": "Arama yap... (Örn: TotalShoot)", "hex_search_placeholder": "Hex veya Metin arat...", "search_btn": "BUL", "offset": "Offset", "ascii": "ASCII", "file_info_name": "Dosya:", "file_info_size": "Boyut:", "file_info_status": "Durum:", "status_processing": "İşleniyor...", "status_success": "Başarılı", "status_fail": "Okuma Başarısız", "fail_desc": "Bu dosyada okunabilir değer bulunamadı.<br><br>Hex Editör sekmesini kullanın.", "modal_title": "Hex Değeri Düzenle", "modal_cancel": "İPTAL", "modal_save": "KAYDET", "search_not_found": "Aranan değer bulunamadı!", "patch_import": "Yama Uygula (.json)", "patch_export": "Yamayı Dışa Aktar", "share_patch": "Toplulukta Paylaş", "patch_empty": "Değişiklik bulunamadı!", "patch_success_export": "Yama başarıyla kaydedildi!", "patch_success_import": "Yama başarıyla uygulandı!", "patch_error": "Geçersiz yama dosyası!", "undo": "Geri Al", "redo": "İleri Al", "community": "Topluluk", "share_title": "Toplulukta Paylaş", "share_desc": "Yaptığınız değişiklikleri diğer oyuncularla paylaşın.", "share_author_ph": "Yazar Adı (Örn: Texas)", "share_game_ph": "Oyun Adı (Örn: PUBG)", "share_title_ph": "Yama Başlığı (Örn: Aim Active)", "share_btn": "PAYLAŞ", "share_success": "Yamanız başarıyla paylaşıldı!", "share_fail": "Paylaşım başarısız oldu.", "apply_btn": "UYGULA", "conn_error": "Bağlantı Hatası!", "toggle_lang": "EN" },
-    "en": { "upload_btn": "UPLOAD", "download_btn": "SAVE", "compare_btn": "COMPARE", "compared_file": "Compared:", "main_file": "Main File:", "active_file": "Active File", "no_file": "No file selected. Upload a .sav file to start editing.", "tab_values": "Values", "tab_hex": "Hex Editor", "empty_msg": "Upload a file to begin editing.", "search_placeholder": "Search... (e.g., TotalShoot)", "hex_search_placeholder": "Search Hex or Text...", "search_btn": "FIND", "offset": "Offset", "ascii": "ASCII", "file_info_name": "File:", "file_info_size": "Size:", "file_info_status": "Status:", "status_processing": "Processing...", "status_success": "Success", "status_fail": "Read Failed", "fail_desc": "No readable values found in this file.<br><br>Please use the Hex Editor.", "modal_title": "Edit Hex Value", "modal_cancel": "CANCEL", "modal_save": "SAVE", "search_not_found": "Value not found!", "patch_import": "Import Patch (.json)", "patch_export": "Export Patch", "share_patch": "Share to Community", "patch_empty": "No changes found!", "patch_success_export": "Patch exported successfully!", "patch_success_import": "Patch applied successfully!", "patch_error": "Invalid patch file!", "undo": "Undo", "redo": "Redo", "community": "Community", "share_title": "Share to Community", "share_desc": "Share your modifications with other players.", "share_author_ph": "Author Name (e.g., Texas)", "share_game_ph": "Game Name (e.g., PUBG)", "share_title_ph": "Patch Title (e.g., Aim Active)", "share_btn": "SHARE", "share_success": "Patch shared successfully!", "share_fail": "Failed to share patch.", "apply_btn": "APPLY", "conn_error": "Connection Error!", "toggle_lang": "TR" }
+    "tr": {
+        "upload_btn": "DOSYA YÜKLE", "download_btn": "KAYDET", "compare_btn": "KARŞILAŞTIR", "compared_file": "Karşılaştırılan:", "main_file": "Ana Dosya:", "active_file": "Aktif Dosya", "no_file": "Henüz dosya seçilmedi. Düzenlemek için .sav uzantılı bir dosya yükleyin.", "tab_values": "Değerler", "tab_hex": "Hex Editör", "empty_msg": "Düzenlemeye başlamak için bir dosya yükleyin.", "search_placeholder": "Arama yap... (Örn: TotalShoot)", "hex_search_placeholder": "Hex veya Metin arat...", "search_btn": "BUL", "offset": "Offset", "ascii": "ASCII", "file_info_name": "Dosya:", "file_info_size": "Boyut:", "file_info_status": "Durum:", "status_processing": "İşleniyor...", "status_success": "Başarılı", "status_fail": "Okuma Başarısız", "fail_desc": "Bu dosyada okunabilir değer bulunamadı.<br><br>Hex Editör sekmesini kullanın.", "modal_title": "Hex Değeri Düzenle", "modal_cancel": "İPTAL", "modal_save": "KAYDET", "search_not_found": "Aranan değer bulunamadı!", "undo": "Geri Al", "redo": "İleri Al", "toggle_lang": "EN"
+    },
+    "en": {
+        "upload_btn": "UPLOAD", "download_btn": "SAVE", "compare_btn": "COMPARE", "compared_file": "Compared:", "main_file": "Main File:", "active_file": "Active File", "no_file": "No file selected. Upload a .sav file to start editing.", "tab_values": "Values", "tab_hex": "Hex Editor", "empty_msg": "Upload a file to begin editing.", "search_placeholder": "Search... (e.g., TotalShoot)", "hex_search_placeholder": "Search Hex or Text...", "search_btn": "FIND", "offset": "Offset", "ascii": "ASCII", "file_info_name": "File:", "file_info_size": "Size:", "file_info_status": "Status:", "status_processing": "Processing...", "status_success": "Success", "status_fail": "Read Failed", "fail_desc": "No readable values found in this file.<br><br>Please use the Hex Editor.", "modal_title": "Edit Hex Value", "modal_cancel": "CANCEL", "modal_save": "SAVE", "search_not_found": "Value not found!", "undo": "Undo", "redo": "Redo", "toggle_lang": "TR"
+    }
 };
 
-let currentLang = "tr", totalValuesFound = 0, activeHexIndex = -1, activeHexElement = null, searchMatchIndex = -1, searchMatchLength = 0, undoStack = [], redoStack = [], originalUint8Array = null, compareUint8Array = null, compareFileName = "", fileBuffer = null, dataView = null, uint8Array = null, currentFileName = "";
+let currentLang = "tr", totalValuesFound = 0, activeHexIndex = -1, activeHexElement = null, searchMatchIndex = -1, searchMatchLength = 0;
+let undoStack = [], redoStack = [], originalUint8Array = null, compareUint8Array = null, compareFileName = "", fileBuffer = null, dataView = null, uint8Array = null, currentFileName = "";
 
 function showToast(message) {
     const toast = document.getElementById("toast-container");
-    toast.innerText = message;
-    toast.classList.remove("hidden");
+    toast.innerText = message; toast.classList.remove("hidden");
     setTimeout(() => { toast.classList.add("hidden"); }, 3000);
 }
 
@@ -36,29 +22,21 @@ function applyTranslations() {
     document.querySelectorAll('[data-i18n-placeholder]').forEach(elem => { if (langData[elem.getAttribute('data-i18n-placeholder')]) elem.setAttribute('placeholder', langData[elem.getAttribute('data-i18n-placeholder')]); });
     document.querySelectorAll('[data-i18n-title]').forEach(elem => { if (langData[elem.getAttribute('data-i18n-title')]) elem.setAttribute('title', langData[elem.getAttribute('data-i18n-title')]); });
     document.getElementById('lang-toggle').innerText = langData["toggle_lang"];
+
+    const fileInfo = document.getElementById("file-info");
+    if (fileInfo.innerHTML.includes(translations[currentLang === "tr" ? "en" : "tr"].file_info_name) || fileInfo.innerHTML.includes(translations[currentLang].file_info_name)) {
+        const fileNameSpan = document.getElementById("ui-filename"), fileSizeSpan = document.getElementById("ui-filesize"), fileStatusSpan = document.getElementById("ui-filestatus");
+        if(fileNameSpan) {
+            fileInfo.innerHTML = `<strong>${langData.active_file}</strong><br><br><strong>${langData.file_info_name}</strong> <span id="ui-filename" style="color:var(--text-main)">${fileNameSpan.innerText}</span> <br><strong>${langData.file_info_size}</strong> <span id="ui-filesize" style="color:var(--text-main)">${fileSizeSpan.innerText}</span> <br><strong>${langData.file_info_status}</strong> <span id="ui-filestatus" style="color:var(--text-main)">${totalValuesFound > 0 ? langData.status_success + ' ('+totalValuesFound+')' : fileStatusSpan.innerText}</span>`;
+        }
+    }
+    if(compareUint8Array) { document.getElementById("compare-details").innerHTML = `<strong style="color:var(--text-main)">${langData.main_file}</strong> ${currentFileName} <br><strong style="color:#ff4444">${langData.compared_file}</strong> ${compareFileName}`; }
 }
 
 document.addEventListener("DOMContentLoaded", () => {
-    
-    // SİHRİN GERÇEKLEŞTİĞİ YER: Yükleme ekranı asla kilitlenmeyecek!
-    const splashScreen = document.getElementById("splash-screen");
-    if(splashScreen) {
-        setTimeout(() => {
-            splashScreen.classList.add("hidden");
-            initSupabase(); 
-        }, 500); 
-    }
-
-    const uploadInput = document.getElementById("upload-save"), downloadBtn = document.getElementById("download-save"), fileInfo = document.getElementById("file-info"), smartList = document.getElementById("smart-list"), emptyMsg = document.getElementById("empty-message"), editorContainer = document.getElementById("smart-editor-container"), hexSearchContainer = document.getElementById("hex-search-container"), searchInput = document.getElementById("search-input"), langToggleBtn = document.getElementById("lang-toggle"), tabs = document.querySelectorAll(".tab"), views = document.querySelectorAll(".view-content"), customModal = document.getElementById("custom-modal"), modalDesc = document.getElementById("modal-desc"), modalInput = document.getElementById("modal-input"), modalCancel = document.getElementById("modal-cancel"), modalSave = document.getElementById("modal-save"), hexSearchInput = document.getElementById("hex-search-input"), hexSearchBtn = document.getElementById("hex-search-btn"), btnUndo = document.getElementById("btn-undo"), btnRedo = document.getElementById("btn-redo"), btnExportPatch = document.getElementById("btn-export-patch"), btnImportPatch = document.getElementById("btn-import-patch"), btnSharePatch = document.getElementById("btn-share-patch"), patchDivider = document.getElementById("patch-divider"), uploadPatch = document.getElementById("upload-patch"), compareSection = document.getElementById("compare-section"), uploadCompare = document.getElementById("upload-compare"), compareDetails = document.getElementById("compare-details"), btnCommunity = document.getElementById("btn-community"), editorWrapper = document.getElementById("editor-wrapper"), communityView = document.getElementById("community-view"), communityLoader = document.getElementById("community-loader"), communityList = document.getElementById("community-list"), shareModal = document.getElementById("share-modal"), shareAuthor = document.getElementById("share-author"), shareGame = document.getElementById("share-game"), shareTitle = document.getElementById("share-title-input"), shareCancel = document.getElementById("share-cancel"), shareSave = document.getElementById("share-save");
+    const uploadInput = document.getElementById("upload-save"), downloadBtn = document.getElementById("download-save"), fileInfo = document.getElementById("file-info"), smartList = document.getElementById("smart-list"), emptyMsg = document.getElementById("empty-message"), editorContainer = document.getElementById("smart-editor-container"), hexSearchContainer = document.getElementById("hex-search-container"), searchInput = document.getElementById("search-input"), langToggleBtn = document.getElementById("lang-toggle"), tabs = document.querySelectorAll(".tab"), views = document.querySelectorAll(".view-content"), customModal = document.getElementById("custom-modal"), modalDesc = document.getElementById("modal-desc"), modalInput = document.getElementById("modal-input"), modalCancel = document.getElementById("modal-cancel"), modalSave = document.getElementById("modal-save"), hexSearchInput = document.getElementById("hex-search-input"), hexSearchBtn = document.getElementById("hex-search-btn"), btnUndo = document.getElementById("btn-undo"), btnRedo = document.getElementById("btn-redo"), compareSection = document.getElementById("compare-section"), uploadCompare = document.getElementById("upload-compare"), compareDetails = document.getElementById("compare-details");
 
     langToggleBtn.addEventListener("click", () => { currentLang = currentLang === "tr" ? "en" : "tr"; applyTranslations(); });
-
-    let isCommunityOpen = false;
-    btnCommunity.addEventListener("click", () => {
-        isCommunityOpen = !isCommunityOpen;
-        if(isCommunityOpen) { btnCommunity.classList.remove("outline-btn"); btnCommunity.classList.add("primary-btn"); editorWrapper.style.display = "none"; communityView.style.display = "flex"; loadCommunityPatches(); } 
-        else { btnCommunity.classList.add("outline-btn"); btnCommunity.classList.remove("primary-btn"); editorWrapper.style.display = "flex"; communityView.style.display = "none"; }
-    });
 
     tabs.forEach(tab => {
         tab.addEventListener("click", () => {
@@ -77,13 +55,11 @@ document.addEventListener("DOMContentLoaded", () => {
 
     uploadInput.addEventListener("change", (e) => {
         const file = e.target.files[0]; if (!file) return;
-        if(isCommunityOpen) btnCommunity.click();
         currentFileName = file.name; const reader = new FileReader();
         reader.onload = (event) => {
-            fileBuffer = event.target.result; dataView = new DataView(fileBuffer); uint8Array = new Uint8Array(fileBuffer); originalUint8Array = new Uint8Array(fileBuffer.slice(0));
-            compareUint8Array = null; compareFileName = ""; compareDetails.style.display = "none"; undoStack = []; redoStack = []; updateHistoryButtons(); searchMatchIndex = -1; searchMatchLength = 0;
+            fileBuffer = event.target.result; dataView = new DataView(fileBuffer); uint8Array = new Uint8Array(fileBuffer); originalUint8Array = new Uint8Array(fileBuffer.slice(0)); compareUint8Array = null; compareFileName = ""; compareDetails.style.display = "none"; undoStack = []; redoStack = []; updateHistoryButtons(); searchMatchIndex = -1; searchMatchLength = 0;
             fileInfo.innerHTML = `<strong>Aktif Dosya:</strong> <span style="color:var(--text-main)">${file.name}</span>`;
-            emptyMsg.style.display = "none"; editorContainer.style.display = "flex"; hexSearchContainer.style.display = "flex"; downloadBtn.disabled = false; downloadBtn.classList.remove("outline-btn"); downloadBtn.classList.add("primary-btn"); btnExportPatch.style.display = "flex"; btnImportPatch.style.display = "flex"; btnSharePatch.style.display = "flex"; patchDivider.style.display = "block"; compareSection.style.display = "block";
+            emptyMsg.style.display = "none"; editorContainer.style.display = "flex"; hexSearchContainer.style.display = "flex"; downloadBtn.disabled = false; downloadBtn.classList.remove("outline-btn"); downloadBtn.classList.add("primary-btn"); compareSection.style.display = "block";
             setTimeout(() => { extractPropertiesBulletproof(); renderHexEditor(); }, 50);
         };
         reader.readAsArrayBuffer(file); 
@@ -92,76 +68,8 @@ document.addEventListener("DOMContentLoaded", () => {
     uploadCompare.addEventListener("change", (e) => {
         const file = e.target.files[0]; if (!file || !uint8Array) return;
         compareFileName = file.name; const reader = new FileReader();
-        reader.onload = (event) => {
-            compareUint8Array = new Uint8Array(event.target.result); compareDetails.style.display = "block";
-            document.querySelector(".tabs button[data-target='hex-view']").click(); renderHexEditor(); 
-        };
+        reader.onload = (event) => { compareUint8Array = new Uint8Array(event.target.result); compareDetails.style.display = "block"; document.querySelector(".tabs button[data-target='hex-view']").click(); renderHexEditor(); };
         reader.readAsArrayBuffer(file);
-    });
-
-    btnSharePatch.addEventListener("click", () => {
-        if (!uint8Array || !originalUint8Array) return;
-        let changes = []; for (let i = 0; i < uint8Array.length; i++) { if (uint8Array[i] !== originalUint8Array[i]) changes.push({ o: i, v: uint8Array[i] }); }
-        if (changes.length === 0) return showToast(translations[currentLang].patch_empty);
-        if (!supabase) return showToast(translations[currentLang].conn_error);
-        shareModal.classList.remove("hidden");
-    });
-
-    shareCancel.addEventListener("click", () => { shareModal.classList.add("hidden"); });
-
-    shareSave.addEventListener("click", async () => {
-        if (!supabase) return showToast(translations[currentLang].conn_error);
-        const author = shareAuthor.value.trim() || "Anonim", game = shareGame.value.trim() || "Bilinmiyor", title = shareTitle.value.trim() || "İsimsiz Yama";
-        let changes = []; for (let i = 0; i < uint8Array.length; i++) { if (uint8Array[i] !== originalUint8Array[i]) changes.push({ o: i, v: uint8Array[i] }); }
-        const patchData = { savstudio: true, version: 1, changes: changes };
-        shareSave.disabled = true; shareSave.innerText = "...";
-        const { data, error } = await supabase.from('community_patches').insert([{ title: title, author: author, game_name: game, patch_data: patchData }]);
-        shareSave.disabled = false; shareSave.innerText = translations[currentLang].share_btn; shareModal.classList.add("hidden");
-        if (error) { showToast(translations[currentLang].share_fail); } else { showToast(translations[currentLang].share_success); shareAuthor.value = ""; shareGame.value = ""; shareTitle.value = ""; }
-    });
-
-    async function loadCommunityPatches() {
-        communityLoader.style.display = "block"; communityList.style.display = "none"; communityList.innerHTML = "";
-        if (!supabase) { communityLoader.style.display = "none"; communityList.style.display = "flex"; communityList.innerHTML = `<p style="text-align:center; color:#ff4444;">${translations[currentLang].conn_error}</p>`; return; }
-        const { data, error } = await supabase.from('community_patches').select('*').order('created_at', { ascending: false }).limit(20);
-        communityLoader.style.display = "none"; communityList.style.display = "flex";
-        if (error || !data || data.length === 0) { communityList.innerHTML = `<p style="text-align:center; color:var(--text-muted);">Henüz paylaşılan yama yok.</p>`; return; }
-        data.forEach(patch => {
-            const date = new Date(patch.created_at).toLocaleDateString(); const changesCount = patch.patch_data.changes ? patch.patch_data.changes.length : 0;
-            const card = document.createElement("div"); card.className = "community-card";
-            card.innerHTML = `<div class="community-info"><span class="community-title">${patch.title}</span><span class="community-meta">${patch.game_name} | Yazar: ${patch.author}</span><span class="community-meta" style="color:var(--text-main)">${changesCount} değişiklik | ${date}</span></div><button class="btn primary-btn apply-cloud-patch" data-id="${patch.id}"><i class="ph-bold ph-download-simple"></i> <span class="hide-mobile">${translations[currentLang].apply_btn}</span></button>`;
-            communityList.appendChild(card);
-        });
-        document.querySelectorAll(".apply-cloud-patch").forEach(btn => {
-            btn.addEventListener("click", (e) => {
-                if(!uint8Array) return showToast(translations[currentLang].no_file);
-                const patchId = e.currentTarget.getAttribute("data-id"); const patchObj = data.find(p => p.id == patchId);
-                if(patchObj && patchObj.patch_data && patchObj.patch_data.changes) {
-                    let historyChanges = [];
-                    patchObj.patch_data.changes.forEach(c => { if (c.o < uint8Array.length) { let oldVal = uint8Array[c.o]; if(oldVal !== c.v) { historyChanges.push({ index: c.o, oldVal: oldVal, newVal: c.v }); uint8Array[c.o] = c.v; } } });
-                    if (historyChanges.length > 0) { pushHistory(historyChanges); extractPropertiesBulletproof(); renderHexEditor(); btnCommunity.click(); showToast(translations[currentLang].patch_success_import); } 
-                    else { showToast(translations[currentLang].patch_empty); }
-                }
-            });
-        });
-    }
-
-    btnExportPatch.addEventListener("click", () => {
-        if (!uint8Array || !originalUint8Array) return;
-        let changes = []; for (let i = 0; i < uint8Array.length; i++) { if (uint8Array[i] !== originalUint8Array[i]) changes.push({ o: i, v: uint8Array[i] }); }
-        if (changes.length === 0) return showToast(translations[currentLang].patch_empty);
-        const patchData = { savstudio: true, version: 1, changes: changes }; const blob = new Blob([JSON.stringify(patchData)], { type: "application/json" }); const url = URL.createObjectURL(blob); const a = document.createElement("a"); a.href = url; a.download = currentFileName.replace(".sav", "") + "_patch.json"; document.body.appendChild(a); a.click(); setTimeout(() => { document.body.removeChild(a); URL.revokeObjectURL(url); }, 0); showToast(translations[currentLang].patch_success_export);
-    });
-
-    uploadPatch.addEventListener("change", (e) => {
-        const file = e.target.files[0]; if (!file || !uint8Array) return; const reader = new FileReader();
-        reader.onload = (event) => {
-            try {
-                const patchData = JSON.parse(event.target.result); if (!patchData.savstudio || !patchData.changes) throw new Error("Invalid format");
-                let historyChanges = []; patchData.changes.forEach(c => { if (c.o < uint8Array.length) { let oldVal = uint8Array[c.o]; if(oldVal !== c.v) { historyChanges.push({ index: c.o, oldVal: oldVal, newVal: c.v }); uint8Array[c.o] = c.v; } } });
-                if (historyChanges.length > 0) { pushHistory(historyChanges); extractPropertiesBulletproof(); renderHexEditor(); showToast(translations[currentLang].patch_success_import); } else { showToast(translations[currentLang].patch_empty); }
-            } catch(err) { showToast(translations[currentLang].patch_error); } e.target.value = ""; 
-        }; reader.readAsText(file);
     });
 
     function extractPropertiesBulletproof() {
@@ -175,8 +83,7 @@ document.addEventListener("DOMContentLoaded", () => {
                     if (varName.length >= 2) { const valueOffset = index + t.offsetAdd; if (valueOffset + 4 <= uint8Array.length) properties.push({ name: varName, type: t.type, offset: valueOffset }); }
                 } catch(e) {} index += t.type.length;
             }
-        });
-        renderList(properties);
+        }); renderList(properties);
     }
 
     function renderList(properties) {
@@ -237,7 +144,6 @@ document.addEventListener("DOMContentLoaded", () => {
         if (foundIdx === -1 && startIdx > 0) { for (let i = 0; i < startIdx; i++) { let match = true; for (let j = 0; j < searchBytes.length; j++) { if (uint8Array[i + j] !== searchBytes[j]) { match = false; break; } } if (match) { foundIdx = i; break; } } }
         if (foundIdx !== -1) { searchMatchIndex = foundIdx; searchMatchLength = searchBytes.length; scrollToHex(foundIdx); renderHexEditor(); } else { showToast(translations[currentLang].search_not_found); searchMatchIndex = -1; searchMatchLength = 0; renderHexEditor(); }
     });
-
     hexSearchInput.addEventListener("keyup", (e) => { if (e.key === "Enter") hexSearchBtn.click(); });
 
     window.renderHexEditor = function() {
