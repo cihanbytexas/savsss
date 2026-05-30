@@ -136,6 +136,15 @@
         </section>
     </main>
 
+    <footer style="text-align: center; padding: 15px; background: var(--bg-panel); border-top: 1px solid var(--border-color); font-size: 0.75rem; color: var(--text-muted); flex-shrink: 0;">
+        <p>&copy; 2026 SavStudio. Tüm hakları saklıdır.</p>
+        <div style="margin-top: 8px; display: flex; justify-content: center; gap: 15px;">
+            <a href="/kullanim-sartlari" style="color: var(--text-muted); text-decoration: none; transition: 0.2s;" onmouseover="this.style.color='var(--text-main)'" onmouseout="this.style.color='var(--text-muted)'">Kullanım Şartları</a>
+            <span style="color: var(--border-color);">|</span>
+            <a href="/gizlilik-politikasi" style="color: var(--text-muted); text-decoration: none; transition: 0.2s;" onmouseover="this.style.color='var(--text-main)'" onmouseout="this.style.color='var(--text-muted)'">Gizlilik Politikası</a>
+        </div>
+    </footer>
+
     <script>
         if ('serviceWorker' in navigator) {
             navigator.serviceWorker.register('sw.js').catch(err => console.error("SW Registration failed:", err));
