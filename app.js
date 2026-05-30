@@ -35,6 +35,11 @@ function applyTranslations() {
 
 document.addEventListener("DOMContentLoaded", () => {
     const uploadInput = document.getElementById("upload-save"), downloadBtn = document.getElementById("download-save"), fileInfo = document.getElementById("file-info"), smartList = document.getElementById("smart-list"), emptyMsg = document.getElementById("empty-message"), editorContainer = document.getElementById("smart-editor-container"), hexSearchContainer = document.getElementById("hex-search-container"), searchInput = document.getElementById("search-input"), langToggleBtn = document.getElementById("lang-toggle"), tabs = document.querySelectorAll(".tab"), views = document.querySelectorAll(".view-content"), customModal = document.getElementById("custom-modal"), modalDesc = document.getElementById("modal-desc"), modalInput = document.getElementById("modal-input"), modalCancel = document.getElementById("modal-cancel"), modalSave = document.getElementById("modal-save"), hexSearchInput = document.getElementById("hex-search-input"), hexSearchBtn = document.getElementById("hex-search-btn"), btnUndo = document.getElementById("btn-undo"), btnRedo = document.getElementById("btn-redo"), compareSection = document.getElementById("compare-section"), uploadCompare = document.getElementById("upload-compare"), compareDetails = document.getElementById("compare-details");
+    
+    const btnExportPatch = document.getElementById("btn-export-patch");
+    const uploadPatch = document.getElementById("upload-patch");
+    const btnImportPatch = document.getElementById("btn-import-patch");
+    const patchDivider = document.getElementById("patch-divider");
 
     langToggleBtn.addEventListener("click", () => { currentLang = currentLang === "tr" ? "en" : "tr"; applyTranslations(); });
 
@@ -58,17 +63,115 @@ document.addEventListener("DOMContentLoaded", () => {
         currentFileName = file.name; const reader = new FileReader();
         reader.onload = (event) => {
             fileBuffer = event.target.result; dataView = new DataView(fileBuffer); uint8Array = new Uint8Array(fileBuffer); originalUint8Array = new Uint8Array(fileBuffer.slice(0)); compareUint8Array = null; compareFileName = ""; compareDetails.style.display = "none"; undoStack = []; redoStack = []; updateHistoryButtons(); searchMatchIndex = -1; searchMatchLength = 0;
-            fileInfo.innerHTML = `<strong>Aktif Dosya:</strong> <span style="color:var(--text-main)">${file.name}</span>`;
+            
+            let sizeStr = (file.size / 1024).toFixed(2) + " KB";
+            fileInfo.innerHTML = `<strong>${translations[currentLang].active_file}</strong><br><br><strong>${translations[currentLang].file_info_name}</strong> <span id="ui-filename" style="color:var(--text-main)">${file.name}</span> <br><strong>${translations[currentLang].file_info_size}</strong> <span id="ui-filesize" style="color:var(--text-main)">${sizeStr}</span> <br><strong>${translations[currentLang].file_info_status}</strong> <span id="ui-filestatus" style="color:var(--text-main)">${translations[currentLang].status_processing}</span>`;
+            
             emptyMsg.style.display = "none"; editorContainer.style.display = "flex"; hexSearchContainer.style.display = "flex"; downloadBtn.disabled = false; downloadBtn.classList.remove("outline-btn"); downloadBtn.classList.add("primary-btn"); compareSection.style.display = "block";
-            setTimeout(() => { extractPropertiesBulletproof(); renderHexEditor(); }, 50);
+            
+            btnImportPatch.style.display = "flex";
+            btnExportPatch.style.display = "flex";
+            patchDivider.style.display = "block";
+
+            setTimeout(() => { extractPropertiesBulletproof(); renderHexEditor(); applyTranslations(); }, 50);
         };
         reader.readAsArrayBuffer(file); 
+    });
+
+    btnExportPatch.addEventListener("click", () => {
+        if (!uint8Array || !originalUint8Array) return;
+        
+        let changes = [];
+        for (let i = 0; i < uint8Array.length; i++) {
+            if (uint8Array[i] !== originalUint8Array[i]) {
+                changes.push({
+                    offset: i,
+                    oldVal: originalUint8Array[i],
+                    newVal: uint8Array[i]
+                });
+            }
+        }
+
+        if (changes.length === 0) {
+            showToast(currentLang === "tr" ? "Dışa aktarılacak bir değişiklik bulunamadı!" : "No changes found to export!");
+            return;
+        }
+
+        const patchData = JSON.stringify({ 
+            app: "SavStudio",
+            filename: currentFileName, 
+            timestamp: new Date().toISOString(),
+            changes: changes 
+        }, null, 2);
+
+        const blob = new Blob([patchData], { type: "application/json" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = currentFileName.replace(".sav", "") + "_patch.json";
+        document.body.appendChild(a);
+        a.click();
+        
+        setTimeout(() => { 
+            document.body.removeChild(a); 
+            URL.revokeObjectURL(url); 
+        }, 0);
+        
+        showToast(currentLang === "tr" ? "Yama başarıyla dışa aktarıldı." : "Patch exported successfully.");
+    });
+
+    uploadPatch.addEventListener("change", (e) => {
+        const file = e.target.files[0];
+        if (!file || !uint8Array) return;
+
+        const reader = new FileReader();
+        reader.onload = (event) => {
+            try {
+                const patchData = JSON.parse(event.target.result);
+                
+                if (!patchData.changes || !Array.isArray(patchData.changes)) {
+                    throw new Error("Geçersiz yama formatı.");
+                }
+
+                let historyChanges = [];
+                let appliedCount = 0;
+
+                patchData.changes.forEach(change => {
+                    const offset = change.offset;
+                    const newVal = change.newVal;
+
+                    if (offset >= 0 && offset < uint8Array.length) {
+                        const oldVal = uint8Array[offset];
+                        if (oldVal !== newVal) {
+                            historyChanges.push({ index: offset, oldVal: oldVal, newVal: newVal });
+                            uint8Array[offset] = newVal;
+                            appliedCount++;
+                        }
+                    }
+                });
+
+                if (appliedCount > 0) {
+                    pushHistory(historyChanges);
+                    extractPropertiesBulletproof();
+                    renderHexEditor();
+                    showToast(currentLang === "tr" ? `${appliedCount} değişiklik başarıyla uygulandı.` : `${appliedCount} changes applied successfully.`);
+                } else {
+                    showToast(currentLang === "tr" ? "Uygulanacak yeni bir değişiklik bulunamadı." : "No new changes to apply.");
+                }
+
+            } catch (err) {
+                showToast(currentLang === "tr" ? "Yama dosyası okunamadı: Format hatası." : "Failed to read patch: Invalid format.");
+            }
+            
+            e.target.value = "";
+        };
+        reader.readAsText(file);
     });
 
     uploadCompare.addEventListener("change", (e) => {
         const file = e.target.files[0]; if (!file || !uint8Array) return;
         compareFileName = file.name; const reader = new FileReader();
-        reader.onload = (event) => { compareUint8Array = new Uint8Array(event.target.result); compareDetails.style.display = "block"; document.querySelector(".tabs button[data-target='hex-view']").click(); renderHexEditor(); };
+        reader.onload = (event) => { compareUint8Array = new Uint8Array(event.target.result); compareDetails.style.display = "block"; document.querySelector(".tabs button[data-target='hex-view']").click(); renderHexEditor(); applyTranslations(); };
         reader.readAsArrayBuffer(file);
     });
 
@@ -173,7 +276,12 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     searchInput.addEventListener("input", (e) => { const term = e.target.value.toLowerCase(); document.querySelectorAll(".smart-item").forEach(item => { item.style.display = item.querySelector(".smart-name").innerText.toLowerCase().includes(term) ? "flex" : "none"; }); });
+    
     downloadBtn.addEventListener("click", () => { const blob = new Blob([fileBuffer], { type: "application/octet-stream" }); const url = URL.createObjectURL(blob); const a = document.createElement("a"); a.href = url; a.download = "edited_" + currentFileName; document.body.appendChild(a); a.click(); setTimeout(() => { document.body.removeChild(a); URL.revokeObjectURL(url); }, 0); });
 
-    applyTranslations();
+    setTimeout(() => {
+        const splash = document.getElementById("splash-screen");
+        if (splash) { splash.classList.add("hidden"); }
+        applyTranslations();
+    }, 1000);
 });
