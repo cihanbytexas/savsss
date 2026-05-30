@@ -29,6 +29,9 @@
             font-family: var(--font-ui);
             overflow-wrap: break-word;
         }
+        
+        .top-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; }
+        
         .legal-container h1 { color: var(--text-main); margin-bottom: 5px; font-size: 2rem; letter-spacing: 0.5px; }
         .legal-container .last-update { color: var(--text-muted); font-size: 0.85rem; font-family: var(--font-mono); margin-bottom: 30px; display: block; padding-bottom: 20px; border-bottom: 1px solid var(--border-color); }
         .legal-container h2 { color: var(--text-main); margin-bottom: 15px; margin-top: 35px; font-size: 1.3rem; border-left: 3px solid var(--accent-bg); padding-left: 10px; }
@@ -37,8 +40,8 @@
         .legal-container li { margin-bottom: 8px; font-size: 0.95rem; }
         .legal-container strong { color: var(--text-main); font-weight: 600; }
         
-        .back-link { display: inline-flex; align-items: center; gap: 8px; color: var(--text-muted); text-decoration: none; font-weight: 600; margin-bottom: 30px; transition: 0.2s; padding: 8px 16px; border: 1px solid var(--border-color); border-radius: 4px; background: var(--bg-base); text-transform: uppercase; font-size: 0.8rem; }
-        .back-link:hover { color: var(--accent-text); background: var(--accent-bg); border-color: var(--accent-bg); }
+        .btn-action { display: inline-flex; align-items: center; gap: 8px; color: var(--text-muted); text-decoration: none; font-weight: 600; transition: 0.2s; padding: 8px 16px; border: 1px solid var(--border-color); border-radius: 4px; background: var(--bg-base); text-transform: uppercase; font-size: 0.8rem; cursor: pointer; }
+        .btn-action:hover { color: var(--accent-text); background: var(--accent-bg); border-color: var(--accent-bg); }
         
         /* Mobil Ekran Optimizasyonu */
         @media (max-width: 600px) { 
@@ -49,26 +52,88 @@
 </head>
 <body>
     <div class="legal-container">
-        <a href="/" class="back-link"><i class="ph-bold ph-arrow-left"></i> Ana Sayfaya Dön</a>
         
-        <h1>Gizlilik Politikası</h1>
-        <span class="last-update">Son Güncelleme Tarihi: 30 Mayıs 2026</span>
+        <div class="top-bar">
+            <a href="/" class="btn-action" id="back-btn"><i class="ph-bold ph-arrow-left"></i> <span id="back-text">Ana Sayfaya Dön</span></a>
+            <button class="btn-action" id="lang-toggle">EN</button>
+        </div>
 
-        <h2>1. Veri İşleme ve "İstemci Tarafı" (Client-Side) Mimarisi</h2>
-        <p>SavStudio, kullanıcı gizliliğini temel alan bir mühendislik yaklaşımıyla geliştirilmiştir. Sitemizi kullandığınızda ve .sav dosyalarınızı yüklediğinizde, bu dosyalar <strong>kesinlikle hiçbir uzak sunucuya, bulut depolama alanına veya üçüncü taraf veri tabanına aktarılmaz.</strong></p>
-        <p>Tüm dosya okuma, veri ayrıştırma (parsing) ve hex düzenleme işlemleri cihazınızın kendi işlemcisi ve belleği (RAM) kullanılarak, doğrudan tarayıcınızın (Chrome, Safari, Edge vb.) içerisinde yerel olarak gerçekleşir.</p>
+        <div id="content-tr">
+            <h1>Gizlilik Politikası</h1>
+            <span class="last-update">Son Güncelleme Tarihi: 30 Mayıs 2026</span>
 
-        <h2>2. Kişisel Verilerin Toplanmaması</h2>
-        <p>SavStudio bir üyelik sistemi gerektirmez ve kullanıcıları tanımlamaya yönelik (isim, e-posta, IP adresi geçmişi, oyun ID'leri vb.) hiçbir kişisel veri toplamaz, kaydetmez veya izlemez. Geliştiricilerin, üzerinde çalıştığınız dosyaların içeriğini görme teknik imkanı bulunmamaktadır.</p>
+            <h2>1. Veri İşleme ve "İstemci Tarafı" (Client-Side) Mimarisi</h2>
+            <p>SavStudio, kullanıcı gizliliğini temel alan bir mühendislik yaklaşımıyla geliştirilmiştir. Sitemizi kullandığınızda ve .sav dosyalarınızı yüklediğinizde, bu dosyalar <strong>kesinlikle hiçbir uzak sunucuya, bulut depolama alanına veya üçüncü taraf veri tabanına aktarılmaz.</strong></p>
+            <p>Tüm dosya okuma, veri ayrıştırma (parsing) ve hex düzenleme işlemleri cihazınızın kendi işlemcisi ve belleği (RAM) kullanılarak, doğrudan tarayıcınızın (Chrome, Safari, Edge vb.) içerisinde yerel olarak gerçekleşir.</p>
 
-        <h2>3. Tarayıcı Önbelleği ve PWA (Çevrimdışı Kullanım)</h2>
-        <p>Hizmetimizin daha hızlı çalışması ve internet bağlantısı olmadan da kullanılabilmesi (Progressive Web App) amacıyla, sitenin statik arayüz dosyaları (HTML, CSS, JS) tarayıcınızın yerel önbelleğine (Service Worker Cache) kaydedilir. Bu işlem tamamen standart web teknolojileriyle yapılır ve herhangi bir takip mekanizması içermez.</p>
+            <h2>2. Kişisel Verilerin Toplanmaması</h2>
+            <p>SavStudio bir üyelik sistemi gerektirmez ve kullanıcıları tanımlamaya yönelik (isim, e-posta, IP adresi geçmişi, oyun ID'leri vb.) hiçbir kişisel veri toplamaz, kaydetmez veya izlemez. Geliştiricilerin, üzerinde çalıştığınız dosyaların içeriğini görme teknik imkanı bulunmamaktadır.</p>
 
-        <h2>4. Çerezler (Cookies) ve Analitik Araçları</h2>
-        <p>Uygulamamızın çalışması için zorunlu olan temel çerezler dışında, kullanıcıları web genelinde takip eden reklam çerezleri kullanılmamaktadır. Yalnızca sitemizin performansını ölçmek, ziyaretçi sayısını ve hangi ülkelerden erişim sağlandığını görmek amacıyla tamamen anonimleştirilmiş, standart trafik analitik araçları kullanılabilir.</p>
+            <h2>3. Tarayıcı Önbelleği ve PWA (Çevrimdışı Kullanım)</h2>
+            <p>Hizmetimizin daha hızlı çalışması ve internet bağlantısı olmadan da kullanılabilmesi (Progressive Web App) amacıyla, sitenin statik arayüz dosyaları (HTML, CSS, JS) tarayıcınızın yerel önbelleğine (Service Worker Cache) kaydedilir. Bu işlem tamamen standart web teknolojileriyle yapılır ve herhangi bir takip mekanizması içermez.</p>
 
-        <h2>5. Dış Bağlantılar</h2>
-        <p>Web sitemiz içerisinde sosyal medya hesaplarımıza veya kod depolarına (GitHub vb.) yönlendiren dış bağlantılar bulunabilir. Bu dış sitelerin kendi gizlilik politikaları ve veri işleme yöntemleri SavStudio'nun kontrolü dışındadır.</p>
+            <h2>4. Çerezler (Cookies) ve Analitik Araçları</h2>
+            <p>Uygulamamızın çalışması için zorunlu olan temel çerezler dışında, kullanıcıları web genelinde takip eden reklam çerezleri kullanılmamaktadır. Yalnızca sitemizin performansını ölçmek, ziyaretçi sayısını ve hangi ülkelerden erişim sağlandığını görmek amacıyla tamamen anonimleştirilmiş, standart trafik analitik araçları kullanılabilir.</p>
+
+            <h2>5. Dış Bağlantılar</h2>
+            <p>Web sitemiz içerisinde sosyal medya hesaplarımıza veya kod depolarına (GitHub vb.) yönlendiren dış bağlantılar bulunabilir. Bu dış sitelerin kendi gizlilik politikaları ve veri işleme yöntemleri SavStudio'nun kontrolü dışındadır.</p>
+        </div>
+
+        <div id="content-en" style="display: none;">
+            <h1>Privacy Policy</h1>
+            <span class="last-update">Last Updated: May 30, 2026</span>
+
+            <h2>1. Data Processing and "Client-Side" Architecture</h2>
+            <p>SavStudio is developed with an engineering approach focused on user privacy. When you use our site and upload your .sav files, these files are <strong>absolutely never transferred to any remote server, cloud storage, or third-party database.</strong></p>
+            <p>All file reading, data parsing, and hex editing operations take place locally directly within your browser (Chrome, Safari, Edge, etc.) using your device's own processor and memory (RAM).</p>
+
+            <h2>2. No Collection of Personal Data</h2>
+            <p>SavStudio does not require a membership system and does not collect, save, or track any personal data aimed at identifying users (name, e-mail, IP address history, game IDs, etc.). Developers do not have the technical capability to view the content of the files you are working on.</p>
+
+            <h2>3. Browser Cache and PWA (Offline Use)</h2>
+            <p>In order for our service to work faster and be usable without an internet connection (Progressive Web App), the site's static interface files (HTML, CSS, JS) are saved in your browser's local cache (Service Worker Cache). This process is done entirely using standard web technologies and does not include any tracking mechanism.</p>
+
+            <h2>4. Cookies and Analytics Tools</h2>
+            <p>Apart from the essential cookies required for our application to function, advertising cookies that track users across the web are not used. Fully anonymized, standard traffic analytics tools may be used solely to measure our site's performance, see the number of visitors, and from which countries access is provided.</p>
+
+            <h2>5. External Links</h2>
+            <p>Our website may occasionally contain external links directing to our social media accounts or code repositories (GitHub, etc.). The privacy policies and data processing methods of these external sites are beyond the control of SavStudio.</p>
+        </div>
+
     </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const langToggle = document.getElementById('lang-toggle');
+            const contentTr = document.getElementById('content-tr');
+            const contentEn = document.getElementById('content-en');
+            const backText = document.getElementById('back-text');
+            const htmlTag = document.documentElement;
+            
+            let currentLang = 'tr'; // Varsayılan dil
+
+            langToggle.addEventListener('click', () => {
+                if (currentLang === 'tr') {
+                    // İngilizceye Geç
+                    contentTr.style.display = 'none';
+                    contentEn.style.display = 'block';
+                    langToggle.innerText = 'TR';
+                    backText.innerText = 'Return to Home';
+                    document.title = 'Privacy Policy | SavStudio';
+                    htmlTag.lang = 'en';
+                    currentLang = 'en';
+                } else {
+                    // Türkçeye Geç
+                    contentEn.style.display = 'none';
+                    contentTr.style.display = 'block';
+                    langToggle.innerText = 'EN';
+                    backText.innerText = 'Ana Sayfaya Dön';
+                    document.title = 'Gizlilik Politikası | SavStudio';
+                    htmlTag.lang = 'tr';
+                    currentLang = 'tr';
+                }
+            });
+        });
+    </script>
 </body>
 </html>
