@@ -3,7 +3,20 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>SavStudio | Data Editor</title>
+    
+    <title>SavStudio | Online .sav File Editor & Hex Viewer</title>
+    <meta name="description" content="Tarayıcı üzerinden çalışan, hızlı, güvenli ve ücretsiz Unreal Engine .sav (GVAS) dosya düzenleyicisi. Kurulumsuz Hex editörü ve oyun kayıt (save) veri değiştirici.">
+    <meta name="keywords" content="sav editor, save editor, unreal engine sav, gvas editor, hex editor, online sav editor, browser hex editor, veri düzenleyici">
+    <meta name="author" content="SavStudio">
+    <meta name="robots" content="index, follow">
+    <meta name="language" content="Turkish">
+    
+    <meta property="og:title" content="SavStudio | Data Editor">
+    <meta property="og:description" content="Gelişmiş online .sav dosya düzenleyici. Değerleri ve hex kodlarını anında tarayıcınızda düzenleyin.">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://savstudio.com">
+    <meta property="og:image" content="icon-512.png">
+    
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#0a0a0a">
     
@@ -34,7 +47,7 @@
     </div>
 
     <nav class="navbar">
-        <div class="logo">SavStudio</div>
+        <h1 class="logo">SavStudio</h1>
         <div class="nav-actions">
             <button class="btn outline-btn icon-btn" id="btn-undo" data-i18n-title="undo" title="Geri Al" disabled><i class="ph-bold ph-arrow-u-up-left"></i></button>
             <button class="btn outline-btn icon-btn" id="btn-redo" data-i18n-title="redo" title="İleri Al" disabled><i class="ph-bold ph-arrow-u-up-right"></i></button>
@@ -75,7 +88,7 @@
                     <input type="file" id="upload-compare" accept=".sav" style="display: none;">
                 </label>
                 <div id="compare-details" style="display: none; margin-top: 15px; font-size: 0.8rem; color: var(--text-muted); line-height: 1.8;">
-                    </div>
+                </div>
             </div>
         </aside>
 
