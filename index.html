@@ -103,10 +103,44 @@
             </div>
 
             <div class="view-content active" id="smart-view">
-                <div class="empty-state" id="empty-message">
-                    <i class="ph-duotone ph-file-dashed"></i>
-                    <p data-i18n="empty_msg">Düzenlemeye başlamak için bir dosya yükleyin.</p>
+                
+                <div class="welcome-screen" id="empty-message">
+                    
+                    <div class="drop-zone" id="drop-zone">
+                        <i class="ph-duotone ph-file-dashed drop-icon"></i>
+                        <h2 data-i18n="welcome_drop">Dosyanızı Buraya Sürükleyin</h2>
+                        <p data-i18n="welcome_drop_sub">veya bilgisayarınızdan seçmek için tıklayın (.sav)</p>
+                        <input type="file" id="drop-zone-input" accept=".sav" style="display:none;">
+                    </div>
+
+                    <div class="welcome-info">
+                        <div class="info-card">
+                            <i class="ph-bold ph-lightning"></i>
+                            <h3 data-i18n="feat_fast_title">Hızlı ve Güvenli (Lokal İşlem)</h3>
+                            <p data-i18n="feat_fast_desc">SavStudio %100 tarayıcınızın belleğinde (Client-Side) çalışır. Dosyalarınız hiçbir uzak sunucuya gönderilmez veya kaydedilmez.</p>
+                        </div>
+                        <div class="info-card">
+                            <i class="ph-bold ph-game-controller"></i>
+                            <h3 data-i18n="feat_format_title">Desteklenen Formatlar</h3>
+                            <p data-i18n="feat_format_desc">Unreal Engine 4 ve 5 (GVAS) tabanlı oyun kayıtları için tam destek sunar. Palworld, Hogwarts Legacy, Jedi Survivor ve benzeri oyunların .sav verilerini güvenle düzenleyin.</p>
+                        </div>
+                    </div>
+
+                    <div class="changelog">
+                        <h3 data-i18n="changelog_title">Son Güncellemeler</h3>
+                        <div class="log-item">
+                            <span class="log-version">v1.2</span>
+                            <span class="log-date">Mayıs 2026</span>
+                            <span class="log-desc">JSON tabanlı yama (Patch) dışa aktarma ve içe aktarma sistemi eklendi. Tüm işlemler Geri Al (Undo) mekanizmasına entegre edildi.</span>
+                        </div>
+                        <div class="log-item">
+                            <span class="log-version">v1.1</span>
+                            <span class="log-date">Nisan 2026</span>
+                            <span class="log-desc">Gelişmiş Sanal Kaydırma (Virtual Scrolling) ile devasa hex dosyalarını sıfır donma ile okuma yeteneği ve dosya karşılaştırma (Diff) motoru eklendi.</span>
+                        </div>
+                    </div>
                 </div>
+
                 <div id="smart-editor-container" style="display: none;">
                     <div class="search-box">
                         <i class="ph-bold ph-magnifying-glass"></i>
