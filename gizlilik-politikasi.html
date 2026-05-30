@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gizlilik Politikası | SavStudio</title>
+    <meta name="robots" content="noindex, follow">
+    <link rel="stylesheet" href="style.css">
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+    <style>
+        .legal-container { max-width: 900px; margin: 40px auto; padding: 40px; background: var(--bg-panel); border: 1px solid var(--border-color); border-radius: 4px; line-height: 1.7; font-family: var(--font-ui); }
+        .legal-container h1 { color: var(--text-main); margin-bottom: 5px; font-size: 2rem; letter-spacing: 0.5px; }
+        .legal-container .last-update { color: var(--text-muted); font-size: 0.85rem; font-family: var(--font-mono); margin-bottom: 30px; display: block; padding-bottom: 20px; border-bottom: 1px solid var(--border-color); }
+        .legal-container h2 { color: var(--text-main); margin-bottom: 15px; margin-top: 35px; font-size: 1.3rem; border-left: 3px solid var(--accent-bg); padding-left: 10px; }
+        .legal-container p { color: var(--text-muted); margin-bottom: 15px; font-size: 0.95rem; text-align: justify; }
+        .legal-container ul { margin-left: 20px; color: var(--text-muted); margin-bottom: 15px; }
+        .legal-container li { margin-bottom: 8px; font-size: 0.95rem; }
+        .legal-container strong { color: var(--text-main); font-weight: 600; }
+        .back-link { display: inline-flex; align-items: center; gap: 8px; color: var(--text-muted); text-decoration: none; font-weight: 600; margin-bottom: 30px; transition: 0.2s; padding: 8px 16px; border: 1px solid var(--border-color); border-radius: 4px; background: var(--bg-base); text-transform: uppercase; font-size: 0.8rem; }
+        .back-link:hover { color: var(--accent-text); background: var(--accent-bg); border-color: var(--accent-bg); }
+        @media (max-width: 600px) { .legal-container { margin: 20px 10px; padding: 20px; } }
+    </style>
+</head>
+<body>
+    <div class="legal-container">
+        <a href="/" class="back-link"><i class="ph-bold ph-arrow-left"></i> Ana Sayfaya Dön</a>
+        
+        <h1>Gizlilik Politikası</h1>
+        <span class="last-update">Son Güncelleme Tarihi: 30 Mayıs 2026</span>
+
+        <h2>1. Veri İşleme ve "İstemci Tarafı" (Client-Side) Mimarisi</h2>
+        <p>SavStudio, kullanıcı gizliliğini temel alan bir mühendislik yaklaşımıyla geliştirilmiştir. Sitemizi kullandığınızda ve .sav dosyalarınızı yüklediğinizde, bu dosyalar <strong>kesinlikle hiçbir uzak sunucuya, bulut depolama alanına veya üçüncü taraf veri tabanına aktarılmaz.</strong></p>
+        <p>Tüm dosya okuma, veri ayrıştırma (parsing) ve hex düzenleme işlemleri cihazınızın kendi işlemcisi ve belleği (RAM) kullanılarak, doğrudan tarayıcınızın (Chrome, Safari, Edge vb.) içerisinde yerel olarak gerçekleşir.</p>
+
+        <h2>2. Kişisel Verilerin Toplanmaması</h2>
+        <p>SavStudio bir üyelik sistemi gerektirmez ve kullanıcıları tanımlamaya yönelik (isim, e-posta, IP adresi geçmişi, oyun ID'leri vb.) hiçbir kişisel veri toplamaz, kaydetmez veya izlemez. Geliştiricilerin, üzerinde çalıştığınız dosyaların içeriğini görme teknik imkanı bulunmamaktadır.</p>
+
+        <h2>3. Tarayıcı Önbelleği ve PWA (Çevrimdışı Kullanım)</h2>
+        <p>Hizmetimizin daha hızlı çalışması ve internet bağlantısı olmadan da kullanılabilmesi (Progressive Web App) amacıyla, sitenin statik arayüz dosyaları (HTML, CSS, JS) tarayıcınızın yerel önbelleğine (Service Worker Cache) kaydedilir. Bu işlem tamamen standart web teknolojileriyle yapılır ve herhangi bir takip mekanizması içermez.</p>
+
+        <h2>4. Çerezler (Cookies) ve Analitik Araçları</h2>
+        <p>Uygulamamızın çalışması için zorunlu olan temel çerezler dışında, kullanıcıları web genelinde takip eden reklam çerezleri kullanılmamaktadır. Yalnızca sitemizin performansını ölçmek, ziyaretçi sayısını ve hangi ülkelerden erişim sağlandığını görmek amacıyla tamamen anonimleştirilmiş, standart trafik analitik araçları kullanılabilir.</p>
+
+        <h2>5. Dış Bağlantılar</h2>
+        <p>Web sitemiz içerisinde sosyal medya hesaplarımıza veya kod depolarına (GitHub vb.) yönlendiren dış bağlantılar bulunabilir. Bu dış sitelerin kendi gizlilik politikaları ve veri işleme yöntemleri SavStudio'nun kontrolü dışındadır.</p>
+    </div>
+</body>
+</html>
