@@ -1,9 +1,11 @@
 const translations = {
     "tr": {
-        "upload_btn": "DOSYA YÜKLE", "download_btn": "KAYDET", "compare_btn": "KARŞILAŞTIR", "compared_file": "Karşılaştırılan:", "main_file": "Ana Dosya:", "active_file": "Aktif Dosya", "no_file": "Henüz dosya seçilmedi. Düzenlemek için .sav uzantılı bir dosya yükleyin.", "tab_values": "Değerler", "tab_hex": "Hex Editör", "empty_msg": "Düzenlemeye başlamak için bir dosya yükleyin.", "search_placeholder": "Arama yap... (Örn: TotalShoot)", "hex_search_placeholder": "Hex veya Metin arat...", "search_btn": "BUL", "offset": "Offset", "ascii": "ASCII", "file_info_name": "Dosya:", "file_info_size": "Boyut:", "file_info_status": "Durum:", "status_processing": "İşleniyor...", "status_success": "Başarılı", "status_fail": "Okuma Başarısız", "fail_desc": "Bu dosyada okunabilir değer bulunamadı.<br><br>Hex Editör sekmesini kullanın.", "modal_title": "Hex Değeri Düzenle", "modal_cancel": "İPTAL", "modal_save": "KAYDET", "search_not_found": "Aranan değer bulunamadı!", "undo": "Geri Al", "redo": "İleri Al", "toggle_lang": "EN"
+        "upload_btn": "DOSYA YÜKLE", "download_btn": "KAYDET", "compare_btn": "KARŞILAŞTIR", "compared_file": "Karşılaştırılan:", "main_file": "Ana Dosya:", "active_file": "Aktif Dosya", "no_file": "Henüz dosya seçilmedi. Düzenlemek için .sav uzantılı bir dosya yükleyin.", "tab_values": "Değerler", "tab_hex": "Hex Editör", "empty_msg": "Düzenlemeye başlamak için bir dosya yükleyin.", "search_placeholder": "Arama yap... (Örn: TotalShoot)", "hex_search_placeholder": "Hex veya Metin arat...", "search_btn": "BUL", "offset": "Offset", "ascii": "ASCII", "file_info_name": "Dosya:", "file_info_size": "Boyut:", "file_info_status": "Durum:", "status_processing": "İşleniyor...", "status_success": "Başarılı", "status_fail": "Okuma Başarısız", "fail_desc": "Bu dosyada okunabilir değer bulunamadı.<br><br>Hex Editör sekmesini kullanın.", "modal_title": "Hex Değeri Düzenle", "modal_cancel": "İPTAL", "modal_save": "KAYDET", "search_not_found": "Aranan değer bulunamadı!", "undo": "Geri Al", "redo": "İleri Al", "toggle_lang": "EN",
+        "welcome_drop": "Dosyanızı Buraya Sürükleyin", "welcome_drop_sub": "veya bilgisayarınızdan seçmek için tıklayın (.sav)", "feat_fast_title": "Hızlı ve Güvenli (Lokal İşlem)", "feat_fast_desc": "SavStudio %100 tarayıcınızın belleğinde (Client-Side) çalışır. Dosyalarınız hiçbir uzak sunucuya gönderilmez veya kaydedilmez.", "feat_format_title": "Desteklenen Formatlar", "feat_format_desc": "Unreal Engine 4 ve 5 (GVAS) tabanlı oyun kayıtları için tam destek sunar. Palworld, Hogwarts Legacy, Jedi Survivor ve benzeri oyunların .sav verilerini güvenle düzenleyin.", "changelog_title": "Son Güncellemeler"
     },
     "en": {
-        "upload_btn": "UPLOAD", "download_btn": "SAVE", "compare_btn": "COMPARE", "compared_file": "Compared:", "main_file": "Main File:", "active_file": "Active File", "no_file": "No file selected. Upload a .sav file to start editing.", "tab_values": "Values", "tab_hex": "Hex Editor", "empty_msg": "Upload a file to begin editing.", "search_placeholder": "Search... (e.g., TotalShoot)", "hex_search_placeholder": "Search Hex or Text...", "search_btn": "FIND", "offset": "Offset", "ascii": "ASCII", "file_info_name": "File:", "file_info_size": "Size:", "file_info_status": "Status:", "status_processing": "Processing...", "status_success": "Success", "status_fail": "Read Failed", "fail_desc": "No readable values found in this file.<br><br>Please use the Hex Editor.", "modal_title": "Edit Hex Value", "modal_cancel": "CANCEL", "modal_save": "SAVE", "search_not_found": "Value not found!", "undo": "Undo", "redo": "Redo", "toggle_lang": "TR"
+        "upload_btn": "UPLOAD", "download_btn": "SAVE", "compare_btn": "COMPARE", "compared_file": "Compared:", "main_file": "Main File:", "active_file": "Active File", "no_file": "No file selected. Upload a .sav file to start editing.", "tab_values": "Values", "tab_hex": "Hex Editor", "empty_msg": "Upload a file to begin editing.", "search_placeholder": "Search... (e.g., TotalShoot)", "hex_search_placeholder": "Search Hex or Text...", "search_btn": "FIND", "offset": "Offset", "ascii": "ASCII", "file_info_name": "File:", "file_info_size": "Size:", "file_info_status": "Status:", "status_processing": "Processing...", "status_success": "Success", "status_fail": "Read Failed", "fail_desc": "No readable values found in this file.<br><br>Please use the Hex Editor.", "modal_title": "Edit Hex Value", "modal_cancel": "CANCEL", "modal_save": "SAVE", "search_not_found": "Value not found!", "undo": "Undo", "redo": "Redo", "toggle_lang": "TR",
+        "welcome_drop": "Drag & Drop Your File Here", "welcome_drop_sub": "or click to select from your computer (.sav)", "feat_fast_title": "Fast & Secure (Local Processing)", "feat_fast_desc": "SavStudio operates 100% in your browser's memory (Client-Side). Your files are never sent to or stored on any remote server.", "feat_format_title": "Supported Formats", "feat_format_desc": "Full support for Unreal Engine 4 & 5 (GVAS) based save games. Safely edit .sav data for games like Palworld, Hogwarts Legacy, Jedi Survivor, etc.", "changelog_title": "Recent Updates"
     }
 };
 
@@ -36,10 +38,8 @@ function applyTranslations() {
 document.addEventListener("DOMContentLoaded", () => {
     const uploadInput = document.getElementById("upload-save"), downloadBtn = document.getElementById("download-save"), fileInfo = document.getElementById("file-info"), smartList = document.getElementById("smart-list"), emptyMsg = document.getElementById("empty-message"), editorContainer = document.getElementById("smart-editor-container"), hexSearchContainer = document.getElementById("hex-search-container"), searchInput = document.getElementById("search-input"), langToggleBtn = document.getElementById("lang-toggle"), tabs = document.querySelectorAll(".tab"), views = document.querySelectorAll(".view-content"), customModal = document.getElementById("custom-modal"), modalDesc = document.getElementById("modal-desc"), modalInput = document.getElementById("modal-input"), modalCancel = document.getElementById("modal-cancel"), modalSave = document.getElementById("modal-save"), hexSearchInput = document.getElementById("hex-search-input"), hexSearchBtn = document.getElementById("hex-search-btn"), btnUndo = document.getElementById("btn-undo"), btnRedo = document.getElementById("btn-redo"), compareSection = document.getElementById("compare-section"), uploadCompare = document.getElementById("upload-compare"), compareDetails = document.getElementById("compare-details");
     
-    const btnExportPatch = document.getElementById("btn-export-patch");
-    const uploadPatch = document.getElementById("upload-patch");
-    const btnImportPatch = document.getElementById("btn-import-patch");
-    const patchDivider = document.getElementById("patch-divider");
+    const btnExportPatch = document.getElementById("btn-export-patch"), uploadPatch = document.getElementById("upload-patch"), btnImportPatch = document.getElementById("btn-import-patch"), patchDivider = document.getElementById("patch-divider");
+    const dropZone = document.getElementById("drop-zone"), dropZoneInput = document.getElementById("drop-zone-input");
 
     langToggleBtn.addEventListener("click", () => { currentLang = currentLang === "tr" ? "en" : "tr"; applyTranslations(); });
 
@@ -58,8 +58,9 @@ document.addEventListener("DOMContentLoaded", () => {
     btnUndo.addEventListener("click", performUndo); btnRedo.addEventListener("click", performRedo);
     document.addEventListener("keydown", (e) => { if(e.ctrlKey && e.key.toLowerCase() === 'z') performUndo(); if(e.ctrlKey && e.key.toLowerCase() === 'y') performRedo(); });
 
-    uploadInput.addEventListener("change", (e) => {
-        const file = e.target.files[0]; if (!file) return;
+    // YENİ: Dosya okuma işlemini merkezi bir fonksiyona aldık (Sürükle bırak için)
+    function processUploadedFile(file) {
+        if (!file) return;
         currentFileName = file.name; const reader = new FileReader();
         reader.onload = (event) => {
             fileBuffer = event.target.result; dataView = new DataView(fileBuffer); uint8Array = new Uint8Array(fileBuffer); originalUint8Array = new Uint8Array(fileBuffer.slice(0)); compareUint8Array = null; compareFileName = ""; compareDetails.style.display = "none"; undoStack = []; redoStack = []; updateHistoryButtons(); searchMatchIndex = -1; searchMatchLength = 0;
@@ -69,100 +70,58 @@ document.addEventListener("DOMContentLoaded", () => {
             
             emptyMsg.style.display = "none"; editorContainer.style.display = "flex"; hexSearchContainer.style.display = "flex"; downloadBtn.disabled = false; downloadBtn.classList.remove("outline-btn"); downloadBtn.classList.add("primary-btn"); compareSection.style.display = "block";
             
-            btnImportPatch.style.display = "flex";
-            btnExportPatch.style.display = "flex";
-            patchDivider.style.display = "block";
+            btnImportPatch.style.display = "flex"; btnExportPatch.style.display = "flex"; patchDivider.style.display = "block";
 
             setTimeout(() => { extractPropertiesBulletproof(); renderHexEditor(); applyTranslations(); }, 50);
         };
-        reader.readAsArrayBuffer(file); 
-    });
+        reader.readAsArrayBuffer(file);
+    }
+
+    // Navigasyon Yükle Butonu
+    uploadInput.addEventListener("change", (e) => processUploadedFile(e.target.files[0]));
+    
+    // Sürükle-Bırak Alanı Eventleri
+    if (dropZone) {
+        dropZone.addEventListener("click", () => dropZoneInput.click());
+        dropZoneInput.addEventListener("change", (e) => processUploadedFile(e.target.files[0]));
+        dropZone.addEventListener("dragover", (e) => { e.preventDefault(); dropZone.classList.add("drag-active"); });
+        dropZone.addEventListener("dragleave", () => dropZone.classList.remove("drag-active"));
+        dropZone.addEventListener("drop", (e) => {
+            e.preventDefault(); dropZone.classList.remove("drag-active");
+            if (e.dataTransfer.files.length) processUploadedFile(e.dataTransfer.files[0]);
+        });
+    }
 
     btnExportPatch.addEventListener("click", () => {
         if (!uint8Array || !originalUint8Array) return;
-        
         let changes = [];
-        for (let i = 0; i < uint8Array.length; i++) {
-            if (uint8Array[i] !== originalUint8Array[i]) {
-                changes.push({
-                    offset: i,
-                    oldVal: originalUint8Array[i],
-                    newVal: uint8Array[i]
-                });
-            }
-        }
+        for (let i = 0; i < uint8Array.length; i++) { if (uint8Array[i] !== originalUint8Array[i]) changes.push({ offset: i, oldVal: originalUint8Array[i], newVal: uint8Array[i] }); }
+        if (changes.length === 0) { showToast(currentLang === "tr" ? "Dışa aktarılacak bir değişiklik bulunamadı!" : "No changes found to export!"); return; }
 
-        if (changes.length === 0) {
-            showToast(currentLang === "tr" ? "Dışa aktarılacak bir değişiklik bulunamadı!" : "No changes found to export!");
-            return;
-        }
-
-        const patchData = JSON.stringify({ 
-            app: "SavStudio",
-            filename: currentFileName, 
-            timestamp: new Date().toISOString(),
-            changes: changes 
-        }, null, 2);
-
-        const blob = new Blob([patchData], { type: "application/json" });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement("a");
-        a.href = url;
-        a.download = currentFileName.replace(".sav", "") + "_patch.json";
-        document.body.appendChild(a);
-        a.click();
-        
-        setTimeout(() => { 
-            document.body.removeChild(a); 
-            URL.revokeObjectURL(url); 
-        }, 0);
-        
+        const patchData = JSON.stringify({ app: "SavStudio", filename: currentFileName, timestamp: new Date().toISOString(), changes: changes }, null, 2);
+        const blob = new Blob([patchData], { type: "application/json" }); const url = URL.createObjectURL(blob); const a = document.createElement("a");
+        a.href = url; a.download = currentFileName.replace(".sav", "") + "_patch.json"; document.body.appendChild(a); a.click();
+        setTimeout(() => { document.body.removeChild(a); URL.revokeObjectURL(url); }, 0);
         showToast(currentLang === "tr" ? "Yama başarıyla dışa aktarıldı." : "Patch exported successfully.");
     });
 
     uploadPatch.addEventListener("change", (e) => {
-        const file = e.target.files[0];
-        if (!file || !uint8Array) return;
-
+        const file = e.target.files[0]; if (!file || !uint8Array) return;
         const reader = new FileReader();
         reader.onload = (event) => {
             try {
                 const patchData = JSON.parse(event.target.result);
-                
-                if (!patchData.changes || !Array.isArray(patchData.changes)) {
-                    throw new Error("Geçersiz yama formatı.");
-                }
-
-                let historyChanges = [];
-                let appliedCount = 0;
-
+                if (!patchData.changes || !Array.isArray(patchData.changes)) throw new Error("Geçersiz yama formatı.");
+                let historyChanges = [], appliedCount = 0;
                 patchData.changes.forEach(change => {
-                    const offset = change.offset;
-                    const newVal = change.newVal;
-
+                    const offset = change.offset; const newVal = change.newVal;
                     if (offset >= 0 && offset < uint8Array.length) {
                         const oldVal = uint8Array[offset];
-                        if (oldVal !== newVal) {
-                            historyChanges.push({ index: offset, oldVal: oldVal, newVal: newVal });
-                            uint8Array[offset] = newVal;
-                            appliedCount++;
-                        }
+                        if (oldVal !== newVal) { historyChanges.push({ index: offset, oldVal: oldVal, newVal: newVal }); uint8Array[offset] = newVal; appliedCount++; }
                     }
                 });
-
-                if (appliedCount > 0) {
-                    pushHistory(historyChanges);
-                    extractPropertiesBulletproof();
-                    renderHexEditor();
-                    showToast(currentLang === "tr" ? `${appliedCount} değişiklik başarıyla uygulandı.` : `${appliedCount} changes applied successfully.`);
-                } else {
-                    showToast(currentLang === "tr" ? "Uygulanacak yeni bir değişiklik bulunamadı." : "No new changes to apply.");
-                }
-
-            } catch (err) {
-                showToast(currentLang === "tr" ? "Yama dosyası okunamadı: Format hatası." : "Failed to read patch: Invalid format.");
-            }
-            
+                if (appliedCount > 0) { pushHistory(historyChanges); extractPropertiesBulletproof(); renderHexEditor(); showToast(currentLang === "tr" ? `${appliedCount} değişiklik başarıyla uygulandı.` : `${appliedCount} changes applied successfully.`); } else { showToast(currentLang === "tr" ? "Uygulanacak yeni bir değişiklik bulunamadı." : "No new changes to apply."); }
+            } catch (err) { showToast(currentLang === "tr" ? "Yama dosyası okunamadı: Format hatası." : "Failed to read patch: Invalid format."); }
             e.target.value = "";
         };
         reader.readAsText(file);
@@ -216,8 +175,19 @@ document.addEventListener("DOMContentLoaded", () => {
                         if (type === "IntProperty") dataView.setInt32(offset, Number(newVal), true); else if (type === "FloatProperty") dataView.setFloat32(offset, Number(newVal), true); else if (type === "BoolProperty") { dataView.setUint8(offset, newVal); }
                         for(let i=0; i<bytesToSave; i++) changes.push({index: offset+i, oldVal: oldBuffer[i], newVal: uint8Array[offset+i]});
                     } else if (type === "StrProperty" || type === "NameProperty") {
-                        let origLen = 0; while(uint8Array[offset + origLen] !== 0 && origLen < 128) origLen++; let oldBuffer = new Uint8Array(fileBuffer.slice(offset, offset + origLen));
-                        for (let i=0; i<origLen; i++) { let newByte = i < newVal.length ? newVal.charCodeAt(i) : 0; dataView.setUint8(offset + i, newByte); changes.push({index: offset+i, oldVal: oldBuffer[i], newVal: newByte}); }
+                        let origLen = 0; while(uint8Array[offset + origLen] !== 0 && origLen < 128) origLen++; 
+                        
+                        if (newVal.length > origLen) {
+                            showToast(currentLang === "tr" ? `Uyarı: Metin çok uzun! Maksimum ${origLen} karakter olmalı. Fazlası kırpıldı.` : `Warning: Text too long! Max ${origLen} chars. Excess truncated.`);
+                            newVal = newVal.substring(0, origLen);
+                        }
+
+                        let oldBuffer = new Uint8Array(fileBuffer.slice(offset, offset + origLen));
+                        for (let i = 0; i < origLen; i++) { 
+                            let newByte = i < newVal.length ? newVal.charCodeAt(i) : 0; 
+                            dataView.setUint8(offset + i, newByte); 
+                            changes.push({index: offset+i, oldVal: oldBuffer[i], newVal: newByte}); 
+                        }
                     }
                     if(changes.length > 0) pushHistory(changes); if (type !== "BoolProperty") e.target.classList.add("edited-val"); renderHexEditor(); 
                 } catch(err) {}
