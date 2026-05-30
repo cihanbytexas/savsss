@@ -1,11 +1,22 @@
-const CACHE_NAME = 'savstudio-v2';
+const CACHE_NAME = 'savstudio-v3';
+const ASSETS_TO_CACHE = [
+    './',
+    './index.html',
+    './style.css',
+    './app.js',
+    './manifest.json'
+];
 
 self.addEventListener('install', (e) => {
-    self.skipWaiting(); // Bekleme, anında yeni versiyona geç
+    self.skipWaiting();
+    e.waitUntil(
+        caches.open(CACHE_NAME).then((cache) => {
+            return cache.addAll(ASSETS_TO_CACHE);
+        })
+    );
 });
 
 self.addEventListener('activate', (e) => {
-    // Eski hatalı önbellekleri tamamen temizle
     e.waitUntil(
         caches.keys().then((keys) => {
             return Promise.all(keys.map((key) => {
@@ -16,7 +27,6 @@ self.addEventListener('activate', (e) => {
 });
 
 self.addEventListener('fetch', (e) => {
-    // ÖNCE İNTERNET (Taze kod) -> EĞER İNTERNET YOKSA HAFIZA (Cache)
     e.respondWith(
         fetch(e.request).catch(() => caches.match(e.request))
     );
