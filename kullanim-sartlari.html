@@ -29,6 +29,8 @@
             font-family: var(--font-ui);
             overflow-wrap: break-word;
         }
+        .top-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; }
+        
         .legal-container h1 { color: var(--text-main); margin-bottom: 5px; font-size: 2rem; letter-spacing: 0.5px; }
         .legal-container .last-update { color: var(--text-muted); font-size: 0.85rem; font-family: var(--font-mono); margin-bottom: 30px; display: block; padding-bottom: 20px; border-bottom: 1px solid var(--border-color); }
         .legal-container h2 { color: var(--text-main); margin-bottom: 15px; margin-top: 35px; font-size: 1.3rem; border-left: 3px solid var(--accent-bg); padding-left: 10px; }
@@ -37,8 +39,8 @@
         .legal-container li { margin-bottom: 8px; font-size: 0.95rem; }
         .legal-container strong { color: var(--text-main); font-weight: 600; }
         
-        .back-link { display: inline-flex; align-items: center; gap: 8px; color: var(--text-muted); text-decoration: none; font-weight: 600; margin-bottom: 30px; transition: 0.2s; padding: 8px 16px; border: 1px solid var(--border-color); border-radius: 4px; background: var(--bg-base); text-transform: uppercase; font-size: 0.8rem; }
-        .back-link:hover { color: var(--accent-text); background: var(--accent-bg); border-color: var(--accent-bg); }
+        .btn-action { display: inline-flex; align-items: center; gap: 8px; color: var(--text-muted); text-decoration: none; font-weight: 600; transition: 0.2s; padding: 8px 16px; border: 1px solid var(--border-color); border-radius: 4px; background: var(--bg-base); text-transform: uppercase; font-size: 0.8rem; cursor: pointer; }
+        .btn-action:hover { color: var(--accent-text); background: var(--accent-bg); border-color: var(--accent-bg); }
         
         /* Mobil Ekran Optimizasyonu */
         @media (max-width: 600px) { 
@@ -49,23 +51,127 @@
 </head>
 <body>
     <div class="legal-container">
-        <a href="/" class="back-link"><i class="ph-bold ph-arrow-left"></i> Ana Sayfaya Dön</a>
         
-        <h1>Kullanım Şartları ve Sorumluluk Reddi</h1>
-        <span class="last-update">Son Güncelleme Tarihi: 30 Mayıs 2026</span>
+        <div class="top-bar">
+            <a href="/" class="btn-action" id="back-btn"><i class="ph-bold ph-arrow-left"></i> <span id="back-text">Ana Sayfaya Dön</span></a>
+            <button class="btn-action" id="lang-toggle">EN</button>
+        </div>
+        
+        <div id="content-tr">
+            <h1>Kullanım Şartları ve Sorumluluk Reddi</h1>
+            <span class="last-update">Son Güncelleme Tarihi: 30 Mayıs 2026</span>
 
-        <h2>1. Sözleşmenin Kabulü</h2>
-        <p>SavStudio (bundan böyle "Site", "Araç" veya "Hizmet" olarak anılacaktır) web sitesine erişim sağlayarak ve bu aracı kullanarak, aşağıda belirtilen tüm hüküm ve koşulları okuduğunuzu, anladığınızı ve eksiksiz olarak kabul ettiğinizi beyan edersiniz. Bu şartların herhangi bir bölümünü kabul etmiyorsanız, siteyi ve aracı kullanmayı derhal bırakmalısınız.</p>
+            <h2>1. Sözleşmenin Kabulü</h2>
+            <p>SavStudio (bundan böyle "Site", "Araç" veya "Hizmet" olarak anılacaktır) web sitesine erişim sağlayarak ve bu aracı kullanarak, aşağıda belirtilen tüm hüküm ve koşulları okuduğunuzu, anladığınızı ve eksiksiz olarak kabul ettiğinizi beyan edersiniz. Bu şartların herhangi bir bölümünü kabul etmiyorsanız, siteyi ve aracı kullanmayı derhal bırakmalısınız.</p>
 
-        <h2>2. Hizmetin Tanımı ve Doğası</h2>
-        <p>SavStudio, kullanıcıların bilgisayarlarında veya cihazlarında bulunan yerel <strong>.sav (oyun kayıt verisi)</strong> dosyalarını tarayıcı ortamında incelemelerine, veri ofsetlerini (offset) görüntülemelerine ve hex veya metin formatında düzenlemelerine olanak tanıyan, tamamen "istemci tarafında" (client-side) çalışan bir web aracıdır. Site, girdiğiniz hiçbir dosyayı veya veriyi uzak bir sunucuya yüklemez, depolamaz veya işlemez.</p>
+            <h2>2. Hizmetin Tanımı ve Doğası</h2>
+            <p>SavStudio, kullanıcıların bilgisayarlarında veya cihazlarında bulunan yerel <strong>.sav (oyun kayıt verisi)</strong> dosyalarını tarayıcı ortamında incelemelerine, veri ofsetlerini (offset) görüntülemelerine ve hex veya metin formatında düzenlemelerine olanak tanıyan, tamamen "istemci tarafında" (client-side) çalışan bir web aracıdır. Site, girdiğiniz hiçbir dosyayı veya veriyi uzak bir sunucuya yüklemez, depolamaz veya işlemez.</p>
 
-        <h2>3. Sorumluluk Reddi Beyanı (Önemli Hükümler)</h2>
-        <p>Bu araç "olduğu gibi" ve "mevcut olduğu şekliyle" (as-is) hiçbir açık veya zımni garanti verilmeksizin sunulmaktadır. SavStudio'yu kullanmanız tamamen kendi riskinizdedir. Geliştiriciler, aracın kullanımından doğabilecek dolaylı veya doğrudan zararlardan sorumlu tutulamaz. Aşağıdaki senaryolar kullanıcı sorumluluğundadır:</p>
-        <ul>
-            <li><strong>Veri Kaybı ve Dosya Bozulması:</strong> İkili (binary) verileri veya hex kodlarını düzenlemek, orijinal dosya yapısını kalıcı olarak bozabilir. Kullanıcı, düzenleme yapmadan önce daima dosyalarının <strong>yedeklerini (backup) almakla</strong> yükümlüdür. İşlem sonrası bozulan veya kullanılamaz hale gelen oyun kayıtlarından SavStudio sorumlu değildir.</li>
-            <li><strong>Hesap Yasaklamaları (Ban Riski):</strong> Bu araç, sadece tek oyunculu (single-player) veya çevrimdışı (offline) ortamlarda, kullanıcının kendi verilerini test etmesi ve kişiselleştirmesi amacıyla tasarlanmıştır. Çevrimiçi (online), çok oyunculu (multiplayer) veya anti-hile (anti-cheat) yazılımlarıyla korunan oyunlarda bu aracın kullanılması sonucu oluşabilecek platform veya oyun yasaklamalarından (Steam, Epic Games, vb. kısıtlamaları) geliştiriciler sorumlu tutulamaz.</li>
-            <li><strong>Kusursuzluk Garantisinin Olmaması:</strong> Aracın belirli bir amaca uygunluğu, kesintisiz çalışacağı veya tamamen hatasız (bug-free) olduğu garanti edilmez.</li>
+            <h2>3. Sorumluluk Reddi Beyanı (Önemli Hükümler)</h2>
+            <p>Bu araç "olduğu gibi" ve "mevcut olduğu şekliyle" (as-is) hiçbir açık veya zımni garanti verilmeksizin sunulmaktadır. SavStudio'yu kullanmanız tamamen kendi riskinizdedir. Geliştiriciler, aracın kullanımından doğabilecek dolaylı veya doğrudan zararlardan sorumlu tutulamaz. Aşağıdaki senaryolar kullanıcı sorumluluğundadır:</p>
+            <ul>
+                <li><strong>Veri Kaybı ve Dosya Bozulması:</strong> İkili (binary) verileri veya hex kodlarını düzenlemek, orijinal dosya yapısını kalıcı olarak bozabilir. Kullanıcı, düzenleme yapmadan önce daima dosyalarının <strong>yedeklerini (backup) almakla</strong> yükümlüdür. İşlem sonrası bozulan veya kullanılamaz hale gelen oyun kayıtlarından SavStudio sorumlu değildir.</li>
+                <li><strong>Hesap Yasaklamaları (Ban Riski):</strong> Bu araç, sadece tek oyunculu (single-player) veya çevrimdışı (offline) ortamlarda, kullanıcının kendi verilerini test etmesi ve kişiselleştirmesi amacıyla tasarlanmıştır. Çevrimiçi (online), çok oyunculu (multiplayer) veya anti-hile (anti-cheat) yazılımlarıyla korunan oyunlarda bu aracın kullanılması sonucu oluşabilecek platform veya oyun yasaklamalarından (Steam, Epic Games, vb. kısıtlamaları) geliştiriciler sorumlu tutulamaz.</li>
+                <li><strong>Kusursuzluk Garantisinin Olmaması:</strong> Aracın belirli bir amaca uygunluğu, kesintisiz çalışacağı veya tamamen hatasız (bug-free) olduğu garanti edilmez.</li>
+            </ul>
+
+            <h2>4. Kullanıcı Yükümlülükleri ve Etik Kullanım</h2>
+            <p>Kullanıcı, hizmeti kullanırken yürürlükteki tüm yerel ve uluslararası yasalara uymayı kabul eder. SavStudio aracını aşağıdaki amaçlarla kullanmak kesinlikle yasaktır:</p>
+            <ul>
+                <li>Başkalarına ait verileri veya hesapları izinsiz olarak değiştirmek.</li>
+                <li>Rekabetçi oyun ortamlarında haksız avantaj (hile) elde etmek amacıyla diğer oyuncuların deneyimini bozacak eylemlerde bulunmak.</li>
+                <li>Siteye veya hizmete zarar verecek, aşırı yük bindirecek veya çalışmasını engelleyecek tersine mühendislik (reverse engineering), siber saldırı veya zararlı yazılım dağıtımı yapmak.</li>
+            </ul>
+
+            <h2>5. Fikri Mülkiyet Hakları</h2>
+            <p>SavStudio'nun arayüzü, tasarımı, kaynak kodları (HTML, CSS, JavaScript mimarisi), logoları ve altyapısı ilgili fikri mülkiyet yasalarıyla korunmaktadır. Aracın kodlarının veya tasarımlarının izinsiz kopyalanması, ticari amaçla satılması veya farklı bir isimle yayınlanması yasaktır.</p>
+
+            <h2>6. Değişiklik Yapma Hakkı</h2>
+            <p>SavStudio geliştiricileri, önceden haber vermeksizin aracı güncelleme, özelliklerini değiştirme, hizmeti geçici veya kalıcı olarak durdurma hakkını saklı tutar. Aynı şekilde, bu Kullanım Şartları metni de zaman zaman güncellenebilir. Yapılan değişiklikler, sitede yayınlandığı andan itibaren geçerli sayılır. Kullanıcılar, güncel şartları takip etmekle yükümlüdür.</p>
+
+            <h2>7. Üçüncü Taraf Bağlantıları</h2>
+            <p>Sitemiz, zaman zaman üçüncü taraf web sitelerine veya kaynaklara bağlantılar (linkler) içerebilir. Bu bağlantılar yalnızca kullanıcılara kolaylık sağlamak amacıyla sunulmuştur. Üçüncü taraf sitelerin içeriklerinden, gizlilik politikalarından veya uygulamalarından SavStudio sorumlu değildir.</p>
+
+            <h2>8. Uyuşmazlıkların Çözümü</h2>
+            <p>Bu Kullanım Şartları'ndan doğabilecek her türlü uyuşmazlığın çözümünde, kullanıcı ile SavStudio arasındaki ilişkinin niteliği gereği, iyi niyet kuralları çerçevesinde çözüm aranacaktır. Bu sözleşmenin herhangi bir maddesinin yasal olarak geçersiz sayılması, diğer maddelerin geçerliliğini etkilemeyecektir.</p>
+        </div>
+
+        <div id="content-en" style="display: none;">
+            <h1>Terms of Use and Disclaimer</h1>
+            <span class="last-update">Last Updated: May 30, 2026</span>
+
+            <h2>1. Acceptance of Terms</h2>
+            <p>By accessing and using the SavStudio website (hereinafter referred to as the "Site", "Tool", or "Service"), you acknowledge that you have read, understood, and fully agree to all terms and conditions stated below. If you do not agree to any part of these terms, you must immediately stop using the site and the tool.</p>
+
+            <h2>2. Description and Nature of the Service</h2>
+            <p>SavStudio is a web tool operating entirely on the "client-side", allowing users to inspect, view offsets, and edit local <strong>.sav (game save data)</strong> files in hex or text format via their browser. The site does not upload, store, or process any files or data you enter on a remote server.</p>
+
+            <h2>3. Disclaimer of Liability (Important Provisions)</h2>
+            <p>This tool is provided "as-is" and "as available" without any express or implied warranties. Using SavStudio is entirely at your own risk. The developers cannot be held liable for any direct or indirect damages arising from the use of the tool. The following scenarios are the user's responsibility:</p>
+            <ul>
+                <li><strong>Data Loss and File Corruption:</strong> Editing binary data or hex codes can permanently corrupt the original file structure. The user is obligated to always <strong>backup their files</strong> before making edits. SavStudio is not responsible for game saves that become corrupted or unusable after processing.</li>
+                <li><strong>Account Bans (Ban Risk):</strong> This tool is designed solely for users to test and customize their own data in single-player or offline environments. Developers cannot be held responsible for any platform or game bans (Steam, Epic Games, etc.) resulting from using this tool in online, multiplayer, or anti-cheat protected games.</li>
+                <li><strong>No Guarantee of Perfection:</strong> There is no guarantee that the tool will be fit for a particular purpose, operate uninterrupted, or be completely bug-free.</li>
+            </ul>
+
+            <h2>4. User Obligations and Ethical Use</h2>
+            <p>The user agrees to comply with all applicable local and international laws while using the service. It is strictly forbidden to use the SavStudio tool for the following purposes:</p>
+            <ul>
+                <li>Unauthorized modification of data or accounts belonging to others.</li>
+                <li>Engaging in actions that disrupt other players' experiences to gain an unfair advantage (cheating) in competitive gaming environments.</li>
+                <li>Reverse engineering, cyber attacks, or malware distribution that would damage, overload, or prevent the operation of the site or service.</li>
+            </ul>
+
+            <h2>5. Intellectual Property Rights</h2>
+            <p>The interface, design, source codes (HTML, CSS, JavaScript architecture), logos, and infrastructure of SavStudio are protected by relevant intellectual property laws. Unauthorized copying, commercial sale, or republishing of the tool's codes or designs under a different name is prohibited.</p>
+
+            <h2>6. Right to Make Changes</h2>
+            <p>SavStudio developers reserve the right to update the tool, change its features, or temporarily/permanently suspend the service without prior notice. Similarly, this Terms of Use text may be updated from time to time. Changes are considered valid from the moment they are published on the site. Users are responsible for following the current terms.</p>
+
+            <h2>7. Third-Party Links</h2>
+            <p>Our site may occasionally contain links to third-party websites or resources. These links are provided solely for the convenience of users. SavStudio is not responsible for the content, privacy policies, or practices of third-party sites.</p>
+
+            <h2>8. Dispute Resolution</h2>
+            <p>Due to the nature of the relationship between the user and SavStudio, any disputes arising from these Terms of Use will be sought to be resolved within the framework of good faith rules. If any provision of this agreement is deemed legally invalid, it will not affect the validity of the other provisions.</p>
+        </div>
+
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const langToggle = document.getElementById('lang-toggle');
+            const contentTr = document.getElementById('content-tr');
+            const contentEn = document.getElementById('content-en');
+            const backText = document.getElementById('back-text');
+            const htmlTag = document.documentElement;
+            
+            let currentLang = 'tr'; // Varsayılan dil
+
+            langToggle.addEventListener('click', () => {
+                if (currentLang === 'tr') {
+                    // İngilizceye Geç
+                    contentTr.style.display = 'none';
+                    contentEn.style.display = 'block';
+                    langToggle.innerText = 'TR';
+                    backText.innerText = 'Return to Home';
+                    document.title = 'Terms of Use | SavStudio';
+                    htmlTag.lang = 'en';
+                    currentLang = 'en';
+                } else {
+                    // Türkçeye Geç
+                    contentEn.style.display = 'none';
+                    contentTr.style.display = 'block';
+                    langToggle.innerText = 'EN';
+                    backText.innerText = 'Ana Sayfaya Dön';
+                    document.title = 'Kullanım Şartları | SavStudio';
+                    htmlTag.lang = 'tr';
+                    currentLang = 'tr';
+                }
+            });
+        });
+    </script>
+</body>
+</html>
         </ul>
 
         <h2>4. Kullanıcı Yükümlülükleri ve Etik Kullanım</h2>
