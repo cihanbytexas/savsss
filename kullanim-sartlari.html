@@ -8,7 +8,27 @@
     <link rel="stylesheet" href="style.css">
     <script src="https://unpkg.com/@phosphor-icons/web"></script>
     <style>
-        .legal-container { max-width: 900px; margin: 40px auto; padding: 40px; background: var(--bg-panel); border: 1px solid var(--border-color); border-radius: 4px; line-height: 1.7; font-family: var(--font-ui); }
+        /* Ana CSS'ten gelen kaydırma engelini (overflow: hidden) iptal eder */
+        body { 
+            overflow-y: auto !important; 
+            overflow-x: hidden !important; 
+            height: auto !important; 
+            display: block !important; 
+        }
+        
+        .legal-container { 
+            box-sizing: border-box;
+            max-width: 900px; 
+            width: 90%;
+            margin: 40px auto; 
+            padding: 40px; 
+            background: var(--bg-panel); 
+            border: 1px solid var(--border-color); 
+            border-radius: 4px; 
+            line-height: 1.7; 
+            font-family: var(--font-ui);
+            overflow-wrap: break-word;
+        }
         .legal-container h1 { color: var(--text-main); margin-bottom: 5px; font-size: 2rem; letter-spacing: 0.5px; }
         .legal-container .last-update { color: var(--text-muted); font-size: 0.85rem; font-family: var(--font-mono); margin-bottom: 30px; display: block; padding-bottom: 20px; border-bottom: 1px solid var(--border-color); }
         .legal-container h2 { color: var(--text-main); margin-bottom: 15px; margin-top: 35px; font-size: 1.3rem; border-left: 3px solid var(--accent-bg); padding-left: 10px; }
@@ -16,9 +36,15 @@
         .legal-container ul { margin-left: 20px; color: var(--text-muted); margin-bottom: 15px; }
         .legal-container li { margin-bottom: 8px; font-size: 0.95rem; }
         .legal-container strong { color: var(--text-main); font-weight: 600; }
+        
         .back-link { display: inline-flex; align-items: center; gap: 8px; color: var(--text-muted); text-decoration: none; font-weight: 600; margin-bottom: 30px; transition: 0.2s; padding: 8px 16px; border: 1px solid var(--border-color); border-radius: 4px; background: var(--bg-base); text-transform: uppercase; font-size: 0.8rem; }
         .back-link:hover { color: var(--accent-text); background: var(--accent-bg); border-color: var(--accent-bg); }
-        @media (max-width: 600px) { .legal-container { margin: 20px 10px; padding: 20px; } }
+        
+        /* Mobil Ekran Optimizasyonu */
+        @media (max-width: 600px) { 
+            .legal-container { width: 95%; margin: 20px auto; padding: 20px; } 
+            .legal-container h1 { font-size: 1.5rem; }
+        }
     </style>
 </head>
 <body>
