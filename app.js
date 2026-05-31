@@ -11,6 +11,7 @@ const translations = {
 
 let currentLang = "tr", totalValuesFound = 0, activeHexIndex = -1, activeHexElement = null, searchMatchIndex = -1, searchMatchLength = 0;
 let undoStack = [], redoStack = [], originalUint8Array = null, compareUint8Array = null, compareFileName = "", fileBuffer = null, dataView = null, uint8Array = null, currentFileName = "";
+let hasUnsavedChanges = false; // Çökmelere ve kazara çıkışlara karşı koruma bayrağı
 
 function showToast(message) {
     const toast = document.getElementById("toast-container");
@@ -41,6 +42,14 @@ document.addEventListener("DOMContentLoaded", () => {
     const btnExportPatch = document.getElementById("btn-export-patch"), uploadPatch = document.getElementById("upload-patch"), btnImportPatch = document.getElementById("btn-import-patch"), patchDivider = document.getElementById("patch-divider");
     const dropZone = document.getElementById("drop-zone"), dropZoneInput = document.getElementById("drop-zone-input");
 
+    // Sekme kapatılırken veya yenilenirken uyarı göster (Koruma Sistemi)
+    window.addEventListener("beforeunload", (e) => {
+        if (hasUnsavedChanges) {
+            e.preventDefault();
+            e.returnValue = ""; // Modern tarayıcılarda uyarıyı tetiklemek için gereklidir
+        }
+    });
+
     langToggleBtn.addEventListener("click", () => { currentLang = currentLang === "tr" ? "en" : "tr"; applyTranslations(); });
 
     tabs.forEach(tab => {
@@ -50,7 +59,13 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     });
 
-    function pushHistory(changes) { undoStack.push(changes); redoStack = []; updateHistoryButtons(); }
+    function pushHistory(changes) { 
+        undoStack.push(changes); 
+        redoStack = []; 
+        hasUnsavedChanges = true; // Değişiklik yapıldığında korumayı aktif et
+        updateHistoryButtons(); 
+    }
+    
     function updateHistoryButtons() { btnUndo.disabled = undoStack.length === 0; btnRedo.disabled = redoStack.length === 0; }
     function performUndo() { if (undoStack.length === 0) return; const changes = undoStack.pop(); redoStack.push(changes); changes.forEach(c => { uint8Array[c.index] = c.oldVal; }); extractPropertiesBulletproof(); renderHexEditor(); updateHistoryButtons(); }
     function performRedo() { if (redoStack.length === 0) return; const changes = redoStack.pop(); undoStack.push(changes); changes.forEach(c => { uint8Array[c.index] = c.newVal; }); extractPropertiesBulletproof(); renderHexEditor(); updateHistoryButtons(); }
@@ -58,13 +73,14 @@ document.addEventListener("DOMContentLoaded", () => {
     btnUndo.addEventListener("click", performUndo); btnRedo.addEventListener("click", performRedo);
     document.addEventListener("keydown", (e) => { if(e.ctrlKey && e.key.toLowerCase() === 'z') performUndo(); if(e.ctrlKey && e.key.toLowerCase() === 'y') performRedo(); });
 
-    // YENİ: Dosya okuma işlemini merkezi bir fonksiyona aldık (Sürükle bırak için)
     function processUploadedFile(file) {
         if (!file) return;
         currentFileName = file.name; const reader = new FileReader();
         reader.onload = (event) => {
             fileBuffer = event.target.result; dataView = new DataView(fileBuffer); uint8Array = new Uint8Array(fileBuffer); originalUint8Array = new Uint8Array(fileBuffer.slice(0)); compareUint8Array = null; compareFileName = ""; compareDetails.style.display = "none"; undoStack = []; redoStack = []; updateHistoryButtons(); searchMatchIndex = -1; searchMatchLength = 0;
             
+            hasUnsavedChanges = false; // Yeni dosya yüklendiğinde korumayı sıfırla
+
             let sizeStr = (file.size / 1024).toFixed(2) + " KB";
             fileInfo.innerHTML = `<strong>${translations[currentLang].active_file}</strong><br><br><strong>${translations[currentLang].file_info_name}</strong> <span id="ui-filename" style="color:var(--text-main)">${file.name}</span> <br><strong>${translations[currentLang].file_info_size}</strong> <span id="ui-filesize" style="color:var(--text-main)">${sizeStr}</span> <br><strong>${translations[currentLang].file_info_status}</strong> <span id="ui-filestatus" style="color:var(--text-main)">${translations[currentLang].status_processing}</span>`;
             
@@ -77,10 +93,8 @@ document.addEventListener("DOMContentLoaded", () => {
         reader.readAsArrayBuffer(file);
     }
 
-    // Navigasyon Yükle Butonu
     uploadInput.addEventListener("change", (e) => processUploadedFile(e.target.files[0]));
     
-    // Sürükle-Bırak Alanı Eventleri
     if (dropZone) {
         dropZone.addEventListener("click", () => dropZoneInput.click());
         dropZoneInput.addEventListener("change", (e) => processUploadedFile(e.target.files[0]));
@@ -247,7 +261,10 @@ document.addEventListener("DOMContentLoaded", () => {
 
     searchInput.addEventListener("input", (e) => { const term = e.target.value.toLowerCase(); document.querySelectorAll(".smart-item").forEach(item => { item.style.display = item.querySelector(".smart-name").innerText.toLowerCase().includes(term) ? "flex" : "none"; }); });
     
-    downloadBtn.addEventListener("click", () => { const blob = new Blob([fileBuffer], { type: "application/octet-stream" }); const url = URL.createObjectURL(blob); const a = document.createElement("a"); a.href = url; a.download = "edited_" + currentFileName; document.body.appendChild(a); a.click(); setTimeout(() => { document.body.removeChild(a); URL.revokeObjectURL(url); }, 0); });
+    downloadBtn.addEventListener("click", () => { 
+        hasUnsavedChanges = false; // Dosya indirildiğinde korumayı kaldır
+        const blob = new Blob([fileBuffer], { type: "application/octet-stream" }); const url = URL.createObjectURL(blob); const a = document.createElement("a"); a.href = url; a.download = "edited_" + currentFileName; document.body.appendChild(a); a.click(); setTimeout(() => { document.body.removeChild(a); URL.revokeObjectURL(url); }, 0); 
+    });
 
     setTimeout(() => {
         const splash = document.getElementById("splash-screen");
