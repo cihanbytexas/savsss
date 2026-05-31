@@ -46,30 +46,31 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const exitModal = document.getElementById("exit-modal"), exitCancel = document.getElementById("exit-cancel"), exitConfirm = document.getElementById("exit-confirm");
 
-    // Sekme kapatılırken veya sayfa yenilenirken (F5) çıkacak güvenlik uyarısı
     window.addEventListener("beforeunload", (e) => {
         if (hasUnsavedChanges) { e.preventDefault(); e.returnValue = ""; }
     });
 
-    // Mobil cihazlarda Geri tuşuna basıldığında kendi şık uyarı ekranımızı gösterme tuzağı
     window.addEventListener("popstate", (e) => {
         if (hasUnsavedChanges) {
-            window.history.pushState({ preventBack: true }, ""); // Gerçekten çıkmasını engelle
-            exitModal.classList.remove("hidden"); // Bizim şık modalı aç
+            window.history.pushState({ preventBack: true }, ""); 
+            exitModal.classList.remove("hidden"); 
         }
     });
 
-    exitCancel.addEventListener("click", () => { exitModal.classList.add("hidden"); });
+    exitCancel.addEventListener("click", () => { 
+        exitModal.classList.add("hidden"); 
+    });
+    
     exitConfirm.addEventListener("click", () => {
         hasUnsavedChanges = false;
         exitModal.classList.add("hidden");
-        window.history.back(); // Kullanıcı çıkışı onayladıysa gerçekten çık
+        window.history.go(-2); // YENİ: Hem tuzaktan hem de sayfadan tek seferde çıkmak için 2 adım geri gider
     });
 
     function triggerUnsaved() {
         if (!hasUnsavedChanges) {
             hasUnsavedChanges = true;
-            window.history.pushState({ preventBack: true }, ""); // Kullanıcı düzenleme yaptığı an Geri tuşunu tuzağa al
+            window.history.pushState({ preventBack: true }, ""); 
         }
     }
 
@@ -102,10 +103,10 @@ document.addEventListener("DOMContentLoaded", () => {
         reader.onload = (event) => {
             fileBuffer = event.target.result; dataView = new DataView(fileBuffer); uint8Array = new Uint8Array(fileBuffer); originalUint8Array = new Uint8Array(fileBuffer.slice(0)); compareUint8Array = null; compareFileName = ""; compareDetails.style.display = "none"; undoStack = []; redoStack = []; updateHistoryButtons(); searchMatchIndex = -1; searchMatchLength = 0;
             
-            hasUnsavedChanges = false; // Yeni dosya yüklendiğinde korumayı sıfırla
+            hasUnsavedChanges = false; 
 
             let sizeStr = (file.size / 1024).toFixed(2) + " KB";
-            fileInfo.innerHTML = `<strong>${translations[currentLang].active_file}</strong><br><br><strong>${translations[currentLang].file_info_name}</strong> <span id="ui-filename" style="color:var(--text-main)">${file.name}</span> <br><strong>${translations[currentLang].file_info_size}</strong> <span id="ui-filesize" style="color:var(--text-main)">${sizeStr}</span> <br><strong>${translations[currentLang].file_info_status}</strong> <span id="ui-filestatus" style="color:var(--text-main)">${translations[currentLang].status_processing}</span>`;
+            fileInfo.innerHTML = `<strong>${translations[currentLang].active_file}</strong><br><br><strong>${translations[currentLang].file_info_name}</strong> <span id="ui-filename" style="color:var(--text-main)">${file.name}</span> <br><strong>${translations[currentLang].file_info_size}</strong> <span id="ui-filesize" style="color:var(--text-main)">${fileSizeSpan.innerText}</span> <br><strong>${translations[currentLang].file_info_status}</strong> <span id="ui-filestatus" style="color:var(--text-main)">${translations[currentLang].status_processing}</span>`;
             
             emptyMsg.style.display = "none"; editorContainer.style.display = "flex"; hexSearchContainer.style.display = "flex"; downloadBtn.disabled = false; downloadBtn.classList.remove("outline-btn"); downloadBtn.classList.add("primary-btn"); compareSection.style.display = "block";
             
@@ -285,7 +286,7 @@ document.addEventListener("DOMContentLoaded", () => {
     searchInput.addEventListener("input", (e) => { const term = e.target.value.toLowerCase(); document.querySelectorAll(".smart-item").forEach(item => { item.style.display = item.querySelector(".smart-name").innerText.toLowerCase().includes(term) ? "flex" : "none"; }); });
     
     downloadBtn.addEventListener("click", () => { 
-        hasUnsavedChanges = false; // Dosya indirildiğinde korumayı kaldır
+        hasUnsavedChanges = false; 
         const blob = new Blob([fileBuffer], { type: "application/octet-stream" }); const url = URL.createObjectURL(blob); const a = document.createElement("a"); a.href = url; a.download = "edited_" + currentFileName; document.body.appendChild(a); a.click(); setTimeout(() => { document.body.removeChild(a); URL.revokeObjectURL(url); }, 0); 
     });
 
