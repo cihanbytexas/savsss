@@ -46,6 +46,18 @@
         </div>
     </div>
 
+    <div id="exit-modal" class="modal-overlay hidden">
+        <div class="modal-content" style="text-align: center; max-width: 340px;">
+            <i class="ph-duotone ph-warning-circle" style="font-size: 4rem; color: #ff4444; margin-bottom: 15px; display: inline-block;"></i>
+            <h3 data-i18n="exit_title" style="margin-bottom: 10px; font-size: 1.3rem;">Kaydedilmemiş Değişiklikler</h3>
+            <p data-i18n="exit_desc" style="color: var(--text-muted); font-size: 0.95rem; margin-bottom: 25px; line-height: 1.5;">Yaptığınız değişiklikleri henüz kaydetmediniz. Çıkmak istediğinize emin misiniz?</p>
+            <div class="modal-actions" style="justify-content: center; gap: 15px;">
+                <button class="btn outline-btn" id="exit-cancel" data-i18n="exit_btn_cancel">İPTAL</button>
+                <button class="btn primary-btn" id="exit-confirm" data-i18n="exit_btn_confirm" style="background: #ff4444; border-color: #ff4444;">ÇIK</button>
+            </div>
+        </div>
+    </div>
+
     <nav class="navbar">
         <h1 class="logo">SavStudio</h1>
         <div class="nav-actions">
@@ -143,11 +155,11 @@
     </main>
 
     <footer style="text-align: center; padding: 15px; background: var(--bg-panel); border-top: 1px solid var(--border-color); font-size: 0.75rem; color: var(--text-muted); flex-shrink: 0;">
-        <p>&copy; 2026 SavStudio. All rights reserved.</p>
+        <p>&copy; 2026 SavStudio. Tüm hakları saklıdır.</p>
         <div style="margin-top: 8px; display: flex; justify-content: center; gap: 15px;">
-            <a href="/kullanim-sartlari" style="color: var(--text-muted); text-decoration: none; transition: 0.2s;" onmouseover="this.style.color='var(--text-main)'" onmouseout="this.style.color='var(--text-muted)'">Terms of Use</a>
+            <a href="/kullanim-sartlari" style="color: var(--text-muted); text-decoration: none; transition: 0.2s;" onmouseover="this.style.color='var(--text-main)'" onmouseout="this.style.color='var(--text-muted)'">Kullanım Şartları</a>
             <span style="color: var(--border-color);">|</span>
-            <a href="/gizlilik-politikasi" style="color: var(--text-muted); text-decoration: none; transition: 0.2s;" onmouseover="this.style.color='var(--text-main)'" onmouseout="this.style.color='var(--text-muted)'">Privacy Policy</a>
+            <a href="/gizlilik-politikasi" style="color: var(--text-muted); text-decoration: none; transition: 0.2s;" onmouseover="this.style.color='var(--text-main)'" onmouseout="this.style.color='var(--text-muted)'">Gizlilik Politikası</a>
         </div>
     </footer>
 
