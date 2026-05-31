@@ -1,17 +1,19 @@
 const translations = {
     "tr": {
         "upload_btn": "DOSYA YÜKLE", "download_btn": "KAYDET", "compare_btn": "KARŞILAŞTIR", "compared_file": "Karşılaştırılan:", "main_file": "Ana Dosya:", "active_file": "Aktif Dosya", "no_file": "Henüz dosya seçilmedi. Düzenlemek için .sav uzantılı bir dosya yükleyin.", "tab_values": "Değerler", "tab_hex": "Hex Editör", "empty_msg": "Düzenlemeye başlamak için bir dosya yükleyin.", "search_placeholder": "Arama yap... (Örn: TotalShoot)", "hex_search_placeholder": "Hex veya Metin arat...", "search_btn": "BUL", "offset": "Offset", "ascii": "ASCII", "file_info_name": "Dosya:", "file_info_size": "Boyut:", "file_info_status": "Durum:", "status_processing": "İşleniyor...", "status_success": "Başarılı", "status_fail": "Okuma Başarısız", "fail_desc": "Bu dosyada okunabilir değer bulunamadı.<br><br>Hex Editör sekmesini kullanın.", "modal_title": "Hex Değeri Düzenle", "modal_cancel": "İPTAL", "modal_save": "KAYDET", "search_not_found": "Aranan değer bulunamadı!", "undo": "Geri Al", "redo": "İleri Al", "toggle_lang": "EN",
-        "welcome_drop": "Dosyanızı Buraya Sürükleyin", "welcome_drop_sub": "veya bilgisayarınızdan seçmek için tıklayın (.sav)", "feat_fast_title": "Hızlı ve Güvenli (Lokal İşlem)", "feat_fast_desc": "SavStudio %100 tarayıcınızın belleğinde (Client-Side) çalışır. Dosyalarınız hiçbir uzak sunucuya gönderilmez veya kaydedilmez.", "feat_format_title": "Desteklenen Formatlar", "feat_format_desc": "Unreal Engine 4 ve 5 (GVAS) tabanlı oyun kayıtları için tam destek sunar. Palworld, Hogwarts Legacy, Jedi Survivor ve benzeri oyunların .sav verilerini güvenle düzenleyin.", "changelog_title": "Son Güncellemeler"
+        "welcome_drop": "Dosyanızı Buraya Sürükleyin", "welcome_drop_sub": "veya bilgisayarınızdan seçmek için tıklayın (.sav)", 
+        "exit_title": "Kaydedilmemiş Değişiklikler", "exit_desc": "Yaptığınız değişiklikleri henüz kaydetmediniz. Çıkmak istediğinize emin misiniz?", "exit_btn_cancel": "İPTAL", "exit_btn_confirm": "ÇIK"
     },
     "en": {
         "upload_btn": "UPLOAD", "download_btn": "SAVE", "compare_btn": "COMPARE", "compared_file": "Compared:", "main_file": "Main File:", "active_file": "Active File", "no_file": "No file selected. Upload a .sav file to start editing.", "tab_values": "Values", "tab_hex": "Hex Editor", "empty_msg": "Upload a file to begin editing.", "search_placeholder": "Search... (e.g., TotalShoot)", "hex_search_placeholder": "Search Hex or Text...", "search_btn": "FIND", "offset": "Offset", "ascii": "ASCII", "file_info_name": "File:", "file_info_size": "Size:", "file_info_status": "Status:", "status_processing": "Processing...", "status_success": "Success", "status_fail": "Read Failed", "fail_desc": "No readable values found in this file.<br><br>Please use the Hex Editor.", "modal_title": "Edit Hex Value", "modal_cancel": "CANCEL", "modal_save": "SAVE", "search_not_found": "Value not found!", "undo": "Undo", "redo": "Redo", "toggle_lang": "TR",
-        "welcome_drop": "Drag & Drop Your File Here", "welcome_drop_sub": "or click to select from your computer (.sav)", "feat_fast_title": "Fast & Secure (Local Processing)", "feat_fast_desc": "SavStudio operates 100% in your browser's memory (Client-Side). Your files are never sent to or stored on any remote server.", "feat_format_title": "Supported Formats", "feat_format_desc": "Full support for Unreal Engine 4 & 5 (GVAS) based save games. Safely edit .sav data for games like Palworld, Hogwarts Legacy, Jedi Survivor, etc.", "changelog_title": "Recent Updates"
+        "welcome_drop": "Drag & Drop Your File Here", "welcome_drop_sub": "or click to select from your computer (.sav)",
+        "exit_title": "Unsaved Changes", "exit_desc": "You have unsaved changes. Are you sure you want to exit without saving?", "exit_btn_cancel": "CANCEL", "exit_btn_confirm": "EXIT"
     }
 };
 
 let currentLang = "tr", totalValuesFound = 0, activeHexIndex = -1, activeHexElement = null, searchMatchIndex = -1, searchMatchLength = 0;
 let undoStack = [], redoStack = [], originalUint8Array = null, compareUint8Array = null, compareFileName = "", fileBuffer = null, dataView = null, uint8Array = null, currentFileName = "";
-let hasUnsavedChanges = false; // Çökmelere ve kazara çıkışlara karşı koruma bayrağı
+let hasUnsavedChanges = false;
 
 function showToast(message) {
     const toast = document.getElementById("toast-container");
@@ -42,13 +44,34 @@ document.addEventListener("DOMContentLoaded", () => {
     const btnExportPatch = document.getElementById("btn-export-patch"), uploadPatch = document.getElementById("upload-patch"), btnImportPatch = document.getElementById("btn-import-patch"), patchDivider = document.getElementById("patch-divider");
     const dropZone = document.getElementById("drop-zone"), dropZoneInput = document.getElementById("drop-zone-input");
 
-    // Sekme kapatılırken veya yenilenirken uyarı göster (Koruma Sistemi)
+    const exitModal = document.getElementById("exit-modal"), exitCancel = document.getElementById("exit-cancel"), exitConfirm = document.getElementById("exit-confirm");
+
+    // Sekme kapatılırken veya sayfa yenilenirken (F5) çıkacak güvenlik uyarısı
     window.addEventListener("beforeunload", (e) => {
+        if (hasUnsavedChanges) { e.preventDefault(); e.returnValue = ""; }
+    });
+
+    // Mobil cihazlarda Geri tuşuna basıldığında kendi şık uyarı ekranımızı gösterme tuzağı
+    window.addEventListener("popstate", (e) => {
         if (hasUnsavedChanges) {
-            e.preventDefault();
-            e.returnValue = ""; // Modern tarayıcılarda uyarıyı tetiklemek için gereklidir
+            window.history.pushState({ preventBack: true }, ""); // Gerçekten çıkmasını engelle
+            exitModal.classList.remove("hidden"); // Bizim şık modalı aç
         }
     });
+
+    exitCancel.addEventListener("click", () => { exitModal.classList.add("hidden"); });
+    exitConfirm.addEventListener("click", () => {
+        hasUnsavedChanges = false;
+        exitModal.classList.add("hidden");
+        window.history.back(); // Kullanıcı çıkışı onayladıysa gerçekten çık
+    });
+
+    function triggerUnsaved() {
+        if (!hasUnsavedChanges) {
+            hasUnsavedChanges = true;
+            window.history.pushState({ preventBack: true }, ""); // Kullanıcı düzenleme yaptığı an Geri tuşunu tuzağa al
+        }
+    }
 
     langToggleBtn.addEventListener("click", () => { currentLang = currentLang === "tr" ? "en" : "tr"; applyTranslations(); });
 
@@ -62,7 +85,7 @@ document.addEventListener("DOMContentLoaded", () => {
     function pushHistory(changes) { 
         undoStack.push(changes); 
         redoStack = []; 
-        hasUnsavedChanges = true; // Değişiklik yapıldığında korumayı aktif et
+        triggerUnsaved(); 
         updateHistoryButtons(); 
     }
     
