@@ -31,7 +31,7 @@ function applyTranslations() {
     const fileInfo = document.getElementById("file-info");
     if (fileInfo.innerHTML.includes(translations[currentLang === "tr" ? "en" : "tr"].file_info_name) || fileInfo.innerHTML.includes(translations[currentLang].file_info_name)) {
         const fileNameSpan = document.getElementById("ui-filename"), fileSizeSpan = document.getElementById("ui-filesize"), fileStatusSpan = document.getElementById("ui-filestatus");
-        if(fileNameSpan) {
+        if(fileNameSpan && fileSizeSpan) {
             fileInfo.innerHTML = `<strong>${langData.active_file}</strong><br><br><strong>${langData.file_info_name}</strong> <span id="ui-filename" style="color:var(--text-main)">${fileNameSpan.innerText}</span> <br><strong>${langData.file_info_size}</strong> <span id="ui-filesize" style="color:var(--text-main)">${fileSizeSpan.innerText}</span> <br><strong>${langData.file_info_status}</strong> <span id="ui-filestatus" style="color:var(--text-main)">${totalValuesFound > 0 ? langData.status_success + ' ('+totalValuesFound+')' : fileStatusSpan.innerText}</span>`;
         }
     }
@@ -64,7 +64,7 @@ document.addEventListener("DOMContentLoaded", () => {
     exitConfirm.addEventListener("click", () => {
         hasUnsavedChanges = false;
         exitModal.classList.add("hidden");
-        window.history.go(-2); // YENİ: Hem tuzaktan hem de sayfadan tek seferde çıkmak için 2 adım geri gider
+        window.history.go(-2); 
     });
 
     function triggerUnsaved() {
@@ -105,8 +105,9 @@ document.addEventListener("DOMContentLoaded", () => {
             
             hasUnsavedChanges = false; 
 
+            // Hatanın düzeltildiği kısım: fileSizeSpan yerine doğrudan hesaplanan sizeStr kullanıldı
             let sizeStr = (file.size / 1024).toFixed(2) + " KB";
-            fileInfo.innerHTML = `<strong>${translations[currentLang].active_file}</strong><br><br><strong>${translations[currentLang].file_info_name}</strong> <span id="ui-filename" style="color:var(--text-main)">${file.name}</span> <br><strong>${translations[currentLang].file_info_size}</strong> <span id="ui-filesize" style="color:var(--text-main)">${fileSizeSpan.innerText}</span> <br><strong>${translations[currentLang].file_info_status}</strong> <span id="ui-filestatus" style="color:var(--text-main)">${translations[currentLang].status_processing}</span>`;
+            fileInfo.innerHTML = `<strong>${translations[currentLang].active_file}</strong><br><br><strong>${translations[currentLang].file_info_name}</strong> <span id="ui-filename" style="color:var(--text-main)">${file.name}</span> <br><strong>${translations[currentLang].file_info_size}</strong> <span id="ui-filesize" style="color:var(--text-main)">${sizeStr}</span> <br><strong>${translations[currentLang].file_info_status}</strong> <span id="ui-filestatus" style="color:var(--text-main)">${translations[currentLang].status_processing}</span>`;
             
             emptyMsg.style.display = "none"; editorContainer.style.display = "flex"; hexSearchContainer.style.display = "flex"; downloadBtn.disabled = false; downloadBtn.classList.remove("outline-btn"); downloadBtn.classList.add("primary-btn"); compareSection.style.display = "block";
             
