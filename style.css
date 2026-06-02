@@ -188,3 +188,70 @@ input:checked + .slider:before { transform: translateX(20px); background-color: 
 .log-version { background: var(--accent-bg); color: var(--accent-text); padding: 3px 8px; border-radius: 2px; font-size: 0.75rem; font-weight: bold; margin-right: 15px; font-family: var(--font-mono); }
 .log-date { color: var(--text-muted); font-size: 0.8rem; width: 100px; flex-shrink: 0; padding-top: 2px; }
 .log-desc { color: #ccc; font-size: 0.85rem; flex: 1; min-width: 200px; line-height: 1.6; }
+
+/* --- HEX ARAMA ÇUBUĞU - DÖNEN IŞIK EFEKTİ (Minimalist Luxury) --- */
+.hex-search-bar {
+    position: relative;
+    isolation: isolate; /* Yeni katman oluşturarak dışa taşmayı engeller */
+    overflow: hidden;
+    border: none !important; /* Standart statik sınırı kaldır */
+    background: transparent !important;
+}
+
+/* 1. Katman: Dönen Parlak Beyaz Işık Hüzmesi */
+.hex-search-bar::before {
+    content: "";
+    position: absolute;
+    top: -150%;
+    left: -150%;
+    width: 400%;
+    height: 400%;
+    /* Işığın siyah/beyaz/gümüş tonlarındaki renk geçişi */
+    background: conic-gradient(
+        transparent, 
+        transparent 30%, 
+        rgba(255, 255, 255, 0.1) 35%, 
+        #ffffff 40%, /* Işığın en parlak beyaz ucu */
+        rgba(255, 255, 255, 0.1) 45%,
+        transparent 50%
+    );
+    animation: hexSpin 4s linear infinite;
+    z-index: -2;
+}
+
+/* 2. Katman: Işığın içini oyan (maskeleyen) karanlık arka plan */
+.hex-search-bar::after {
+    content: "";
+    position: absolute;
+    inset: 1px; /* 1px dış çerçeve bırakır (ışık sadece buradan sızar) */
+    background: var(--bg-panel); /* Arama kutusunun kendi karanlık rengi */
+    border-radius: 5px; /* Köşe yuvarlaması */
+    z-index: -1;
+}
+
+/* Işığın Dönme Animasyonu */
+@keyframes hexSpin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* İçeriklerin (İkon, Yazı, Buton) ışığın altında kalmasını önlemek için */
+.hex-search-bar > i,
+.hex-search-bar > input,
+.hex-search-bar > button {
+    position: relative;
+    z-index: 1;
+}
+
+/* Etkileşim: Kullanıcı yazı yazmak için tıkladığında ışık hızlansın ve parlasın */
+.hex-search-bar:focus-within::before {
+    animation-duration: 2s; /* Dönüş hızı iki katına çıkar */
+    background: conic-gradient(
+        transparent, 
+        transparent 30%, 
+        rgba(255, 255, 255, 0.4) 35%, 
+        #ffffff 40%, 
+        rgba(255, 255, 255, 0.4) 45%,
+        transparent 50%
+    );
+}
