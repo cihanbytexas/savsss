@@ -189,63 +189,67 @@ input:checked + .slider:before { transform: translateX(20px); background-color: 
 .log-date { color: var(--text-muted); font-size: 0.8rem; width: 100px; flex-shrink: 0; padding-top: 2px; }
 .log-desc { color: #ccc; font-size: 0.85rem; flex: 1; min-width: 200px; line-height: 1.6; }
 
-/* --- HEX ARAMA ÇUBUĞU - DÖNEN IŞIK EFEKTİ (Minimalist Luxury) --- */
-.hex-search-bar {
+/* --- TÜM ARAMA ÇUBUKLARI - DÖNEN IŞIK EFEKTİ (Değerler ve Hex İçin Ortak) --- */
+.search-box {
     position: relative;
-    isolation: isolate; /* Yeni katman oluşturarak dışa taşmayı engeller */
+    isolation: isolate; /* Işığın dışarı taşmasını engeller */
     overflow: hidden;
-    border: none !important; /* Standart statik sınırı kaldır */
+    border: none !important; /* Standart sınırı kaldır */
     background: transparent !important;
 }
 
 /* 1. Katman: Dönen Parlak Beyaz Işık Hüzmesi */
-.hex-search-bar::before {
+.search-box::before {
     content: "";
     position: absolute;
     top: -150%;
     left: -150%;
     width: 400%;
     height: 400%;
-    /* Işığın siyah/beyaz/gümüş tonlarındaki renk geçişi */
+    /* Siyah/beyaz/gümüş lüks ışık geçişi */
     background: conic-gradient(
         transparent, 
         transparent 30%, 
         rgba(255, 255, 255, 0.1) 35%, 
-        #ffffff 40%, /* Işığın en parlak beyaz ucu */
+        #ffffff 40%, /* En parlak uç */
         rgba(255, 255, 255, 0.1) 45%,
         transparent 50%
     );
-    animation: hexSpin 4s linear infinite;
+    animation: searchSpin 4s linear infinite;
     z-index: -2;
 }
 
-/* 2. Katman: Işığın içini oyan (maskeleyen) karanlık arka plan */
-.hex-search-bar::after {
+/* 2. Katman: İçini oyan karanlık arka plan (Sadece 1px çerçeve bırakır) */
+.search-box::after {
     content: "";
     position: absolute;
-    inset: 1px; /* 1px dış çerçeve bırakır (ışık sadece buradan sızar) */
-    background: var(--bg-panel); /* Arama kutusunun kendi karanlık rengi */
-    border-radius: 5px; /* Köşe yuvarlaması */
+    inset: 1px; /* Dönen ışık sadece 1 piksellik bu boşluktan sızar */
+    background: var(--bg-panel); /* Sitenin kendi karanlık arka planı */
+    border-radius: 4px; /* Köşe yuvarlaması */
     z-index: -1;
 }
 
-/* Işığın Dönme Animasyonu */
-@keyframes hexSpin {
+/* Dönme Animasyonu */
+@keyframes searchSpin {
     0% { transform: rotate(0deg); }
     100% { transform: rotate(360deg); }
 }
 
-/* İçeriklerin (İkon, Yazı, Buton) ışığın altında kalmasını önlemek için */
-.hex-search-bar > i,
-.hex-search-bar > input,
-.hex-search-bar > button {
+/* İçeriklerin ışığın üstünde kalmasını sağla ve arka planlarını şeffaf yap */
+.search-box > i,
+.search-box > input,
+.search-box > button {
     position: relative;
     z-index: 1;
 }
 
-/* Etkileşim: Kullanıcı yazı yazmak için tıkladığında ışık hızlansın ve parlasın */
-.hex-search-bar:focus-within::before {
-    animation-duration: 2s; /* Dönüş hızı iki katına çıkar */
+.search-box > input {
+    background: transparent !important;
+}
+
+/* Etkileşim: Kullanıcı arama yapmak için tıkladığında ışık hızlansın ve parlasın */
+.search-box:focus-within::before {
+    animation-duration: 2s; /* Dönüş hızını 2 katına çıkarır */
     background: conic-gradient(
         transparent, 
         transparent 30%, 
