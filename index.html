@@ -7,15 +7,6 @@
     <title>SavStudio | Online .sav File Editor & Hex Viewer</title>
     <meta name="description" content="Tarayıcı üzerinden çalışan, hızlı, güvenli ve ücretsiz Unreal Engine .sav (GVAS) dosya düzenleyicisi. Kurulumsuz Hex editörü ve oyun kayıt (save) veri değiştirici.">
     <meta name="keywords" content="sav editor, save editor, unreal engine sav, gvas editor, hex editor, online sav editor, browser hex editor, veri düzenleyici">
-    <meta name="author" content="SavStudio">
-    <meta name="robots" content="index, follow">
-    <meta name="language" content="Turkish">
-    
-    <meta property="og:title" content="SavStudio | Data Editor">
-    <meta property="og:description" content="Gelişmiş online .sav dosya düzenleyici. Değerleri ve hex kodlarını anında tarayıcınızda düzenleyin.">
-    <meta property="og:type" content="website">
-    <meta property="og:url" content="https://savstudio.com">
-    <meta property="og:image" content="icon-512.png">
     
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#0a0a0a">
@@ -34,6 +25,7 @@
 
     <div id="toast-container" class="toast hidden"></div>
 
+    <!-- HEX DÜZENLEME MODALI -->
     <div id="custom-modal" class="modal-overlay hidden">
         <div class="modal-content">
             <h3 id="modal-title" data-i18n="modal_title">Hex Değerini Düzenle</h3>
@@ -46,6 +38,7 @@
         </div>
     </div>
 
+    <!-- ÇIKIŞ UYARISI MODALI -->
     <div id="exit-modal" class="modal-overlay hidden">
         <div class="modal-content" style="text-align: center; max-width: 340px;">
             <i class="ph-duotone ph-warning-circle" style="font-size: 4rem; color: #ff4444; margin-bottom: 15px; display: inline-block;"></i>
@@ -54,6 +47,20 @@
             <div class="modal-actions" style="justify-content: center; gap: 15px;">
                 <button class="btn outline-btn" id="exit-cancel" data-i18n="exit_btn_cancel">İPTAL</button>
                 <button class="btn primary-btn" id="exit-confirm" data-i18n="exit_btn_confirm" style="background: #ff4444; border-color: #ff4444;">ÇIK</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- YENİ: KOMUT PALETİ (COMMAND PALETTE) MODALI -->
+    <div id="command-palette-modal" class="modal-overlay hidden" style="align-items: flex-start; padding-top: 15vh; backdrop-filter: blur(5px);">
+        <div class="palette-content">
+            <div class="palette-search">
+                <i class="ph-bold ph-command"></i>
+                <input type="text" id="palette-input" data-i18n-placeholder="palette_placeholder" placeholder="Komut yazın... (Örn: yükle, hex)" autocomplete="off">
+                <div class="palette-shortcut">ESC</div>
+            </div>
+            <div class="palette-list" id="palette-list">
+                <!-- Javascript ile komutlar buraya dolacak -->
             </div>
         </div>
     </div>
@@ -75,6 +82,12 @@
             </button>
 
             <div class="divider"></div>
+
+            <!-- YENİ: KOMUT PALETİ BUTONU -->
+            <button class="btn outline-btn icon-btn" id="btn-command-palette" data-i18n-title="cmd_palette" title="Komut Paleti (Ctrl+K)">
+                <i class="ph-bold ph-command"></i>
+            </button>
+
             <button class="btn lang-btn" id="lang-toggle">EN</button>
             
             <label class="btn primary-btn">
@@ -163,11 +176,6 @@
         </div>
     </footer>
 
-    <script>
-        if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.register('sw.js').catch(err => console.error("SW Registration failed:", err));
-        }
-    </script>
     <script src="app.js"></script>
 </body>
 </html>
