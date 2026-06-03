@@ -2,12 +2,14 @@ const translations = {
     "tr": {
         "upload_btn": "DOSYA YÜKLE", "download_btn": "KAYDET", "compare_btn": "KARŞILAŞTIR", "compared_file": "Karşılaştırılan:", "main_file": "Ana Dosya:", "active_file": "Aktif Dosya", "no_file": "Henüz dosya seçilmedi. Düzenlemek için .sav uzantılı bir dosya yükleyin.", "tab_values": "Değerler", "tab_hex": "Hex Editör", "empty_msg": "Düzenlemeye başlamak için bir dosya yükleyin.", "search_placeholder": "Arama yap... (Örn: TotalShoot)", "hex_search_placeholder": "Hex veya Metin arat...", "search_btn": "BUL", "offset": "Offset", "ascii": "ASCII", "file_info_name": "Dosya:", "file_info_size": "Boyut:", "file_info_status": "Durum:", "status_processing": "İşleniyor...", "status_success": "Başarılı", "status_fail": "Okuma Başarısız", "fail_desc": "Bu dosyada okunabilir değer bulunamadı.<br><br>Hex Editör sekmesini kullanın.", "modal_title": "Hex Değeri Düzenle", "modal_cancel": "İPTAL", "modal_save": "KAYDET", "search_not_found": "Aranan değer bulunamadı!", "undo": "Geri Al", "redo": "İleri Al", "toggle_lang": "EN",
         "welcome_drop": "Dosyanızı Buraya Sürükleyin", "welcome_drop_sub": "veya bilgisayarınızdan seçmek için tıklayın (.sav)", 
-        "exit_title": "Kaydedilmemiş Değişiklikler", "exit_desc": "Yaptığınız değişiklikleri henüz kaydetmediniz. Çıkmak istediğinize emin misiniz?", "exit_btn_cancel": "İPTAL", "exit_btn_confirm": "ÇIK"
+        "exit_title": "Kaydedilmemiş Değişiklikler", "exit_desc": "Yaptığınız değişiklikleri henüz kaydetmediniz. Çıkmak istediğinize emin misiniz?", "exit_btn_cancel": "İPTAL", "exit_btn_confirm": "ÇIK",
+        "cmd_palette": "Komut Paleti (Ctrl+K)", "palette_placeholder": "Komut yazın... (Örn: yükle, hex)", "cmd_upload": "Dosya Yükle", "cmd_download": "Dosyayı Kaydet", "cmd_hex": "Hex Görünümüne Geç", "cmd_values": "Değerler Görünümüne Geç", "cmd_compare": "Dosya Karşılaştır", "cmd_patch_export": "Yama Dışa Aktar", "cmd_patch_import": "Yama Uygula", "cmd_lang": "Dili Değiştir (EN/TR)"
     },
     "en": {
         "upload_btn": "UPLOAD", "download_btn": "SAVE", "compare_btn": "COMPARE", "compared_file": "Compared:", "main_file": "Main File:", "active_file": "Active File", "no_file": "No file selected. Upload a .sav file to start editing.", "tab_values": "Values", "tab_hex": "Hex Editor", "empty_msg": "Upload a file to begin editing.", "search_placeholder": "Search... (e.g., TotalShoot)", "hex_search_placeholder": "Search Hex or Text...", "search_btn": "FIND", "offset": "Offset", "ascii": "ASCII", "file_info_name": "File:", "file_info_size": "Size:", "file_info_status": "Status:", "status_processing": "Processing...", "status_success": "Success", "status_fail": "Read Failed", "fail_desc": "No readable values found in this file.<br><br>Please use the Hex Editor.", "modal_title": "Edit Hex Value", "modal_cancel": "CANCEL", "modal_save": "SAVE", "search_not_found": "Value not found!", "undo": "Undo", "redo": "Redo", "toggle_lang": "TR",
         "welcome_drop": "Drag & Drop Your File Here", "welcome_drop_sub": "or click to select from your computer (.sav)",
-        "exit_title": "Unsaved Changes", "exit_desc": "You have unsaved changes. Are you sure you want to exit without saving?", "exit_btn_cancel": "CANCEL", "exit_btn_confirm": "EXIT"
+        "exit_title": "Unsaved Changes", "exit_desc": "You have unsaved changes. Are you sure you want to exit without saving?", "exit_btn_cancel": "CANCEL", "exit_btn_confirm": "EXIT",
+        "cmd_palette": "Command Palette (Ctrl+K)", "palette_placeholder": "Type a command... (e.g., upload, hex)", "cmd_upload": "Upload File", "cmd_download": "Save File", "cmd_hex": "Switch to Hex Editor", "cmd_values": "Switch to Values", "cmd_compare": "Compare Files", "cmd_patch_export": "Export Patch", "cmd_patch_import": "Import Patch", "cmd_lang": "Change Language (TR/EN)"
     }
 };
 
@@ -43,8 +45,111 @@ document.addEventListener("DOMContentLoaded", () => {
     
     const btnExportPatch = document.getElementById("btn-export-patch"), uploadPatch = document.getElementById("upload-patch"), btnImportPatch = document.getElementById("btn-import-patch"), patchDivider = document.getElementById("patch-divider");
     const dropZone = document.getElementById("drop-zone"), dropZoneInput = document.getElementById("drop-zone-input");
-
     const exitModal = document.getElementById("exit-modal"), exitCancel = document.getElementById("exit-cancel"), exitConfirm = document.getElementById("exit-confirm");
+
+    /* --- YENİ: KOMUT PALETİ SİSTEMİ --- */
+    const paletteModal = document.getElementById("command-palette-modal");
+    const paletteInput = document.getElementById("palette-input");
+    const paletteList = document.getElementById("palette-list");
+    const btnCommandPalette = document.getElementById("btn-command-palette");
+    
+    let paletteSelectedIndex = 0;
+    let filteredCommands = [];
+
+    const getCommands = () => [
+        { id: "upload", icon: "ph-upload-simple", name: translations[currentLang].cmd_upload, action: () => uploadInput.click() },
+        { id: "download", icon: "ph-download-simple", name: translations[currentLang].cmd_download, action: () => { if(!downloadBtn.disabled) downloadBtn.click(); } },
+        { id: "view_hex", icon: "ph-hash", name: translations[currentLang].cmd_hex, action: () => document.querySelector('[data-target="hex-view"]').click() },
+        { id: "view_values", icon: "ph-list-numbers", name: translations[currentLang].cmd_values, action: () => document.querySelector('[data-target="smart-view"]').click() },
+        { id: "compare", icon: "ph-git-diff", name: translations[currentLang].cmd_compare, action: () => uploadCompare.click() },
+        { id: "undo", icon: "ph-arrow-u-up-left", name: translations[currentLang].undo, action: () => { if(!btnUndo.disabled) btnUndo.click(); } },
+        { id: "redo", icon: "ph-arrow-u-up-right", name: translations[currentLang].redo, action: () => { if(!btnRedo.disabled) btnRedo.click(); } },
+        { id: "patch_export", icon: "ph-file-arrow-up", name: translations[currentLang].cmd_patch_export, action: () => btnExportPatch.click() },
+        { id: "patch_import", icon: "ph-file-arrow-down", name: translations[currentLang].cmd_patch_import, action: () => uploadPatch.click() },
+        { id: "lang", icon: "ph-translate", name: translations[currentLang].cmd_lang, action: () => langToggleBtn.click() }
+    ];
+
+    function renderPalette(query = "") {
+        paletteList.innerHTML = "";
+        const allCommands = getCommands();
+        filteredCommands = allCommands.filter(c => c.name.toLowerCase().includes(query.toLowerCase()));
+        
+        if(filteredCommands.length === 0) {
+            paletteList.innerHTML = `<div style="padding: 15px 20px; color: var(--text-muted); text-align: center;">Komut bulunamadı.</div>`;
+            return;
+        }
+
+        filteredCommands.forEach((cmd, index) => {
+            const item = document.createElement("div");
+            item.className = `palette-item ${index === paletteSelectedIndex ? 'selected' : ''}`;
+            item.innerHTML = `<i class="ph-duotone ${cmd.icon}"></i><span>${cmd.name}</span>`;
+            
+            item.addEventListener("click", () => { closePalette(); cmd.action(); });
+            item.addEventListener("mousemove", () => { paletteSelectedIndex = index; updatePaletteSelection(); });
+            
+            paletteList.appendChild(item);
+        });
+        updatePaletteSelection();
+    }
+
+    function updatePaletteSelection() {
+        const items = paletteList.querySelectorAll(".palette-item");
+        items.forEach((item, index) => {
+            if (index === paletteSelectedIndex) { item.classList.add("selected"); item.scrollIntoView({ block: "nearest" }); } 
+            else { item.classList.remove("selected"); }
+        });
+    }
+
+    function openPalette() {
+        paletteModal.classList.remove("hidden");
+        paletteInput.value = "";
+        paletteSelectedIndex = 0;
+        renderPalette();
+        setTimeout(() => paletteInput.focus(), 50); // Mobilde klavyeyi açar
+    }
+
+    function closePalette() {
+        paletteModal.classList.add("hidden");
+        paletteInput.blur();
+    }
+
+    btnCommandPalette.addEventListener("click", openPalette);
+    paletteModal.addEventListener("click", (e) => { if (e.target === paletteModal) closePalette(); });
+
+    // Global Kısayollar (Ctrl+K ve Yön Tuşları)
+    document.addEventListener("keydown", (e) => {
+        // Ctrl+K veya Cmd+K tetikleyicisi
+        if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "k") {
+            e.preventDefault();
+            if (paletteModal.classList.contains("hidden")) openPalette(); else closePalette();
+        }
+        
+        // Palet açıkken içindeki klavye dolaşımı
+        if (!paletteModal.classList.contains("hidden")) {
+            if (e.key === "Escape") { closePalette(); } 
+            else if (e.key === "ArrowDown") {
+                e.preventDefault();
+                paletteSelectedIndex = (paletteSelectedIndex + 1) % filteredCommands.length;
+                updatePaletteSelection();
+            } else if (e.key === "ArrowUp") {
+                e.preventDefault();
+                paletteSelectedIndex = (paletteSelectedIndex - 1 + filteredCommands.length) % filteredCommands.length;
+                updatePaletteSelection();
+            } else if (e.key === "Enter") {
+                e.preventDefault();
+                if (filteredCommands[paletteSelectedIndex]) {
+                    closePalette();
+                    filteredCommands[paletteSelectedIndex].action();
+                }
+            }
+        }
+    });
+
+    paletteInput.addEventListener("input", (e) => {
+        paletteSelectedIndex = 0;
+        renderPalette(e.target.value);
+    });
+    /* --- BİTİŞ: KOMUT PALETİ --- */
 
     window.addEventListener("beforeunload", (e) => {
         if (hasUnsavedChanges) { e.preventDefault(); e.returnValue = ""; }
@@ -57,10 +162,7 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     });
 
-    exitCancel.addEventListener("click", () => { 
-        exitModal.classList.add("hidden"); 
-    });
-    
+    exitCancel.addEventListener("click", () => { exitModal.classList.add("hidden"); });
     exitConfirm.addEventListener("click", () => {
         hasUnsavedChanges = false;
         exitModal.classList.add("hidden");
@@ -95,7 +197,14 @@ document.addEventListener("DOMContentLoaded", () => {
     function performRedo() { if (redoStack.length === 0) return; const changes = redoStack.pop(); undoStack.push(changes); changes.forEach(c => { uint8Array[c.index] = c.newVal; }); extractPropertiesBulletproof(); renderHexEditor(); updateHistoryButtons(); }
 
     btnUndo.addEventListener("click", performUndo); btnRedo.addEventListener("click", performRedo);
-    document.addEventListener("keydown", (e) => { if(e.ctrlKey && e.key.toLowerCase() === 'z') performUndo(); if(e.ctrlKey && e.key.toLowerCase() === 'y') performRedo(); });
+    
+    // Geri Al Kısayolu (Palet açık değilse çalışır)
+    document.addEventListener("keydown", (e) => { 
+        if (paletteModal.classList.contains("hidden")) {
+            if(e.ctrlKey && e.key.toLowerCase() === 'z') performUndo(); 
+            if(e.ctrlKey && e.key.toLowerCase() === 'y') performRedo(); 
+        }
+    });
 
     function processUploadedFile(file) {
         if (!file) return;
@@ -105,7 +214,6 @@ document.addEventListener("DOMContentLoaded", () => {
             
             hasUnsavedChanges = false; 
 
-            // Hatanın düzeltildiği kısım: fileSizeSpan yerine doğrudan hesaplanan sizeStr kullanıldı
             let sizeStr = (file.size / 1024).toFixed(2) + " KB";
             fileInfo.innerHTML = `<strong>${translations[currentLang].active_file}</strong><br><br><strong>${translations[currentLang].file_info_name}</strong> <span id="ui-filename" style="color:var(--text-main)">${file.name}</span> <br><strong>${translations[currentLang].file_info_size}</strong> <span id="ui-filesize" style="color:var(--text-main)">${sizeStr}</span> <br><strong>${translations[currentLang].file_info_status}</strong> <span id="ui-filestatus" style="color:var(--text-main)">${translations[currentLang].status_processing}</span>`;
             
