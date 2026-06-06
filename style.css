@@ -342,3 +342,116 @@ input:checked + .slider:before { transform: translateX(20px); background-color: 
     .palette-shortcut { display: none; } /* Mobilde ESC yazısını gizle */
 }
 
+/* --- DATA INSPECTOR (CANLI VERI ANALIZÖRÜ) --- */
+.hex-editor-layout {
+    display: flex;
+    gap: 20px;
+    width: 100%;
+    height: calc(100% - 60px);
+}
+
+.hex-editor-container {
+    flex: 1;
+    min-width: 0; /* Flexbox taşma hatasını önler */
+}
+
+.data-inspector {
+    width: 280px;
+    background: var(--bg-panel);
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    height: fit-content;
+    animation: fadeIn 0.2s ease;
+}
+
+.inspector-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid var(--border-color);
+    padding-bottom: 12px;
+}
+
+.inspector-header h3 {
+    font-size: 0.85rem;
+    color: var(--text-main);
+    letter-spacing: 1px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.inspector-address {
+    font-family: var(--font-mono);
+    font-size: 0.8rem;
+    color: var(--accent-bg);
+    background: rgba(255,255,255,0.02);
+    padding: 2px 6px;
+    border-radius: 2px;
+    border: 1px solid rgba(255,255,255,0.05);
+}
+
+.inspector-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.inspector-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 6px 0;
+    border-bottom: 1px solid rgba(255,255,255,0.02);
+}
+
+.inspector-row span {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+}
+
+.inspector-row strong {
+    font-family: var(--font-mono);
+    font-size: 0.85rem;
+    color: var(--text-main);
+}
+
+/* MOBİL CİHAZ OPTİMİZASYONU (BOTTOM SHEET) */
+@media (max-width: 1024px) {
+    .hex-editor-layout {
+        flex-direction: column;
+        gap: 0;
+    }
+    
+    /* Mobilde dikey paneli alt tarafta sabit açılan bar yapıyoruz */
+    .data-inspector {
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        width: 100%;
+        max-width: 100%;
+        border-radius: 12px 12px 0 0;
+        border-top: 1px solid var(--border-color);
+        border-left: none;
+        border-right: none;
+        box-shadow: 0 -10px 30px rgba(0,0,0,0.9);
+        z-index: 100;
+        padding: 15px 20px 30px 20px; /* Alttan telefon barı payı */
+        background: #111111;
+        animation: slideUpPalette 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    
+    @keyframes slideUpPalette {
+        from { transform: translateY(100%); }
+        to { transform: translateY(0); }
+    }
+    
+    /* Müfettiş açıkken alt kısmın kapanmaması için hex editöre boşluk ekler */
+    .hex-editor-container {
+        padding-bottom: 260px;
+    }
+}
