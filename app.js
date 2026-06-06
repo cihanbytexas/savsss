@@ -47,14 +47,21 @@ document.addEventListener("DOMContentLoaded", () => {
     const dropZone = document.getElementById("drop-zone"), dropZoneInput = document.getElementById("drop-zone-input");
     const exitModal = document.getElementById("exit-modal"), exitCancel = document.getElementById("exit-cancel"), exitConfirm = document.getElementById("exit-confirm");
 
-    /* --- YENİ: KOMUT PALETİ SİSTEMİ --- */
-    const paletteModal = document.getElementById("command-palette-modal");
-    const paletteInput = document.getElementById("palette-input");
-    const paletteList = document.getElementById("palette-list");
-    const btnCommandPalette = document.getElementById("btn-command-palette");
+    const paletteModal = document.getElementById("command-palette-modal"), paletteInput = document.getElementById("palette-input"), paletteList = document.getElementById("palette-list"), btnCommandPalette = document.getElementById("btn-command-palette");
     
-    let paletteSelectedIndex = 0;
-    let filteredCommands = [];
+    /* --- DATA INSPECTOR ELEMENTLERI --- */
+    const dataInspector = document.getElementById("data-inspector");
+    const insAddress = document.getElementById("inspect-address");
+    const insBin = document.getElementById("ins-bin");
+    const insInt8 = document.getElementById("ins-int8");
+    const insUint8 = document.getElementById("ins-uint8");
+    const insInt16 = document.getElementById("ins-int16");
+    const insUint16 = document.getElementById("ins-uint16");
+    const insInt32 = document.getElementById("ins-int32");
+    const insUint32 = document.getElementById("ins-uint32");
+    const insFloat = document.getElementById("ins-float");
+
+    let paletteSelectedIndex = 0, filteredCommands = [];
 
     const getCommands = () => [
         { id: "upload", icon: "ph-upload-simple", name: translations[currentLang].cmd_upload, action: () => uploadInput.click() },
@@ -70,111 +77,45 @@ document.addEventListener("DOMContentLoaded", () => {
     ];
 
     function renderPalette(query = "") {
-        paletteList.innerHTML = "";
-        const allCommands = getCommands();
-        filteredCommands = allCommands.filter(c => c.name.toLowerCase().includes(query.toLowerCase()));
-        
-        if(filteredCommands.length === 0) {
-            paletteList.innerHTML = `<div style="padding: 15px 20px; color: var(--text-muted); text-align: center;">Komut bulunamadı.</div>`;
-            return;
-        }
-
+        paletteList.innerHTML = ""; const allCommands = getCommands(); filteredCommands = allCommands.filter(c => c.name.toLowerCase().includes(query.toLowerCase()));
+        if(filteredCommands.length === 0) { paletteList.innerHTML = `<div style="padding: 15px 20px; color: var(--text-muted); text-align: center;">Komut bulunamadı.</div>`; return; }
         filteredCommands.forEach((cmd, index) => {
-            const item = document.createElement("div");
-            item.className = `palette-item ${index === paletteSelectedIndex ? 'selected' : ''}`;
-            item.innerHTML = `<i class="ph-duotone ${cmd.icon}"></i><span>${cmd.name}</span>`;
-            
+            const item = document.createElement("div"); item.className = `palette-item ${index === paletteSelectedIndex ? 'selected' : ''}`; item.innerHTML = `<i class="ph-duotone ${cmd.icon}"></i><span>${cmd.name}</span>`;
             item.addEventListener("click", () => { closePalette(); cmd.action(); });
             item.addEventListener("mousemove", () => { paletteSelectedIndex = index; updatePaletteSelection(); });
-            
             paletteList.appendChild(item);
-        });
-        updatePaletteSelection();
+        }); updatePaletteSelection();
     }
 
     function updatePaletteSelection() {
         const items = paletteList.querySelectorAll(".palette-item");
-        items.forEach((item, index) => {
-            if (index === paletteSelectedIndex) { item.classList.add("selected"); item.scrollIntoView({ block: "nearest" }); } 
-            else { item.classList.remove("selected"); }
-        });
+        items.forEach((item, index) => { if (index === paletteSelectedIndex) { item.classList.add("selected"); item.scrollIntoView({ block: "nearest" }); } else { item.classList.remove("selected"); } });
     }
 
-    function openPalette() {
-        paletteModal.classList.remove("hidden");
-        paletteInput.value = "";
-        paletteSelectedIndex = 0;
-        renderPalette();
-        setTimeout(() => paletteInput.focus(), 50); // Mobilde klavyeyi açar
-    }
-
-    function closePalette() {
-        paletteModal.classList.add("hidden");
-        paletteInput.blur();
-    }
+    function openPalette() { paletteModal.classList.remove("hidden"); paletteInput.value = ""; paletteSelectedIndex = 0; renderPalette(); setTimeout(() => paletteInput.focus(), 50); }
+    function closePalette() { paletteModal.classList.add("hidden"); paletteInput.blur(); }
 
     btnCommandPalette.addEventListener("click", openPalette);
     paletteModal.addEventListener("click", (e) => { if (e.target === paletteModal) closePalette(); });
 
-    // Global Kısayollar (Ctrl+K ve Yön Tuşları)
     document.addEventListener("keydown", (e) => {
-        // Ctrl+K veya Cmd+K tetikleyicisi
-        if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "k") {
-            e.preventDefault();
-            if (paletteModal.classList.contains("hidden")) openPalette(); else closePalette();
-        }
-        
-        // Palet açıkken içindeki klavye dolaşımı
+        if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "k") { e.preventDefault(); if (paletteModal.classList.contains("hidden")) openPalette(); else closePalette(); }
         if (!paletteModal.classList.contains("hidden")) {
             if (e.key === "Escape") { closePalette(); } 
-            else if (e.key === "ArrowDown") {
-                e.preventDefault();
-                paletteSelectedIndex = (paletteSelectedIndex + 1) % filteredCommands.length;
-                updatePaletteSelection();
-            } else if (e.key === "ArrowUp") {
-                e.preventDefault();
-                paletteSelectedIndex = (paletteSelectedIndex - 1 + filteredCommands.length) % filteredCommands.length;
-                updatePaletteSelection();
-            } else if (e.key === "Enter") {
-                e.preventDefault();
-                if (filteredCommands[paletteSelectedIndex]) {
-                    closePalette();
-                    filteredCommands[paletteSelectedIndex].action();
-                }
-            }
+            else if (e.key === "ArrowDown") { e.preventDefault(); paletteSelectedIndex = (paletteSelectedIndex + 1) % filteredCommands.length; updatePaletteSelection(); } 
+            else if (e.key === "ArrowUp") { e.preventDefault(); paletteSelectedIndex = (paletteSelectedIndex - 1 + filteredCommands.length) % filteredCommands.length; updatePaletteSelection(); } 
+            else if (e.key === "Enter") { e.preventDefault(); if (filteredCommands[paletteSelectedIndex]) { closePalette(); filteredCommands[paletteSelectedIndex].action(); } }
         }
     });
 
-    paletteInput.addEventListener("input", (e) => {
-        paletteSelectedIndex = 0;
-        renderPalette(e.target.value);
-    });
-    /* --- BİTİŞ: KOMUT PALETİ --- */
+    paletteInput.addEventListener("input", (e) => { paletteSelectedIndex = 0; renderPalette(e.target.value); });
 
-    window.addEventListener("beforeunload", (e) => {
-        if (hasUnsavedChanges) { e.preventDefault(); e.returnValue = ""; }
-    });
-
-    window.addEventListener("popstate", (e) => {
-        if (hasUnsavedChanges) {
-            window.history.pushState({ preventBack: true }, ""); 
-            exitModal.classList.remove("hidden"); 
-        }
-    });
-
+    window.addEventListener("beforeunload", (e) => { if (hasUnsavedChanges) { e.preventDefault(); e.returnValue = ""; } });
+    window.addEventListener("popstate", (e) => { if (hasUnsavedChanges) { window.history.pushState({ preventBack: true }, ""); exitModal.classList.remove("hidden"); } });
     exitCancel.addEventListener("click", () => { exitModal.classList.add("hidden"); });
-    exitConfirm.addEventListener("click", () => {
-        hasUnsavedChanges = false;
-        exitModal.classList.add("hidden");
-        window.history.go(-2); 
-    });
+    exitConfirm.addEventListener("click", () => { hasUnsavedChanges = false; exitModal.classList.add("hidden"); window.history.go(-2); });
 
-    function triggerUnsaved() {
-        if (!hasUnsavedChanges) {
-            hasUnsavedChanges = true;
-            window.history.pushState({ preventBack: true }, ""); 
-        }
-    }
+    function triggerUnsaved() { if (!hasUnsavedChanges) { hasUnsavedChanges = true; window.history.pushState({ preventBack: true }, ""); } }
 
     langToggleBtn.addEventListener("click", () => { currentLang = currentLang === "tr" ? "en" : "tr"; applyTranslations(); });
 
@@ -185,98 +126,90 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     });
 
-    function pushHistory(changes) { 
-        undoStack.push(changes); 
-        redoStack = []; 
-        triggerUnsaved(); 
-        updateHistoryButtons(); 
-    }
-    
+    function pushHistory(changes) { undoStack.push(changes); redoStack = []; triggerUnsaved(); updateHistoryButtons(); }
     function updateHistoryButtons() { btnUndo.disabled = undoStack.length === 0; btnRedo.disabled = redoStack.length === 0; }
-    function performUndo() { if (undoStack.length === 0) return; const changes = undoStack.pop(); redoStack.push(changes); changes.forEach(c => { uint8Array[c.index] = c.oldVal; }); extractPropertiesBulletproof(); renderHexEditor(); updateHistoryButtons(); }
-    function performRedo() { if (redoStack.length === 0) return; const changes = redoStack.pop(); undoStack.push(changes); changes.forEach(c => { uint8Array[c.index] = c.newVal; }); extractPropertiesBulletproof(); renderHexEditor(); updateHistoryButtons(); }
+    function performUndo() { if (undoStack.length === 0) return; const changes = undoStack.pop(); redoStack.push(changes); changes.forEach(c => { uint8Array[c.index] = c.oldVal; }); extractPropertiesBulletproof(); renderHexEditor(); updateHistoryButtons(); if(activeHexIndex !== -1) updateDataInspector(activeHexIndex); }
+    function performRedo() { if (redoStack.length === 0) return; const changes = redoStack.pop(); undoStack.push(changes); changes.forEach(c => { uint8Array[c.index] = c.newVal; }); extractPropertiesBulletproof(); renderHexEditor(); updateHistoryButtons(); if(activeHexIndex !== -1) updateDataInspector(activeHexIndex); }
 
     btnUndo.addEventListener("click", performUndo); btnRedo.addEventListener("click", performRedo);
-    
-    // Geri Al Kısayolu (Palet açık değilse çalışır)
-    document.addEventListener("keydown", (e) => { 
-        if (paletteModal.classList.contains("hidden")) {
-            if(e.ctrlKey && e.key.toLowerCase() === 'z') performUndo(); 
-            if(e.ctrlKey && e.key.toLowerCase() === 'y') performRedo(); 
-        }
-    });
+    document.addEventListener("keydown", (e) => { if (paletteModal.classList.contains("hidden")) { if(e.ctrlKey && e.key.toLowerCase() === 'z') performUndo(); if(e.ctrlKey && e.key.toLowerCase() === 'y') performRedo(); } });
 
     function processUploadedFile(file) {
         if (!file) return;
         currentFileName = file.name; const reader = new FileReader();
         reader.onload = (event) => {
-            fileBuffer = event.target.result; dataView = new DataView(fileBuffer); uint8Array = new Uint8Array(fileBuffer); originalUint8Array = new Uint8Array(fileBuffer.slice(0)); compareUint8Array = null; compareFileName = ""; compareDetails.style.display = "none"; undoStack = []; redoStack = []; updateHistoryButtons(); searchMatchIndex = -1; searchMatchLength = 0;
+            fileBuffer = event.target.result; dataView = new DataView(fileBuffer); uint8Array = new Uint8Array(fileBuffer); originalUint8Array = new Uint8Array(fileBuffer.slice(0)); compareUint8Array = null; compareFileName = ""; compareDetails.style.display = "none"; undoStack = []; redoStack = []; updateHistoryButtons(); searchMatchIndex = -1; searchMatchLength = 0; hasUnsavedChanges = false;
             
-            hasUnsavedChanges = false; 
+            dataInspector.style.display = "flex"; // Canlı analizörü aktif et
 
             let sizeStr = (file.size / 1024).toFixed(2) + " KB";
             fileInfo.innerHTML = `<strong>${translations[currentLang].active_file}</strong><br><br><strong>${translations[currentLang].file_info_name}</strong> <span id="ui-filename" style="color:var(--text-main)">${file.name}</span> <br><strong>${translations[currentLang].file_info_size}</strong> <span id="ui-filesize" style="color:var(--text-main)">${sizeStr}</span> <br><strong>${translations[currentLang].file_info_status}</strong> <span id="ui-filestatus" style="color:var(--text-main)">${translations[currentLang].status_processing}</span>`;
-            
-            emptyMsg.style.display = "none"; editorContainer.style.display = "flex"; hexSearchContainer.style.display = "flex"; downloadBtn.disabled = false; downloadBtn.classList.remove("outline-btn"); downloadBtn.classList.add("primary-btn"); compareSection.style.display = "block";
-            
-            btnImportPatch.style.display = "flex"; btnExportPatch.style.display = "flex"; patchDivider.style.display = "block";
-
-            setTimeout(() => { extractPropertiesBulletproof(); renderHexEditor(); applyTranslations(); }, 50);
-        };
-        reader.readAsArrayBuffer(file);
+            emptyMsg.style.display = "none"; editorContainer.style.display = "flex"; hexSearchContainer.style.display = "flex"; downloadBtn.disabled = false; downloadBtn.classList.remove("outline-btn"); downloadBtn.classList.add("primary-btn"); compareSection.style.display = "block"; btnImportPatch.style.display = "flex"; btnExportPatch.style.display = "flex"; patchDivider.style.display = "block";
+            setTimeout(() => { extractPropertiesBulletproof(); renderHexEditor(); applyTranslations(); if(uint8Array.length > 0) updateDataInspector(0); }, 50);
+        }; reader.readAsArrayBuffer(file);
     }
 
     uploadInput.addEventListener("change", (e) => processUploadedFile(e.target.files[0]));
-    
     if (dropZone) {
         dropZone.addEventListener("click", () => dropZoneInput.click());
         dropZoneInput.addEventListener("change", (e) => processUploadedFile(e.target.files[0]));
         dropZone.addEventListener("dragover", (e) => { e.preventDefault(); dropZone.classList.add("drag-active"); });
         dropZone.addEventListener("dragleave", () => dropZone.classList.remove("drag-active"));
-        dropZone.addEventListener("drop", (e) => {
-            e.preventDefault(); dropZone.classList.remove("drag-active");
-            if (e.dataTransfer.files.length) processUploadedFile(e.dataTransfer.files[0]);
-        });
+        dropZone.addEventListener("drop", (e) => { e.preventDefault(); dropZone.classList.remove("drag-active"); if (e.dataTransfer.files.length) processUploadedFile(e.dataTransfer.files[0]); });
+    }
+
+    /* --- YENİ: DATA INSPECTOR CANLI HESAPLAMA MOTORU --- */
+    window.updateDataInspector = function(index) {
+        if (!uint8Array || index < 0 || index >= uint8Array.length) return;
+        activeHexIndex = index;
+        insAddress.innerText = "0x" + index.toString(16).toUpperCase().padStart(8, '0');
+        
+        const byte = uint8Array[index];
+        insBin.innerText = byte.toString(2).padStart(8, '0');
+        insInt8.innerText = dataView.getInt8(index);
+        insUint8.innerText = byte;
+
+        // Dosya sınırlarına göre güvenli okuma (Little Endian)
+        insInt16.innerText = (index + 2 <= uint8Array.length) ? dataView.getInt16(index, true) : "-";
+        insUint16.innerText = (index + 2 <= uint8Array.length) ? dataView.getUint16(index, true) : "-";
+        insInt32.innerText = (index + 4 <= uint8Array.length) ? dataView.getInt32(index, true) : "-";
+        insUint32.innerText = (index + 4 <= uint8Array.length) ? dataView.getUint32(index, true) : "-";
+        
+        if (index + 4 <= uint8Array.length) {
+            let fVal = dataView.getFloat32(index, true);
+            insFloat.innerText = Number.isInteger(fVal) ? fVal + ".0" : fVal.toFixed(6).replace(/\.?0+$/, '');
+        } else {
+            insFloat.innerText = "-";
+        }
     }
 
     btnExportPatch.addEventListener("click", () => {
-        if (!uint8Array || !originalUint8Array) return;
-        let changes = [];
+        if (!uint8Array || !originalUint8Array) return; let changes = [];
         for (let i = 0; i < uint8Array.length; i++) { if (uint8Array[i] !== originalUint8Array[i]) changes.push({ offset: i, oldVal: originalUint8Array[i], newVal: uint8Array[i] }); }
         if (changes.length === 0) { showToast(currentLang === "tr" ? "Dışa aktarılacak bir değişiklik bulunamadı!" : "No changes found to export!"); return; }
-
         const patchData = JSON.stringify({ app: "SavStudio", filename: currentFileName, timestamp: new Date().toISOString(), changes: changes }, null, 2);
         const blob = new Blob([patchData], { type: "application/json" }); const url = URL.createObjectURL(blob); const a = document.createElement("a");
         a.href = url; a.download = currentFileName.replace(".sav", "") + "_patch.json"; document.body.appendChild(a); a.click();
-        setTimeout(() => { document.body.removeChild(a); URL.revokeObjectURL(url); }, 0);
-        showToast(currentLang === "tr" ? "Yama başarıyla dışa aktarıldı." : "Patch exported successfully.");
+        setTimeout(() => { document.body.removeChild(a); URL.revokeObjectURL(url); }, 0); showToast(currentLang === "tr" ? "Yama başarıyla dışa aktarıldı." : "Patch exported successfully.");
     });
 
     uploadPatch.addEventListener("change", (e) => {
-        const file = e.target.files[0]; if (!file || !uint8Array) return;
-        const reader = new FileReader();
+        const file = e.target.files[0]; if (!file || !uint8Array) return; const reader = new FileReader();
         reader.onload = (event) => {
             try {
-                const patchData = JSON.parse(event.target.result);
-                if (!patchData.changes || !Array.isArray(patchData.changes)) throw new Error("Geçersiz yama formatı.");
+                const patchData = JSON.parse(event.target.result); if (!patchData.changes || !Array.isArray(patchData.changes)) throw new Error("Geçersiz yama formatı.");
                 let historyChanges = [], appliedCount = 0;
                 patchData.changes.forEach(change => {
                     const offset = change.offset; const newVal = change.newVal;
-                    if (offset >= 0 && offset < uint8Array.length) {
-                        const oldVal = uint8Array[offset];
-                        if (oldVal !== newVal) { historyChanges.push({ index: offset, oldVal: oldVal, newVal: newVal }); uint8Array[offset] = newVal; appliedCount++; }
-                    }
+                    if (offset >= 0 && offset < uint8Array.length) { const oldVal = uint8Array[offset]; if (oldVal !== newVal) { historyChanges.push({ index: offset, oldVal: oldVal, newVal: newVal }); uint8Array[offset] = newVal; appliedCount++; } }
                 });
-                if (appliedCount > 0) { pushHistory(historyChanges); extractPropertiesBulletproof(); renderHexEditor(); showToast(currentLang === "tr" ? `${appliedCount} değişiklik başarıyla uygulandı.` : `${appliedCount} changes applied successfully.`); } else { showToast(currentLang === "tr" ? "Uygulanacak yeni bir değişiklik bulunamadı." : "No new changes to apply."); }
-            } catch (err) { showToast(currentLang === "tr" ? "Yama dosyası okunamadı: Format hatası." : "Failed to read patch: Invalid format."); }
-            e.target.value = "";
-        };
-        reader.readAsText(file);
+                if (appliedCount > 0) { pushHistory(historyChanges); extractPropertiesBulletproof(); renderHexEditor(); if(activeHexIndex !== -1) updateDataInspector(activeHexIndex); showToast(currentLang === "tr" ? `${appliedCount} değişiklik başarıyla uygulandı.` : `${appliedCount} changes applied successfully.`); } else { showToast(currentLang === "tr" ? "Uygulanacak yeni bir değişiklik bulunamadı." : "No new changes to apply."); }
+            } catch (err) { showToast(currentLang === "tr" ? "Yama dosyası okunamadı: Format hatası." : "Failed to read patch: Invalid format."); } e.target.value = "";
+        }; reader.readAsText(file);
     });
 
     uploadCompare.addEventListener("change", (e) => {
-        const file = e.target.files[0]; if (!file || !uint8Array) return;
-        compareFileName = file.name; const reader = new FileReader();
+        const file = e.target.files[0]; if (!file || !uint8Array) return; compareFileName = file.name; const reader = new FileReader();
         reader.onload = (event) => { compareUint8Array = new Uint8Array(event.target.result); compareDetails.style.display = "block"; document.querySelector(".tabs button[data-target='hex-view']").click(); renderHexEditor(); applyTranslations(); };
         reader.readAsArrayBuffer(file);
     });
@@ -323,34 +256,27 @@ document.addEventListener("DOMContentLoaded", () => {
                         for(let i=0; i<bytesToSave; i++) changes.push({index: offset+i, oldVal: oldBuffer[i], newVal: uint8Array[offset+i]});
                     } else if (type === "StrProperty" || type === "NameProperty") {
                         let origLen = 0; while(uint8Array[offset + origLen] !== 0 && origLen < 128) origLen++; 
-                        
-                        if (newVal.length > origLen) {
-                            showToast(currentLang === "tr" ? `Uyarı: Metin çok uzun! Maksimum ${origLen} karakter olmalı. Fazlası kırpıldı.` : `Warning: Text too long! Max ${origLen} chars. Excess truncated.`);
-                            newVal = newVal.substring(0, origLen);
-                        }
-
+                        if (newVal.length > origLen) { showToast(currentLang === "tr" ? `Uyarı: Metin çok uzun!` : `Warning: Text too long!`); newVal = newVal.substring(0, origLen); }
                         let oldBuffer = new Uint8Array(fileBuffer.slice(offset, offset + origLen));
-                        for (let i = 0; i < origLen; i++) { 
-                            let newByte = i < newVal.length ? newVal.charCodeAt(i) : 0; 
-                            dataView.setUint8(offset + i, newByte); 
-                            changes.push({index: offset+i, oldVal: oldBuffer[i], newVal: newByte}); 
-                        }
+                        for (let i = 0; i < origLen; i++) { let newByte = i < newVal.length ? newVal.charCodeAt(i) : 0; dataView.setUint8(offset + i, newByte); changes.push({index: offset+i, oldVal: oldBuffer[i], newVal: newByte}); }
                     }
-                    if(changes.length > 0) pushHistory(changes); if (type !== "BoolProperty") e.target.classList.add("edited-val"); renderHexEditor(); 
+                    if(changes.length > 0) pushHistory(changes); if (type !== "BoolProperty") e.target.classList.add("edited-val"); renderHexEditor(); if(activeHexIndex !== -1) updateDataInspector(activeHexIndex);
                 } catch(err) {}
             });
         });
     }
 
     function scrollToHex(index) { document.querySelector(".tabs button[data-target='hex-view']").click(); const hexBody = document.getElementById("hex-body"); const row = Math.floor(index / 16); hexBody.scrollTop = row * 28; }
+    
+    // Çift tıklama (veya mobilde basılı tutma gibi) tetiklendiğinde modal açılır
     function openModal(index, currentHex, element) { activeHexIndex = index; activeHexElement = element; const decValue = parseInt(currentHex, 16); modalDesc.innerHTML = `Address: <strong style="color:var(--text-main)">0x${index.toString(16).toUpperCase()}</strong> <br> Decimal: <strong style="color:var(--text-main)">${decValue}</strong>`; modalInput.value = currentHex; customModal.classList.remove("hidden"); setTimeout(() => { modalInput.focus(); modalInput.select(); }, 50); }
-    function closeModal() { customModal.classList.add("hidden"); activeHexIndex = -1; activeHexElement = null; }
+    function closeModal() { customModal.classList.add("hidden"); }
 
     modalCancel.addEventListener("click", closeModal);
     modalSave.addEventListener("click", () => {
         if (activeHexIndex !== -1) {
             let newHex = modalInput.value.trim().toUpperCase();
-            if (/^[0-9A-F]{1,2}$/.test(newHex)) { let oldVal = uint8Array[activeHexIndex]; let newVal = parseInt(newHex, 16); if(oldVal !== newVal) { pushHistory([{index: activeHexIndex, oldVal: oldVal, newVal: newVal}]); uint8Array[activeHexIndex] = newVal; if (activeHexElement) { activeHexElement.innerText = newHex.padStart(2, '0'); activeHexElement.classList.add("edited-val"); } extractPropertiesBulletproof(); } }
+            if (/^[0-9A-F]{1,2}$/.test(newHex)) { let oldVal = uint8Array[activeHexIndex]; let newVal = parseInt(newHex, 16); if(oldVal !== newVal) { pushHistory([{index: activeHexIndex, oldVal: oldVal, newVal: newVal}]); uint8Array[activeHexIndex] = newVal; if (activeHexElement) { activeHexElement.innerText = newHex.padStart(2, '0'); activeHexElement.classList.add("edited-val"); } extractPropertiesBulletproof(); updateDataInspector(activeHexIndex); } }
         } closeModal();
     });
 
@@ -362,7 +288,7 @@ document.addEventListener("DOMContentLoaded", () => {
         let startIdx = (searchMatchIndex !== -1) ? searchMatchIndex + 1 : 0; let foundIdx = -1;
         for (let i = startIdx; i <= uint8Array.length - searchBytes.length; i++) { let match = true; for (let j = 0; j < searchBytes.length; j++) { if (uint8Array[i + j] !== searchBytes[j]) { match = false; break; } } if (match) { foundIdx = i; break; } }
         if (foundIdx === -1 && startIdx > 0) { for (let i = 0; i < startIdx; i++) { let match = true; for (let j = 0; j < searchBytes.length; j++) { if (uint8Array[i + j] !== searchBytes[j]) { match = false; break; } } if (match) { foundIdx = i; break; } } }
-        if (foundIdx !== -1) { searchMatchIndex = foundIdx; searchMatchLength = searchBytes.length; scrollToHex(foundIdx); renderHexEditor(); } else { showToast(translations[currentLang].search_not_found); searchMatchIndex = -1; searchMatchLength = 0; renderHexEditor(); }
+        if (foundIdx !== -1) { searchMatchIndex = foundIdx; searchMatchLength = searchBytes.length; scrollToHex(foundIdx); renderHexEditor(); updateDataInspector(foundIdx); } else { showToast(translations[currentLang].search_not_found); searchMatchIndex = -1; searchMatchLength = 0; renderHexEditor(); }
     });
     hexSearchInput.addEventListener("keyup", (e) => { if (e.key === "Enter") hexSearchBtn.click(); });
 
@@ -382,26 +308,32 @@ document.addEventListener("DOMContentLoaded", () => {
                         const byte = uint8Array[i + j]; const hexValue = byte.toString(16).padStart(2, '0').toUpperCase();
                         let isHighlighted = searchMatchIndex !== -1 && (i+j >= searchMatchIndex) && (i+j < searchMatchIndex + searchMatchLength); let isDiff = compareUint8Array && compareUint8Array[i+j] !== undefined && compareUint8Array[i+j] !== byte; let isNull = byte === 0; let isAscii = byte >= 32 && byte <= 126;
                         let classNames = "hex-byte"; if(isDiff) classNames += " hex-diff"; else if(isHighlighted) classNames += " hex-highlight"; else { if(isNull) classNames += " hex-null"; else if(isAscii) classNames += " hex-ascii"; }
-                        hexBytes += `<span class="${classNames}" data-index="${i+j}" title="Edit">${hexValue}</span> `; asciiChars += isAscii ? String.fromCharCode(byte) : ".";
+                        if(activeHexIndex === (i+j)) classNames += " edited-val"; // Seçili olan byte'ı vurgula
+                        hexBytes += `<span class="${classNames}" data-index="${i+j}">${hexValue}</span> `; asciiChars += isAscii ? String.fromCharCode(byte) : ".";
                     } else { hexBytes += "   "; }
                 }
                 hexRow += `<div class="hex-bytes-col">${hexBytes}</div>`; asciiChars = asciiChars.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;"); hexRow += `<div class="hex-ascii-col">${asciiChars}</div></div>`; htmlContent += hexRow;
             }
-            contentNode.innerHTML = htmlContent; contentNode.querySelectorAll('.hex-byte').forEach(span => { span.addEventListener('click', function() { openModal(parseInt(this.getAttribute('data-index')), this.innerText, this); }); });
+            contentNode.innerHTML = htmlContent; 
+            
+            // TIKLAMA EVENTİ: Tek tıklamada Data Inspector güncellenir, çift tıklamada düzenleme modalı açılır
+            contentNode.querySelectorAll('.hex-byte').forEach(span => { 
+                span.addEventListener('click', function() { 
+                    const idx = parseInt(this.getAttribute('data-index'));
+                    updateDataInspector(idx);
+                    document.querySelectorAll('.hex-byte').forEach(s => s.classList.remove('edited-val'));
+                    this.classList.add('edited-val');
+                });
+                span.addEventListener('dblclick', function() { 
+                    openModal(parseInt(this.getAttribute('data-index')), this.innerText, this); 
+                });
+            });
         }
         hexBody.onscroll = renderChunk; hexBody.scrollTop = currentScrollTop; renderChunk();
     }
 
     searchInput.addEventListener("input", (e) => { const term = e.target.value.toLowerCase(); document.querySelectorAll(".smart-item").forEach(item => { item.style.display = item.querySelector(".smart-name").innerText.toLowerCase().includes(term) ? "flex" : "none"; }); });
-    
-    downloadBtn.addEventListener("click", () => { 
-        hasUnsavedChanges = false; 
-        const blob = new Blob([fileBuffer], { type: "application/octet-stream" }); const url = URL.createObjectURL(blob); const a = document.createElement("a"); a.href = url; a.download = "edited_" + currentFileName; document.body.appendChild(a); a.click(); setTimeout(() => { document.body.removeChild(a); URL.revokeObjectURL(url); }, 0); 
-    });
+    downloadBtn.addEventListener("click", () => { hasUnsavedChanges = false; const blob = new Blob([fileBuffer], { type: "application/octet-stream" }); const url = URL.createObjectURL(blob); const a = document.createElement("a"); a.href = url; a.download = "edited_" + currentFileName; document.body.appendChild(a); a.click(); setTimeout(() => { document.body.removeChild(a); URL.revokeObjectURL(url); }, 0); });
 
-    setTimeout(() => {
-        const splash = document.getElementById("splash-screen");
-        if (splash) { splash.classList.add("hidden"); }
-        applyTranslations();
-    }, 1000);
+    setTimeout(() => { const splash = document.getElementById("splash-screen"); if (splash) { splash.classList.add("hidden"); } applyTranslations(); }, 1000);
 });
