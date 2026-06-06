@@ -7,6 +7,15 @@
     <title>SavStudio | Online .sav File Editor & Hex Viewer</title>
     <meta name="description" content="Tarayıcı üzerinden çalışan, hızlı, güvenli ve ücretsiz Unreal Engine .sav (GVAS) dosya düzenleyicisi. Kurulumsuz Hex editörü ve oyun kayıt (save) veri değiştirici.">
     <meta name="keywords" content="sav editor, save editor, unreal engine sav, gvas editor, hex editor, online sav editor, browser hex editor, veri düzenleyici">
+    <meta name="author" content="SavStudio">
+    <meta name="robots" content="index, follow">
+    <meta name="language" content="Turkish">
+    
+    <meta property="og:title" content="SavStudio | Data Editor">
+    <meta property="og:description" content="Gelişmiş online .sav dosya düzenleyici. Değerleri ve hex kodlarını anında tarayıcınızda düzenleyin.">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://savstudio.com">
+    <meta property="og:image" content="icon-512.png">
     
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#0a0a0a">
@@ -25,7 +34,6 @@
 
     <div id="toast-container" class="toast hidden"></div>
 
-    <!-- HEX DÜZENLEME MODALI -->
     <div id="custom-modal" class="modal-overlay hidden">
         <div class="modal-content">
             <h3 id="modal-title" data-i18n="modal_title">Hex Değerini Düzenle</h3>
@@ -38,7 +46,6 @@
         </div>
     </div>
 
-    <!-- ÇIKIŞ UYARISI MODALI -->
     <div id="exit-modal" class="modal-overlay hidden">
         <div class="modal-content" style="text-align: center; max-width: 340px;">
             <i class="ph-duotone ph-warning-circle" style="font-size: 4rem; color: #ff4444; margin-bottom: 15px; display: inline-block;"></i>
@@ -51,7 +58,6 @@
         </div>
     </div>
 
-    <!-- YENİ: KOMUT PALETİ (COMMAND PALETTE) MODALI -->
     <div id="command-palette-modal" class="modal-overlay hidden" style="align-items: flex-start; padding-top: 15vh; backdrop-filter: blur(5px);">
         <div class="palette-content">
             <div class="palette-search">
@@ -60,8 +66,7 @@
                 <div class="palette-shortcut">ESC</div>
             </div>
             <div class="palette-list" id="palette-list">
-                <!-- Javascript ile komutlar buraya dolacak -->
-            </div>
+                </div>
         </div>
     </div>
 
@@ -83,7 +88,6 @@
 
             <div class="divider"></div>
 
-            <!-- YENİ: KOMUT PALETİ BUTONU -->
             <button class="btn outline-btn icon-btn" id="btn-command-palette" data-i18n-title="cmd_palette" title="Komut Paleti (Ctrl+K)">
                 <i class="ph-bold ph-command"></i>
             </button>
@@ -153,14 +157,34 @@
                     <input type="text" id="hex-search-input" data-i18n-placeholder="hex_search_placeholder" placeholder="Hex veya Metin arat...">
                     <button id="hex-search-btn" class="btn primary-btn" style="padding: 6px 16px; margin-left: 10px;" data-i18n="search_btn">BUL</button>
                 </div>
-                <div class="hex-editor-container">
-                    <div class="hex-header">
-                        <div class="hex-offset-col" data-i18n="offset">Offset</div>
-                        <div class="hex-bytes-col">00 01 02 03 04 05 06 07 08 09 0A 0B 0C 0D 0E 0F</div>
-                        <div class="hex-ascii-col" data-i18n="ascii">ASCII</div>
+                
+                <div class="hex-editor-layout">
+                    <div class="hex-editor-container">
+                        <div class="hex-header">
+                            <div class="hex-offset-col" data-i18n="offset">Offset</div>
+                            <div class="hex-bytes-col">00 01 02 03 04 05 06 07 08 09 0A 0B 0C 0D 0E 0F</div>
+                            <div class="hex-ascii-col" data-i18n="ascii">ASCII</div>
+                        </div>
+                        <div class="hex-body" id="hex-body">
+                            <div class="empty-state"><p data-i18n="empty_msg">Düzenlemeye başlamak için bir dosya yükleyin.</p></div>
+                        </div>
                     </div>
-                    <div class="hex-body" id="hex-body">
-                        <div class="empty-state"><p data-i18n="empty_msg">Düzenlemeye başlamak için bir dosya yükleyin.</p></div>
+
+                    <div class="data-inspector" id="data-inspector" style="display: none;">
+                        <div class="inspector-header">
+                            <h3><i class="ph-bold ph-eye"></i> DATA INSPECTOR</h3>
+                            <span class="inspector-address" id="inspect-address">0x00000000</span>
+                        </div>
+                        <div class="inspector-grid">
+                            <div class="inspector-row"><span>Binary</span><strong id="ins-bin">00000000</strong></div>
+                            <div class="inspector-row"><span>Int8 (Signed)</span><strong id="ins-int8">0</strong></div>
+                            <div class="inspector-row"><span>Uint8 (Unsigned)</span><strong id="ins-uint8">0</strong></div>
+                            <div class="inspector-row"><span>Int16 (Little Endian)</span><strong id="ins-int16">0</strong></div>
+                            <div class="inspector-row"><span>Uint16 (Little Endian)</span><strong id="ins-uint16">0</strong></div>
+                            <div class="inspector-row"><span>Int32 (Little Endian)</span><strong id="ins-int32">0</strong></div>
+                            <div class="inspector-row"><span>Uint32 (Little Endian)</span><strong id="ins-uint32">0</strong></div>
+                            <div class="inspector-row"><span>Float32 (Single)</span><strong id="ins-float">0.0</strong></div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -176,6 +200,11 @@
         </div>
     </footer>
 
+    <script>
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('sw.js').catch(err => console.error("SW Registration failed:", err));
+        }
+    </script>
     <script src="app.js"></script>
 </body>
 </html>
