@@ -23,22 +23,27 @@
 
     <div id="command-palette-modal" class="modal-overlay hidden" style="align-items: flex-start; padding-top: 15vh; backdrop-filter: blur(5px);"><div class="palette-content"><div class="palette-search"><i class="ph-bold ph-command"></i><input type="text" id="palette-input" data-i18n-placeholder="palette_placeholder" placeholder="Komut yazın..." autocomplete="off"><div class="palette-shortcut">ESC</div></div><div class="palette-list" id="palette-list"></div></div></div>
 
-    <div id="share-patch-modal" class="modal-overlay hidden">
+    <div id="share-patch-modal" class="modal-overlay hidden" style="z-index: 10001;">
         <div class="modal-content" style="max-width: 400px;">
             <h3 style="margin-bottom: 15px;"><i class="ph-bold ph-share-network"></i> Toplulukla Paylaş</h3>
             <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 20px;">Yaptığınız değişiklikleri veritabanına ekleyerek diğer kullanıcıların tek tıkla kullanmasını sağlayın.</p>
             
             <div class="form-group">
-                <label>Oyun Adı</label>
-                <input type="text" id="share-game" placeholder="Örn: Palworld" autocomplete="off">
+                <label>Oyun Kategorisi</label>
+                <select id="share-game" style="background: var(--bg-base);">
+                    <option value="PUBG Mobile">PUBG Mobile</option>
+                    <option value="Palworld">Palworld</option>
+                    <option value="Hogwarts Legacy">Hogwarts Legacy</option>
+                    <option value="Diğer">Diğer / Bilinmeyen</option>
+                </select>
             </div>
             <div class="form-group">
                 <label>Yama Başlığı</label>
                 <input type="text" id="share-title" placeholder="Örn: Sınırsız Altın" autocomplete="off">
             </div>
             <div class="form-group">
-                <label>Açıklama</label>
-                <textarea id="share-desc" placeholder="Bu yama dosyada neyi değiştiriyor?"></textarea>
+                <label>Açıklama (En az 30 karakter)</label>
+                <textarea id="share-desc" placeholder="Bu yama dosyada tam olarak neyi değiştiriyor? Lütfen detaylı açıklayın."></textarea>
             </div>
             
             <div class="modal-actions" style="margin-top: 20px;">
@@ -48,9 +53,41 @@
         </div>
     </div>
 
+    <div id="mod-hub-modal" class="mod-hub-modal hidden">
+        <div class="mod-hub-content">
+            <div class="mod-hub-header">
+                <h2><i class="ph-bold ph-planet"></i> Mod Merkezi</h2>
+                <button class="close-hub-btn" id="close-hub"><i class="ph-bold ph-x"></i></button>
+            </div>
+            <div class="mod-hub-body">
+                <div class="mod-hub-sidebar">
+                    <ul class="category-list">
+                        <li class="category-item active" data-cat="Tümü"><i class="ph-bold ph-squares-four"></i> Tüm Oyunlar</li>
+                        <li class="category-item" data-cat="PUBG Mobile"><i class="ph-bold ph-crosshair"></i> PUBG Mobile</li>
+                        <li class="category-item" data-cat="Palworld"><i class="ph-bold ph-paw-print"></i> Palworld</li>
+                        <li class="category-item" data-cat="Diğer"><i class="ph-bold ph-folder-dashed"></i> Diğer</li>
+                    </ul>
+                </div>
+                <div class="mod-hub-main">
+                    <div class="mod-hub-toolbar">
+                        <span class="mod-hub-title" id="hub-current-cat">Tüm Oyunlar</span>
+                    </div>
+                    <div id="hub-list-container">
+                        <div style="color:var(--text-muted); text-align:center; padding: 40px;">Yükleniyor...</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <nav class="navbar">
         <h1 class="logo">SavStudio</h1>
         <div class="nav-actions">
+            
+            <button class="btn outline-btn" id="btn-open-hub" style="color: #66b3ff; border-color: #66b3ff; display: none;">
+                <i class="ph-bold ph-planet"></i> MOD MERKEZİ
+            </button>
+            
             <button class="btn outline-btn" id="btn-share-patch" style="display:none; color: var(--accent-bg); border-color: var(--accent-bg);">
                 <i class="ph-bold ph-share-network"></i> PAYLAŞ
             </button>
@@ -74,21 +111,69 @@
     </nav>
 
     <main class="workspace">
+        
         <aside class="sidebar">
             <div class="file-info" id="file-info"><strong data-i18n="active_file">Aktif Dosya</strong><br><br><span style="color: var(--text-muted);" data-i18n="no_file">Henüz dosya seçilmedi.</span></div>
             
             <div class="compare-info" id="compare-section" style="display: none; margin-top: 15px; padding: 15px; border: 1px solid var(--border-color); background: var(--bg-base); border-radius: 2px;"><label class="btn outline-btn" style="width: 100%; justify-content: center; font-size: 0.75rem;"><i class="ph-bold ph-git-diff"></i> <span data-i18n="compare_btn">KARŞILAŞTIR</span><input type="file" id="upload-compare" accept=".sav" style="display: none;"></label><div id="compare-details" style="display: none; margin-top: 15px; font-size: 0.8rem; color: var(--text-muted); line-height: 1.8;"></div></div>
-
-            <div class="cloud-templates-container" id="cloud-templates-section">
-                <div class="cloud-templates-header"><strong><i class="ph-bold ph-cloud-arrow-down"></i> Topluluk Yamaları</strong></div>
-                <div class="template-list" id="template-list-container"></div>
-            </div>
         </aside>
 
         <section class="editor-area">
             <div class="tabs"><button class="tab active" data-target="smart-view"><i class="ph-bold ph-list-numbers"></i> <span data-i18n="tab_values">Değerler</span></button><button class="tab" data-target="hex-view"><i class="ph-bold ph-hash"></i> <span data-i18n="tab_hex">Hex Editör</span></button></div>
-            <div class="view-content active" id="smart-view"><div class="welcome-screen" id="empty-message" style="margin-top: 10vh;"><div class="drop-zone" id="drop-zone"><i class="ph-duotone ph-file-dashed drop-icon"></i><h2 data-i18n="welcome_drop">Dosyanızı Buraya Sürükleyin</h2><p data-i18n="welcome_drop_sub">veya bilgisayarınızdan seçmek için tıklayın (.sav)</p><input type="file" id="drop-zone-input" accept=".sav" style="display:none;"></div></div><div id="smart-editor-container" style="display: none;"><div class="search-box"><i class="ph-bold ph-magnifying-glass"></i><input type="text" id="search-input" data-i18n-placeholder="search_placeholder" placeholder="Arama yap..."></div><div class="smart-list" id="smart-list"></div></div></div>
-            <div class="view-content" id="hex-view"><div class="search-box hex-search-bar" id="hex-search-container" style="display: none; margin-bottom: 20px;"><i class="ph-bold ph-magnifying-glass"></i><input type="text" id="hex-search-input" data-i18n-placeholder="hex_search_placeholder" placeholder="Hex veya Metin arat..."><button id="hex-search-btn" class="btn primary-btn" style="padding: 6px 16px; margin-left: 10px;" data-i18n="search_btn">BUL</button></div><div class="hex-editor-layout"><div class="hex-editor-container"><div class="hex-header"><div class="hex-offset-col" data-i18n="offset">Offset</div><div class="hex-bytes-col">00 01 02 03 04 05 06 07 08 09 0A 0B 0C 0D 0E 0F</div><div class="hex-ascii-col" data-i18n="ascii">ASCII</div></div><div class="hex-body" id="hex-body"><div class="empty-state"><p data-i18n="empty_msg">Düzenlemeye başlamak için bir dosya yükleyin.</p></div></div></div><div class="data-inspector" id="data-inspector" style="display: none;"><div class="inspector-header"><h3><i class="ph-bold ph-eye"></i> DATA INSPECTOR</h3><span class="inspector-address" id="inspect-address">0x00000000</span></div><div class="inspector-grid"><div class="inspector-row"><span>Binary</span><strong id="ins-bin">00000000</strong></div><div class="inspector-row"><span>Int8</span><strong id="ins-int8">0</strong></div><div class="inspector-row"><span>Uint8</span><strong id="ins-uint8">0</strong></div><div class="inspector-row"><span>Int16 (LE)</span><strong id="ins-int16">0</strong></div><div class="inspector-row"><span>Uint16 (LE)</span><strong id="ins-uint16">0</strong></div><div class="inspector-row"><span>Int32 (LE)</span><strong id="ins-int32">0</strong></div><div class="inspector-row"><span>Uint32 (LE)</span><strong id="ins-uint32">0</strong></div><div class="inspector-row"><span>Float32</span><strong id="ins-float">0.0</strong></div></div></div></div></div>
+            
+            <div class="view-content active" id="smart-view">
+                <div class="welcome-screen" id="empty-message" style="margin-top: 10vh;">
+                    <div class="drop-zone" id="drop-zone">
+                        <i class="ph-duotone ph-file-dashed drop-icon"></i>
+                        <h2 data-i18n="welcome_drop">Dosyanızı Buraya Sürükleyin</h2>
+                        <p data-i18n="welcome_drop_sub">veya bilgisayarınızdan seçmek için tıklayın (.sav)</p>
+                        <input type="file" id="drop-zone-input" accept=".sav" style="display:none;">
+                    </div>
+                </div>
+                <div id="smart-editor-container" style="display: none;">
+                    <div class="search-box">
+                        <i class="ph-bold ph-magnifying-glass"></i>
+                        <input type="text" id="search-input" data-i18n-placeholder="search_placeholder" placeholder="Arama yap...">
+                    </div>
+                    <div class="smart-list" id="smart-list"></div>
+                </div>
+            </div>
+
+            <div class="view-content" id="hex-view">
+                <div class="search-box hex-search-bar" id="hex-search-container" style="display: none; margin-bottom: 20px;">
+                    <i class="ph-bold ph-magnifying-glass"></i>
+                    <input type="text" id="hex-search-input" data-i18n-placeholder="hex_search_placeholder" placeholder="Hex veya Metin arat...">
+                    <button id="hex-search-btn" class="btn primary-btn" style="padding: 6px 16px; margin-left: 10px;" data-i18n="search_btn">BUL</button>
+                </div>
+                <div class="hex-editor-layout">
+                    <div class="hex-editor-container">
+                        <div class="hex-header">
+                            <div class="hex-offset-col" data-i18n="offset">Offset</div>
+                            <div class="hex-bytes-col">00 01 02 03 04 05 06 07 08 09 0A 0B 0C 0D 0E 0F</div>
+                            <div class="hex-ascii-col" data-i18n="ascii">ASCII</div>
+                        </div>
+                        <div class="hex-body" id="hex-body">
+                            <div class="empty-state"><p data-i18n="empty_msg">Düzenlemeye başlamak için bir dosya yükleyin.</p></div>
+                        </div>
+                    </div>
+                    <div class="data-inspector" id="data-inspector" style="display: none;">
+                        <div class="inspector-header">
+                            <h3><i class="ph-bold ph-eye"></i> DATA INSPECTOR</h3>
+                            <span class="inspector-address" id="inspect-address">0x00000000</span>
+                        </div>
+                        <div class="inspector-grid">
+                            <div class="inspector-row"><span>Binary</span><strong id="ins-bin">00000000</strong></div>
+                            <div class="inspector-row"><span>Int8</span><strong id="ins-int8">0</strong></div>
+                            <div class="inspector-row"><span>Uint8</span><strong id="ins-uint8">0</strong></div>
+                            <div class="inspector-row"><span>Int16 (LE)</span><strong id="ins-int16">0</strong></div>
+                            <div class="inspector-row"><span>Uint16 (LE)</span><strong id="ins-uint16">0</strong></div>
+                            <div class="inspector-row"><span>Int32 (LE)</span><strong id="ins-int32">0</strong></div>
+                            <div class="inspector-row"><span>Uint32 (LE)</span><strong id="ins-uint32">0</strong></div>
+                            <div class="inspector-row"><span>Float32</span><strong id="ins-float">0.0</strong></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </section>
     </main>
 
