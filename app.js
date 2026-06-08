@@ -16,11 +16,88 @@ const translations = {
 let currentLang = "tr", totalValuesFound = 0, activeHexIndex = -1, activeHexElement = null, searchMatchIndex = -1, searchMatchLength = 0;
 let undoStack = [], redoStack = [], originalUint8Array = null, compareUint8Array = null, compareFileName = "", fileBuffer = null, dataView = null, uint8Array = null, currentFileName = "";
 let hasUnsavedChanges = false;
+let currentFormatData = null; // Dosya analizi verilerini tutar
+
+/* ==========================================================================
+   FORMAT DETECTION & ROUTING ENGINE (Core Analysis System)
+   ========================================================================== */
+
+class FormatDetector {
+    static calculateEntropy(uint8Array) {
+        const length = uint8Array.length;
+        if (length === 0) return 0;
+        const frequencies = new Uint32Array(256);
+        for (let i = 0; i < length; i++) frequencies[uint8Array[i]]++;
+        let entropy = 0;
+        for (let i = 0; i < 256; i++) {
+            if (frequencies[i] > 0) {
+                const p = frequencies[i] / length;
+                entropy -= p * Math.log2(p);
+            }
+        }
+        return Number(entropy.toFixed(4));
+    }
+
+    static detect(uint8Array) {
+        const entropy = this.calculateEntropy(uint8Array);
+        const metadata = { entropy: entropy, size: uint8Array.length, isEncryptedOrCompressed: entropy >= 7.5 };
+
+        if (uint8Array.length >= 4 && uint8Array[0] === 0x47 && uint8Array[1] === 0x56 && uint8Array[2] === 0x41 && uint8Array[3] === 0x53) {
+            return { type: 'UNREAL_GVAS', confidence: 1.0, metadata: { ...metadata, engine: "Unreal Engine", description: "GVAS Format" } };
+        }
+
+        const previewLimit = Math.min(500, uint8Array.length);
+        const previewStr = String.fromCharCode.apply(null, uint8Array.slice(0, previewLimit));
+        if (previewStr.includes("Property")) {
+             return { type: 'UNREAL_PROPERTY', confidence: 0.85, metadata: { ...metadata, engine: "Unreal Engine", description: "Headerless Property" } };
+        }
+
+        let firstCharIndex = -1;
+        for (let i = 0; i < Math.min(50, uint8Array.length); i++) {
+            const byte = uint8Array[i];
+            if (byte !== 0x20 && byte !== 0x09 && byte !== 0x0A && byte !== 0x0D && byte !== 0xEF && byte !== 0xBB && byte !== 0xBF) {
+                firstCharIndex = i; break;
+            }
+        }
+
+        if (firstCharIndex !== -1 && uint8Array[firstCharIndex] === 0x7B) {
+            return { type: 'UNITY_JSON', confidence: 0.90, metadata: { ...metadata, engine: "Unity", description: "JSON Data" } };
+        }
+
+        if (metadata.isEncryptedOrCompressed) {
+            return { type: 'ENCRYPTED_BIN', confidence: 0.80, metadata: { ...metadata, engine: "Unknown", description: "Packed/Encrypted" } };
+        }
+
+        return { type: 'UNKNOWN_BIN', confidence: 1.0, metadata: { ...metadata, engine: "Unknown", description: "Raw Binary" } };
+    }
+}
+
+class UnrealParser { parse() { return { parserType: "UnrealParser" }; } }
+class UnityJsonParser { parse() { return { parserType: "UnityJsonParser" }; } }
+class FallbackHexParser { parse() { return { parserType: "FallbackHexParser", isHexOnly: true }; } }
+
+class SaveRouter {
+    static process(uint8Array) {
+        const formatInfo = FormatDetector.detect(uint8Array);
+        let parser;
+        switch (formatInfo.type) {
+            case 'UNREAL_GVAS':
+            case 'UNREAL_PROPERTY': parser = new UnrealParser(); break;
+            case 'UNITY_JSON': parser = new UnityJsonParser(); break;
+            default: parser = new FallbackHexParser(); break;
+        }
+        return { format: formatInfo, result: parser.parse() };
+    }
+}
+
+/* ==========================================================================
+   UI & CORE APPLICATION LOGIC
+   ========================================================================== */
 
 function showToast(message) {
     const toast = document.getElementById("toast-container");
     toast.innerText = message; toast.classList.remove("hidden");
-    setTimeout(() => { toast.classList.add("hidden"); }, 3000);
+    setTimeout(() => { toast.classList.add("hidden"); }, 4000);
 }
 
 function applyTranslations() {
@@ -34,7 +111,8 @@ function applyTranslations() {
     if (fileInfo.innerHTML.includes(translations[currentLang === "tr" ? "en" : "tr"].file_info_name) || fileInfo.innerHTML.includes(translations[currentLang].file_info_name)) {
         const fileNameSpan = document.getElementById("ui-filename"), fileSizeSpan = document.getElementById("ui-filesize"), fileStatusSpan = document.getElementById("ui-filestatus");
         if(fileNameSpan && fileSizeSpan) {
-            fileInfo.innerHTML = `<strong>${langData.active_file}</strong><br><br><strong>${langData.file_info_name}</strong> <span id="ui-filename" style="color:var(--text-main)">${fileNameSpan.innerText}</span> <br><strong>${langData.file_info_size}</strong> <span id="ui-filesize" style="color:var(--text-main)">${fileSizeSpan.innerText}</span> <br><strong>${langData.file_info_status}</strong> <span id="ui-filestatus" style="color:var(--text-main)">${totalValuesFound > 0 ? langData.status_success + ' ('+totalValuesFound+')' : fileStatusSpan.innerText}</span>`;
+            let formatBadge = currentFormatData ? `<span style="background:var(--accent-bg); color:#fff; padding:2px 6px; border-radius:4px; font-size:0.65rem; margin-left:8px; vertical-align:middle; letter-spacing:0.5px;">${currentFormatData.type}</span>` : '';
+            fileInfo.innerHTML = `<strong>${langData.active_file}</strong> ${formatBadge}<br><br><strong>${langData.file_info_name}</strong> <span id="ui-filename" style="color:var(--text-main)">${fileNameSpan.innerText}</span> <br><strong>${langData.file_info_size}</strong> <span id="ui-filesize" style="color:var(--text-main)">${fileSizeSpan.innerText}</span> <br><strong>${langData.file_info_status}</strong> <span id="ui-filestatus" style="color:var(--text-main)">${totalValuesFound > 0 ? langData.status_success + ' ('+totalValuesFound+')' : fileStatusSpan.innerText}</span>`;
         }
     }
     if(compareUint8Array) { document.getElementById("compare-details").innerHTML = `<strong style="color:var(--text-main)">${langData.main_file}</strong> ${currentFileName} <br><strong style="color:#ff4444">${langData.compared_file}</strong> ${compareFileName}`; }
@@ -49,18 +127,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const paletteModal = document.getElementById("command-palette-modal"), paletteInput = document.getElementById("palette-input"), paletteList = document.getElementById("palette-list"), btnCommandPalette = document.getElementById("btn-command-palette");
     
-    /* --- DATA INSPECTOR ELEMENTLERI --- */
-    const dataInspector = document.getElementById("data-inspector");
-    const insAddress = document.getElementById("inspect-address");
-    const insBin = document.getElementById("ins-bin");
-    const insInt8 = document.getElementById("ins-int8");
-    const insUint8 = document.getElementById("ins-uint8");
-    const insInt16 = document.getElementById("ins-int16");
-    const insUint16 = document.getElementById("ins-uint16");
-    const insInt32 = document.getElementById("ins-int32");
-    const insUint32 = document.getElementById("ins-uint32");
-    const insFloat = document.getElementById("ins-float");
+    const dataInspector = document.getElementById("data-inspector"), insAddress = document.getElementById("inspect-address"), insBin = document.getElementById("ins-bin"), insInt8 = document.getElementById("ins-int8"), insUint8 = document.getElementById("ins-uint8"), insInt16 = document.getElementById("ins-int16"), insUint16 = document.getElementById("ins-uint16"), insInt32 = document.getElementById("ins-int32"), insUint32 = document.getElementById("ins-uint32"), insFloat = document.getElementById("ins-float");
 
+    /* --- KOMUT PALETİ --- */
     let paletteSelectedIndex = 0, filteredCommands = [];
 
     const getCommands = () => [
@@ -88,8 +157,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     function updatePaletteSelection() {
-        const items = paletteList.querySelectorAll(".palette-item");
-        items.forEach((item, index) => { if (index === paletteSelectedIndex) { item.classList.add("selected"); item.scrollIntoView({ block: "nearest" }); } else { item.classList.remove("selected"); } });
+        paletteList.querySelectorAll(".palette-item").forEach((item, index) => { if (index === paletteSelectedIndex) { item.classList.add("selected"); item.scrollIntoView({ block: "nearest" }); } else { item.classList.remove("selected"); } });
     }
 
     function openPalette() { paletteModal.classList.remove("hidden"); paletteInput.value = ""; paletteSelectedIndex = 0; renderPalette(); setTimeout(() => paletteInput.focus(), 50); }
@@ -110,6 +178,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     paletteInput.addEventListener("input", (e) => { paletteSelectedIndex = 0; renderPalette(e.target.value); });
 
+    /* --- SİSTEM OLAYLARI & KORUMALAR --- */
     window.addEventListener("beforeunload", (e) => { if (hasUnsavedChanges) { e.preventDefault(); e.returnValue = ""; } });
     window.addEventListener("popstate", (e) => { if (hasUnsavedChanges) { window.history.pushState({ preventBack: true }, ""); exitModal.classList.remove("hidden"); } });
     exitCancel.addEventListener("click", () => { exitModal.classList.add("hidden"); });
@@ -126,27 +195,68 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     });
 
+    /* --- GEÇMİŞ YÖNETİMİ (HISTORY API) --- */
     function pushHistory(changes) { undoStack.push(changes); redoStack = []; triggerUnsaved(); updateHistoryButtons(); }
     function updateHistoryButtons() { btnUndo.disabled = undoStack.length === 0; btnRedo.disabled = redoStack.length === 0; }
-    function performUndo() { if (undoStack.length === 0) return; const changes = undoStack.pop(); redoStack.push(changes); changes.forEach(c => { uint8Array[c.index] = c.oldVal; }); extractPropertiesBulletproof(); renderHexEditor(); updateHistoryButtons(); if(activeHexIndex !== -1) updateDataInspector(activeHexIndex); }
-    function performRedo() { if (redoStack.length === 0) return; const changes = redoStack.pop(); undoStack.push(changes); changes.forEach(c => { uint8Array[c.index] = c.newVal; }); extractPropertiesBulletproof(); renderHexEditor(); updateHistoryButtons(); if(activeHexIndex !== -1) updateDataInspector(activeHexIndex); }
+    function performUndo() { if (undoStack.length === 0) return; const changes = undoStack.pop(); redoStack.push(changes); changes.forEach(c => { uint8Array[c.index] = c.oldVal; }); if(currentFormatData && currentFormatData.type.includes("UNREAL")) extractPropertiesBulletproof(); renderHexEditor(); updateHistoryButtons(); if(activeHexIndex !== -1) updateDataInspector(activeHexIndex); }
+    function performRedo() { if (redoStack.length === 0) return; const changes = redoStack.pop(); undoStack.push(changes); changes.forEach(c => { uint8Array[c.index] = c.newVal; }); if(currentFormatData && currentFormatData.type.includes("UNREAL")) extractPropertiesBulletproof(); renderHexEditor(); updateHistoryButtons(); if(activeHexIndex !== -1) updateDataInspector(activeHexIndex); }
 
     btnUndo.addEventListener("click", performUndo); btnRedo.addEventListener("click", performRedo);
     document.addEventListener("keydown", (e) => { if (paletteModal.classList.contains("hidden")) { if(e.ctrlKey && e.key.toLowerCase() === 'z') performUndo(); if(e.ctrlKey && e.key.toLowerCase() === 'y') performRedo(); } });
 
+    /* ==========================================================================
+       DOSYA OKUMA VE MOTOR ENTEGRASYONU
+       ========================================================================== */
     function processUploadedFile(file) {
         if (!file) return;
         currentFileName = file.name; const reader = new FileReader();
+        
         reader.onload = (event) => {
-            fileBuffer = event.target.result; dataView = new DataView(fileBuffer); uint8Array = new Uint8Array(fileBuffer); originalUint8Array = new Uint8Array(fileBuffer.slice(0)); compareUint8Array = null; compareFileName = ""; compareDetails.style.display = "none"; undoStack = []; redoStack = []; updateHistoryButtons(); searchMatchIndex = -1; searchMatchLength = 0; hasUnsavedChanges = false;
+            fileBuffer = event.target.result; 
+            dataView = new DataView(fileBuffer); 
+            uint8Array = new Uint8Array(fileBuffer); 
+            originalUint8Array = new Uint8Array(fileBuffer.slice(0)); 
             
-            dataInspector.style.display = "flex"; // Canlı analizörü aktif et
+            // 1. Yeni Motor ile Format ve Entropi Analizi
+            const routingData = SaveRouter.process(uint8Array);
+            currentFormatData = routingData.format;
+            
+            // 2. Güvenlik ve Bilgi Toast'ı
+            let toastMsg = currentLang === "tr" ? `Format: ${routingData.format.type} (Güven: %${Math.round(routingData.format.confidence * 100)})` : `Format: ${routingData.format.type} (Confidence: ${Math.round(routingData.format.confidence * 100)}%)`;
+            if (routingData.format.metadata.isEncryptedOrCompressed) {
+                toastMsg += currentLang === "tr" ? " - DİKKAT: Yüksek Entropi (Şifreli Olabilir)" : " - WARNING: High Entropy (Encrypted)";
+            }
+            showToast(toastMsg);
+
+            // 3. UI Sıfırlama
+            compareUint8Array = null; compareFileName = ""; compareDetails.style.display = "none"; undoStack = []; redoStack = []; updateHistoryButtons(); searchMatchIndex = -1; searchMatchLength = 0; hasUnsavedChanges = false;
+            dataInspector.style.display = "flex";
 
             let sizeStr = (file.size / 1024).toFixed(2) + " KB";
-            fileInfo.innerHTML = `<strong>${translations[currentLang].active_file}</strong><br><br><strong>${translations[currentLang].file_info_name}</strong> <span id="ui-filename" style="color:var(--text-main)">${file.name}</span> <br><strong>${translations[currentLang].file_info_size}</strong> <span id="ui-filesize" style="color:var(--text-main)">${sizeStr}</span> <br><strong>${translations[currentLang].file_info_status}</strong> <span id="ui-filestatus" style="color:var(--text-main)">${translations[currentLang].status_processing}</span>`;
+            let formatBadge = `<span style="background:var(--accent-bg); color:#fff; padding:2px 6px; border-radius:4px; font-size:0.65rem; margin-left:8px; vertical-align:middle; letter-spacing:0.5px;">${routingData.format.type}</span>`;
+            
+            fileInfo.innerHTML = `<strong>${translations[currentLang].active_file}</strong> ${formatBadge}<br><br><strong>${translations[currentLang].file_info_name}</strong> <span id="ui-filename" style="color:var(--text-main)">${file.name}</span> <br><strong>${translations[currentLang].file_info_size}</strong> <span id="ui-filesize" style="color:var(--text-main)">${sizeStr}</span> <br><strong>${translations[currentLang].file_info_status}</strong> <span id="ui-filestatus" style="color:var(--text-main)">${translations[currentLang].status_processing}</span>`;
+            
             emptyMsg.style.display = "none"; editorContainer.style.display = "flex"; hexSearchContainer.style.display = "flex"; downloadBtn.disabled = false; downloadBtn.classList.remove("outline-btn"); downloadBtn.classList.add("primary-btn"); compareSection.style.display = "block"; btnImportPatch.style.display = "flex"; btnExportPatch.style.display = "flex"; patchDivider.style.display = "block";
-            setTimeout(() => { extractPropertiesBulletproof(); renderHexEditor(); applyTranslations(); if(uint8Array.length > 0) updateDataInspector(0); }, 50);
-        }; reader.readAsArrayBuffer(file);
+
+            // 4. Tespit Edilen Formata Göre Smart View Yönetimi
+            setTimeout(() => { 
+                if (routingData.result.parserType.includes("Unreal")) {
+                    extractPropertiesBulletproof(); // Eski kusursuz Unreal okuyucumuz
+                } else if (routingData.result.parserType === "UnityJsonParser") {
+                    smartList.innerHTML = `<p style='color:var(--text-main); text-align:center; padding: 40px; line-height:1.6;'>${currentLang === "tr" ? "Unity JSON verisi başarıyla tespit edildi." : "Unity JSON data detected successfully."}<br><br><span style="color:var(--text-muted); font-size:0.85rem;">(${currentLang === "tr" ? "Gelişmiş JSON düzenleyici modülü v1.2 güncellemesinde aktif edilecektir. Geçici olarak Hex Editör üzerinden müdahale edebilirsiniz." : "Advanced JSON editor will be active in v1.2. Please use Hex Editor for now."})</span></p>`;
+                    totalValuesFound = 0;
+                } else {
+                    smartList.innerHTML = `<p style='color:#ff4444; text-align:center; padding: 40px; line-height:1.6;'>${currentLang === "tr" ? "Bu dosya şifreli veya tanımlanamayan bir formatta" : "Encrypted or unsupported file format"} (Entropy: ${routingData.format.metadata.entropy}).<br><br><span style="color:var(--text-muted); font-size:0.85rem;">${currentLang === "tr" ? "Değerler (Smart View) sekmesi kullanılamaz. Lütfen Hex Editörü kullanın." : "Smart View is disabled. Please rely on Hex Editor."}</span></p>`;
+                    totalValuesFound = 0;
+                }
+                
+                renderHexEditor(); 
+                if(uint8Array.length > 0) updateDataInspector(0); 
+                applyTranslations(); 
+            }, 50);
+        }; 
+        reader.readAsArrayBuffer(file);
     }
 
     uploadInput.addEventListener("change", (e) => processUploadedFile(e.target.files[0]));
@@ -158,7 +268,7 @@ document.addEventListener("DOMContentLoaded", () => {
         dropZone.addEventListener("drop", (e) => { e.preventDefault(); dropZone.classList.remove("drag-active"); if (e.dataTransfer.files.length) processUploadedFile(e.dataTransfer.files[0]); });
     }
 
-    /* --- YENİ: DATA INSPECTOR CANLI HESAPLAMA MOTORU --- */
+    /* --- DATA INSPECTOR CANLI HESAPLAMA MOTORU --- */
     window.updateDataInspector = function(index) {
         if (!uint8Array || index < 0 || index >= uint8Array.length) return;
         activeHexIndex = index;
@@ -169,7 +279,6 @@ document.addEventListener("DOMContentLoaded", () => {
         insInt8.innerText = dataView.getInt8(index);
         insUint8.innerText = byte;
 
-        // Dosya sınırlarına göre güvenli okuma (Little Endian)
         insInt16.innerText = (index + 2 <= uint8Array.length) ? dataView.getInt16(index, true) : "-";
         insUint16.innerText = (index + 2 <= uint8Array.length) ? dataView.getUint16(index, true) : "-";
         insInt32.innerText = (index + 4 <= uint8Array.length) ? dataView.getInt32(index, true) : "-";
@@ -183,6 +292,7 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     }
 
+    /* --- PATCH EXPORT/IMPORT --- */
     btnExportPatch.addEventListener("click", () => {
         if (!uint8Array || !originalUint8Array) return; let changes = [];
         for (let i = 0; i < uint8Array.length; i++) { if (uint8Array[i] !== originalUint8Array[i]) changes.push({ offset: i, oldVal: originalUint8Array[i], newVal: uint8Array[i] }); }
@@ -203,7 +313,13 @@ document.addEventListener("DOMContentLoaded", () => {
                     const offset = change.offset; const newVal = change.newVal;
                     if (offset >= 0 && offset < uint8Array.length) { const oldVal = uint8Array[offset]; if (oldVal !== newVal) { historyChanges.push({ index: offset, oldVal: oldVal, newVal: newVal }); uint8Array[offset] = newVal; appliedCount++; } }
                 });
-                if (appliedCount > 0) { pushHistory(historyChanges); extractPropertiesBulletproof(); renderHexEditor(); if(activeHexIndex !== -1) updateDataInspector(activeHexIndex); showToast(currentLang === "tr" ? `${appliedCount} değişiklik başarıyla uygulandı.` : `${appliedCount} changes applied successfully.`); } else { showToast(currentLang === "tr" ? "Uygulanacak yeni bir değişiklik bulunamadı." : "No new changes to apply."); }
+                if (appliedCount > 0) { 
+                    pushHistory(historyChanges); 
+                    if(currentFormatData && currentFormatData.type.includes("UNREAL")) extractPropertiesBulletproof(); 
+                    renderHexEditor(); 
+                    if(activeHexIndex !== -1) updateDataInspector(activeHexIndex); 
+                    showToast(currentLang === "tr" ? `${appliedCount} değişiklik başarıyla uygulandı.` : `${appliedCount} changes applied successfully.`); 
+                } else { showToast(currentLang === "tr" ? "Uygulanacak yeni bir değişiklik bulunamadı." : "No new changes to apply."); }
             } catch (err) { showToast(currentLang === "tr" ? "Yama dosyası okunamadı: Format hatası." : "Failed to read patch: Invalid format."); } e.target.value = "";
         }; reader.readAsText(file);
     });
@@ -214,6 +330,7 @@ document.addEventListener("DOMContentLoaded", () => {
         reader.readAsArrayBuffer(file);
     });
 
+    /* --- UNREAL PROPERTY PARSER (ESKİ SAĞLAM SİSTEM) --- */
     function extractPropertiesBulletproof() {
         let rawStr = ""; for (let i = 0; i < uint8Array.length; i++) { rawStr += String.fromCharCode(uint8Array[i]); }
         let properties = []; const types = [ { type: "IntProperty", offsetAdd: 21 }, { type: "FloatProperty", offsetAdd: 23 }, { type: "BoolProperty", offsetAdd: 21 }, { type: "StrProperty", offsetAdd: 25 }, { type: "NameProperty", offsetAdd: 25 } ];
@@ -266,9 +383,9 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     }
 
+    /* --- HEX EDİTÖR MOTORU --- */
     function scrollToHex(index) { document.querySelector(".tabs button[data-target='hex-view']").click(); const hexBody = document.getElementById("hex-body"); const row = Math.floor(index / 16); hexBody.scrollTop = row * 28; }
     
-    // Çift tıklama (veya mobilde basılı tutma gibi) tetiklendiğinde modal açılır
     function openModal(index, currentHex, element) { activeHexIndex = index; activeHexElement = element; const decValue = parseInt(currentHex, 16); modalDesc.innerHTML = `Address: <strong style="color:var(--text-main)">0x${index.toString(16).toUpperCase()}</strong> <br> Decimal: <strong style="color:var(--text-main)">${decValue}</strong>`; modalInput.value = currentHex; customModal.classList.remove("hidden"); setTimeout(() => { modalInput.focus(); modalInput.select(); }, 50); }
     function closeModal() { customModal.classList.add("hidden"); }
 
@@ -276,7 +393,7 @@ document.addEventListener("DOMContentLoaded", () => {
     modalSave.addEventListener("click", () => {
         if (activeHexIndex !== -1) {
             let newHex = modalInput.value.trim().toUpperCase();
-            if (/^[0-9A-F]{1,2}$/.test(newHex)) { let oldVal = uint8Array[activeHexIndex]; let newVal = parseInt(newHex, 16); if(oldVal !== newVal) { pushHistory([{index: activeHexIndex, oldVal: oldVal, newVal: newVal}]); uint8Array[activeHexIndex] = newVal; if (activeHexElement) { activeHexElement.innerText = newHex.padStart(2, '0'); activeHexElement.classList.add("edited-val"); } extractPropertiesBulletproof(); updateDataInspector(activeHexIndex); } }
+            if (/^[0-9A-F]{1,2}$/.test(newHex)) { let oldVal = uint8Array[activeHexIndex]; let newVal = parseInt(newHex, 16); if(oldVal !== newVal) { pushHistory([{index: activeHexIndex, oldVal: oldVal, newVal: newVal}]); uint8Array[activeHexIndex] = newVal; if (activeHexElement) { activeHexElement.innerText = newHex.padStart(2, '0'); activeHexElement.classList.add("edited-val"); } if(currentFormatData && currentFormatData.type.includes("UNREAL")) extractPropertiesBulletproof(); updateDataInspector(activeHexIndex); } }
         } closeModal();
     });
 
@@ -308,7 +425,7 @@ document.addEventListener("DOMContentLoaded", () => {
                         const byte = uint8Array[i + j]; const hexValue = byte.toString(16).padStart(2, '0').toUpperCase();
                         let isHighlighted = searchMatchIndex !== -1 && (i+j >= searchMatchIndex) && (i+j < searchMatchIndex + searchMatchLength); let isDiff = compareUint8Array && compareUint8Array[i+j] !== undefined && compareUint8Array[i+j] !== byte; let isNull = byte === 0; let isAscii = byte >= 32 && byte <= 126;
                         let classNames = "hex-byte"; if(isDiff) classNames += " hex-diff"; else if(isHighlighted) classNames += " hex-highlight"; else { if(isNull) classNames += " hex-null"; else if(isAscii) classNames += " hex-ascii"; }
-                        if(activeHexIndex === (i+j)) classNames += " edited-val"; // Seçili olan byte'ı vurgula
+                        if(activeHexIndex === (i+j)) classNames += " edited-val";
                         hexBytes += `<span class="${classNames}" data-index="${i+j}">${hexValue}</span> `; asciiChars += isAscii ? String.fromCharCode(byte) : ".";
                     } else { hexBytes += "   "; }
                 }
@@ -316,7 +433,6 @@ document.addEventListener("DOMContentLoaded", () => {
             }
             contentNode.innerHTML = htmlContent; 
             
-            // TIKLAMA EVENTİ: Tek tıklamada Data Inspector güncellenir, çift tıklamada düzenleme modalı açılır
             contentNode.querySelectorAll('.hex-byte').forEach(span => { 
                 span.addEventListener('click', function() { 
                     const idx = parseInt(this.getAttribute('data-index'));
@@ -324,9 +440,7 @@ document.addEventListener("DOMContentLoaded", () => {
                     document.querySelectorAll('.hex-byte').forEach(s => s.classList.remove('edited-val'));
                     this.classList.add('edited-val');
                 });
-                span.addEventListener('dblclick', function() { 
-                    openModal(parseInt(this.getAttribute('data-index')), this.innerText, this); 
-                });
+                span.addEventListener('dblclick', function() { openModal(parseInt(this.getAttribute('data-index')), this.innerText, this); });
             });
         }
         hexBody.onscroll = renderChunk; hexBody.scrollTop = currentScrollTop; renderChunk();
