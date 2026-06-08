@@ -455,3 +455,23 @@ input:checked + .slider:before { transform: translateX(20px); background-color: 
         padding-bottom: 260px;
     }
 }
+/* --- CLOUD TEMPLATES (BULUT ŞABLONLAR) VE PAYLAŞMA --- */
+.cloud-templates-container { margin-top: 15px; padding: 15px; border: 1px solid var(--border-color); background: var(--bg-base); border-radius: 4px; display: none; animation: fadeIn 0.3s ease; }
+.cloud-templates-header { font-size: 0.75rem; color: var(--text-muted); margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center; text-transform: uppercase; letter-spacing: 1px; }
+.cloud-templates-header i { color: var(--text-main); font-size: 1rem; }
+.template-list { display: flex; flex-direction: column; gap: 10px; max-height: 250px; overflow-y: auto; padding-right: 5px; }
+.template-card { background: var(--bg-panel); border: 1px solid var(--border-color); border-radius: 4px; padding: 12px; transition: 0.2s ease; cursor: default; }
+.template-card:hover { border-color: rgba(255, 255, 255, 0.2); }
+.template-card-title { font-size: 0.85rem; color: var(--text-main); font-weight: 600; margin-bottom: 4px; display: flex; justify-content: space-between; }
+.template-badge { font-size: 0.6rem; background: var(--accent-bg); color: #fff; padding: 2px 6px; border-radius: 2px; }
+.template-card-desc { font-size: 0.75rem; color: var(--text-muted); margin-bottom: 10px; line-height: 1.4; }
+.template-apply-btn { width: 100%; font-size: 0.75rem; padding: 6px; background: transparent; border: 1px dashed var(--border-color); color: var(--text-main); cursor: pointer; transition: 0.2s; border-radius: 2px; }
+.template-apply-btn:hover { background: rgba(255, 255, 255, 0.05); border-style: solid; }
+
+/* Paylaşma Modalı Formu */
+.form-group { margin-bottom: 15px; text-align: left; }
+.form-group label { display: block; font-size: 0.8rem; color: var(--text-muted); margin-bottom: 5px; }
+.form-group input, .form-group textarea { width: 100%; background: rgba(0,0,0,0.2); border: 1px solid var(--border-color); color: var(--text-main); padding: 10px; border-radius: 4px; font-family: var(--font-ui); outline: none; }
+.form-group textarea { resize: vertical; min-height: 80px; }
+.form-group input:focus, .form-group textarea:focus { border-color: var(--accent-bg); }
+
