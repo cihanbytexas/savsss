@@ -1,9 +1,22 @@
 <!DOCTYPE html>
-<html lang="tr">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>SavStudio | Online .sav File Editor</title>
+    
+    <title>SavStudio | Online .sav File Editor & Hex Viewer</title>
+    <meta name="description" content="Tarayıcı üzerinden çalışan, hızlı, güvenli ve ücretsiz Unreal Engine .sav (GVAS) dosya düzenleyicisi. Kurulumsuz Hex editörü ve oyun kayıt (save) veri değiştirici.">
+    <meta name="keywords" content="sav editor, save editor, unreal engine sav, gvas editor, hex editor, online sav editor, browser hex editor, veri düzenleyici">
+    <meta name="author" content="SavStudio">
+    <meta name="robots" content="index, follow">
+    <meta name="language" content="English">
+    
+    <meta property="og:title" content="SavStudio | Data Editor">
+    <meta property="og:description" content="Advanced online .sav file editor. Edit values and hex codes instantly in your browser.">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://savstudio.com">
+    <meta property="og:image" content="icon-512.png">
+    
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#0a0a0a">
     
@@ -11,44 +24,103 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     
     <link rel="stylesheet" href="style.css">
+
+    <style>
+        /* Hamburger Overlay Modalı */
+        .hamburger-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.6); backdrop-filter: blur(10px); z-index: 99999; display: flex; justify-content: flex-end; opacity: 1; transition: opacity 0.3s ease; }
+        .hamburger-overlay.hidden { opacity: 0; pointer-events: none; }
+        
+        /* Hamburger İçerik Paneli */
+        .hamburger-panel { width: 300px; height: 100%; background: var(--bg-panel); border-left: 1px solid var(--border-color); box-shadow: -10px 0 30px rgba(0,0,0,0.8); display: flex; flex-direction: column; transform: translateX(0); transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1); }
+        .hamburger-overlay.hidden .hamburger-panel { transform: translateX(100%); }
+        
+        .hamburger-header { padding: 25px 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color); }
+        .hamburger-header h2 { font-size: 1.1rem; color: var(--text-main); font-weight: 600; letter-spacing: 2px; text-transform: uppercase; }
+        .close-hamburger-btn { background: transparent; border: none; color: var(--text-muted); font-size: 1.5rem; cursor: pointer; transition: 0.2s; }
+        .close-hamburger-btn:hover { color: #ff4444; transform: rotate(90deg); }
+        
+        .hamburger-menu-list { flex: 1; display: flex; flex-direction: column; padding: 20px 0; }
+        .h-menu-item { background: transparent; border: none; color: var(--text-muted); padding: 18px 25px; text-align: left; font-family: var(--font-ui); font-size: 0.95rem; font-weight: 500; cursor: pointer; transition: 0.2s; display: flex; align-items: center; gap: 15px; border-left: 3px solid transparent; text-transform: uppercase; letter-spacing: 1px; }
+        .h-menu-item:hover { background: rgba(255,255,255,0.03); color: var(--text-main); border-left-color: var(--accent-bg); }
+        .h-menu-item i { font-size: 1.4rem; }
+        
+        .h-menu-divider { height: 1px; background: var(--border-color); margin: 15px 20px; }
+        
+        @media (max-width: 768px) { .mobile-hide { display: none !important; } }
+    </style>
 </head>
 <body>
 
-    <div id="splash-screen" class="splash-screen"><div class="splash-content"><div class="splash-logo">SavStudio</div><div class="splash-loader"></div></div></div>
+    <div id="splash-screen" class="splash-screen">
+        <div class="splash-content">
+            <div class="splash-logo">SavStudio</div>
+            <div class="splash-loader"></div>
+        </div>
+    </div>
+
     <div id="toast-container" class="toast hidden"></div>
 
-    <div id="custom-modal" class="modal-overlay hidden"><div class="modal-content"><h3 id="modal-title" data-i18n="modal_title">Hex Değerini Düzenle</h3><p id="modal-desc" class="modal-desc"></p><input type="text" id="modal-input" maxlength="2" autocomplete="off"><div class="modal-actions"><button class="btn outline-btn" id="modal-cancel" data-i18n="modal_cancel">İPTAL</button><button class="btn primary-btn" id="modal-save" data-i18n="modal_save">KAYDET</button></div></div></div>
+    <div id="custom-modal" class="modal-overlay hidden">
+        <div class="modal-content">
+            <h3 id="modal-title" data-i18n="modal_title">Edit Hex Value</h3>
+            <p id="modal-desc" class="modal-desc"></p>
+            <input type="text" id="modal-input" maxlength="2" autocomplete="off">
+            <div class="modal-actions">
+                <button class="btn outline-btn" id="modal-cancel" data-i18n="modal_cancel">CANCEL</button>
+                <button class="btn primary-btn" id="modal-save" data-i18n="modal_save">SAVE</button>
+            </div>
+        </div>
+    </div>
 
-    <div id="exit-modal" class="modal-overlay hidden"><div class="modal-content" style="text-align: center; max-width: 340px;"><i class="ph-duotone ph-warning-circle" style="font-size: 4rem; color: #ff4444; margin-bottom: 15px; display: inline-block;"></i><h3 data-i18n="exit_title" style="margin-bottom: 10px; font-size: 1.3rem;">Kaydedilmemiş Değişiklikler</h3><p data-i18n="exit_desc" style="color: var(--text-muted); font-size: 0.95rem; margin-bottom: 25px; line-height: 1.5;">Çıkmak istediğinize emin misiniz?</p><div class="modal-actions" style="justify-content: center; gap: 15px;"><button class="btn outline-btn" id="exit-cancel" data-i18n="exit_btn_cancel">İPTAL</button><button class="btn primary-btn" id="exit-confirm" data-i18n="exit_btn_confirm" style="background: #ff4444; border-color: #ff4444;">ÇIK</button></div></div></div>
+    <div id="exit-modal" class="modal-overlay hidden">
+        <div class="modal-content" style="text-align: center; max-width: 340px;">
+            <i class="ph-duotone ph-warning-circle" style="font-size: 4rem; color: #ff4444; margin-bottom: 15px; display: inline-block;"></i>
+            <h3 data-i18n="exit_title" style="margin-bottom: 10px; font-size: 1.3rem;">Unsaved Changes</h3>
+            <p data-i18n="exit_desc" style="color: var(--text-muted); font-size: 0.95rem; margin-bottom: 25px; line-height: 1.5;">You have unsaved changes. Are you sure you want to exit without saving?</p>
+            <div class="modal-actions" style="justify-content: center; gap: 15px;">
+                <button class="btn outline-btn" id="exit-cancel" data-i18n="exit_btn_cancel">CANCEL</button>
+                <button class="btn primary-btn" id="exit-confirm" data-i18n="exit_btn_confirm" style="background: #ff4444; border-color: #ff4444;">EXIT</button>
+            </div>
+        </div>
+    </div>
 
-    <div id="command-palette-modal" class="modal-overlay hidden" style="align-items: flex-start; padding-top: 15vh; backdrop-filter: blur(5px);"><div class="palette-content"><div class="palette-search"><i class="ph-bold ph-command"></i><input type="text" id="palette-input" data-i18n-placeholder="palette_placeholder" placeholder="Komut yazın..." autocomplete="off"><div class="palette-shortcut">ESC</div></div><div class="palette-list" id="palette-list"></div></div></div>
+    <div id="command-palette-modal" class="modal-overlay hidden" style="align-items: flex-start; padding-top: 15vh; backdrop-filter: blur(5px);">
+        <div class="palette-content">
+            <div class="palette-search">
+                <i class="ph-bold ph-command"></i>
+                <input type="text" id="palette-input" data-i18n-placeholder="palette_placeholder" placeholder="Type a command..." autocomplete="off">
+                <div class="palette-shortcut">ESC</div>
+            </div>
+            <div class="palette-list" id="palette-list"></div>
+        </div>
+    </div>
 
     <div id="share-patch-modal" class="modal-overlay hidden" style="z-index: 10001;">
         <div class="modal-content" style="max-width: 400px;">
-            <h3 style="margin-bottom: 15px;"><i class="ph-bold ph-share-network"></i> Toplulukla Paylaş</h3>
-            <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 20px;">Yaptığınız değişiklikleri veritabanına ekleyerek diğer kullanıcıların tek tıkla kullanmasını sağlayın.</p>
+            <h3 style="margin-bottom: 15px;"><i class="ph-bold ph-share-network"></i> Share with Community</h3>
+            <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 20px;">Add your changes to the database so others can use them instantly.</p>
             
             <div class="form-group">
-                <label>Oyun Kategorisi</label>
-                <select id="share-game" style="background: var(--bg-base);">
+                <label>Game Category</label>
+                <select id="share-game" style="background: var(--bg-panel); padding: 12px; font-family: var(--font-ui);">
                     <option value="PUBG Mobile">PUBG Mobile</option>
                     <option value="Palworld">Palworld</option>
                     <option value="Hogwarts Legacy">Hogwarts Legacy</option>
-                    <option value="Diğer">Diğer / Bilinmeyen</option>
+                    <option value="Diğer">Other / Unknown</option>
                 </select>
             </div>
             <div class="form-group">
-                <label>Yama Başlığı</label>
-                <input type="text" id="share-title" placeholder="Örn: Sınırsız Altın" autocomplete="off">
+                <label>Patch Title</label>
+                <input type="text" id="share-title" placeholder="e.g.: Infinite Gold" autocomplete="off">
             </div>
             <div class="form-group">
-                <label>Açıklama (En az 30 karakter)</label>
-                <textarea id="share-desc" placeholder="Bu yama dosyada tam olarak neyi değiştiriyor? Lütfen detaylı açıklayın."></textarea>
+                <label>Description (Min 30 chars)</label>
+                <textarea id="share-desc" placeholder="What exactly does this patch change? Please describe in detail."></textarea>
             </div>
             
             <div class="modal-actions" style="margin-top: 20px;">
-                <button class="btn outline-btn" id="share-cancel">İPTAL</button>
-                <button class="btn primary-btn" id="share-submit">GÖNDER</button>
+                <button class="btn outline-btn" id="share-cancel">CANCEL</button>
+                <button class="btn primary-btn" id="share-submit">SUBMIT</button>
             </div>
         </div>
     </div>
@@ -56,84 +128,127 @@
     <div id="mod-hub-modal" class="mod-hub-modal hidden">
         <div class="mod-hub-content">
             <div class="mod-hub-header">
-                <h2><i class="ph-bold ph-planet"></i> Mod Merkezi</h2>
+                <h2><i class="ph-bold ph-planet"></i> Mod Center</h2>
                 <button class="close-hub-btn" id="close-hub"><i class="ph-bold ph-x"></i></button>
             </div>
             <div class="mod-hub-body">
                 <div class="mod-hub-sidebar">
                     <ul class="category-list">
-                        <li class="category-item active" data-cat="Tümü"><i class="ph-bold ph-squares-four"></i> Tüm Oyunlar</li>
+                        <li class="category-item active" data-cat="Tümü"><i class="ph-bold ph-squares-four"></i> All Games</li>
                         <li class="category-item" data-cat="PUBG Mobile"><i class="ph-bold ph-crosshair"></i> PUBG Mobile</li>
                         <li class="category-item" data-cat="Palworld"><i class="ph-bold ph-paw-print"></i> Palworld</li>
-                        <li class="category-item" data-cat="Diğer"><i class="ph-bold ph-folder-dashed"></i> Diğer</li>
+                        <li class="category-item" data-cat="Diğer"><i class="ph-bold ph-folder-dashed"></i> Other</li>
                     </ul>
                 </div>
                 <div class="mod-hub-main">
                     <div class="mod-hub-toolbar">
-                        <span class="mod-hub-title" id="hub-current-cat">Tüm Oyunlar</span>
+                        <span class="mod-hub-title" id="hub-current-cat">All Games</span>
                     </div>
                     <div id="hub-list-container">
-                        <div style="color:var(--text-muted); text-align:center; padding: 40px;">Yükleniyor...</div>
+                        <div style="color:var(--text-muted); text-align:center; padding: 40px;">Loading...</div>
                     </div>
                 </div>
             </div>
         </div>
     </div>
 
+    <div id="hamburger-overlay" class="hamburger-overlay hidden">
+        <div class="hamburger-panel">
+            <div class="hamburger-header">
+                <h2>Menu</h2>
+                <button class="close-hamburger-btn" id="close-hamburger-btn"><i class="ph-bold ph-x"></i></button>
+            </div>
+            <div class="hamburger-menu-list">
+                <button class="h-menu-item" id="menu-btn-open-hub"><i class="ph-bold ph-planet"></i> Mod Center</button>
+                <button class="h-menu-item" id="menu-btn-share-patch"><i class="ph-bold ph-share-network"></i> Share Patch</button>
+                
+                <div class="h-menu-divider"></div>
+                
+                <label class="h-menu-item" id="menu-btn-import-patch" style="cursor: pointer;">
+                    <i class="ph-bold ph-file-arrow-down"></i> Import Patch
+                </label>
+                <button class="h-menu-item" id="menu-btn-export-patch"><i class="ph-bold ph-file-arrow-up"></i> Export Patch</button>
+
+                <div class="h-menu-divider"></div>
+                
+                <button class="h-menu-item" id="menu-btn-command-palette"><i class="ph-bold ph-command"></i> Command Palette</button>
+                <button class="h-menu-item" id="menu-btn-lang-toggle"><i class="ph-bold ph-translate"></i> Language: <span id="lang-text" style="margin-left: 5px; color: var(--text-main);">TR</span></button>
+            </div>
+        </div>
+    </div>
+
+    <div id="proxy-buttons" style="display: none;">
+        <button id="btn-open-hub"></button>
+        <button id="btn-share-patch"></button>
+        <label id="btn-import-patch"><input type="file" id="upload-patch" accept=".json,.patch"></label>
+        <button id="btn-export-patch"></button>
+        <button id="btn-command-palette"></button>
+        <button id="lang-toggle"></button>
+    </div>
+
     <nav class="navbar">
         <h1 class="logo">SavStudio</h1>
         <div class="nav-actions">
+            <button class="btn outline-btn icon-btn" id="btn-undo" title="Undo" disabled><i class="ph-bold ph-arrow-u-up-left"></i></button>
+            <button class="btn outline-btn icon-btn" id="btn-redo" title="Redo" disabled><i class="ph-bold ph-arrow-u-up-right"></i></button>
             
-            <button class="btn outline-btn" id="btn-open-hub" style="color: #66b3ff; border-color: #66b3ff; display: none;">
-                <i class="ph-bold ph-planet"></i> MOD MERKEZİ
-            </button>
+            <div class="divider"></div>
             
-            <button class="btn outline-btn" id="btn-share-patch" style="display:none; color: var(--accent-bg); border-color: var(--accent-bg);">
-                <i class="ph-bold ph-share-network"></i> PAYLAŞ
+            <label class="btn primary-btn">
+                <i class="ph-bold ph-upload-simple"></i> <span class="hide-mobile" data-i18n="upload_btn">UPLOAD</span>
+                <input type="file" id="upload-save" accept=".sav" style="display: none;">
+            </label>
+            <button class="btn outline-btn" id="download-save" disabled>
+                <i class="ph-bold ph-download-simple"></i> <span class="hide-mobile" data-i18n="download_btn">SAVE</span>
             </button>
 
             <div class="divider"></div>
 
-            <button class="btn outline-btn icon-btn" id="btn-undo" title="Geri Al" disabled><i class="ph-bold ph-arrow-u-up-left"></i></button>
-            <button class="btn outline-btn icon-btn" id="btn-redo" title="İleri Al" disabled><i class="ph-bold ph-arrow-u-up-right"></i></button>
-            
-            <div class="divider" id="patch-divider" style="display: none;"></div>
-            <label class="btn outline-btn icon-btn" id="btn-import-patch" title="Yama Uygula" style="display:none; cursor: pointer;"><i class="ph-bold ph-file-arrow-down"></i><input type="file" id="upload-patch" accept=".json,.patch" style="display: none;"></label>
-            <button class="btn outline-btn icon-btn" id="btn-export-patch" title="Yama Dışa Aktar" style="display:none;"><i class="ph-bold ph-file-arrow-up"></i></button>
-
-            <div class="divider"></div>
-            <button class="btn outline-btn icon-btn" id="btn-command-palette" title="Komut Paleti (Ctrl+K)"><i class="ph-bold ph-command"></i></button>
-            <button class="btn lang-btn" id="lang-toggle">EN</button>
-            
-            <label class="btn primary-btn"><i class="ph-bold ph-upload-simple"></i> <span data-i18n="upload_btn">DOSYA YÜKLE</span><input type="file" id="upload-save" accept=".sav" style="display: none;"></label>
-            <button class="btn outline-btn" id="download-save" disabled><i class="ph-bold ph-download-simple"></i> <span data-i18n="download_btn">KAYDET</span></button>
+            <button class="btn outline-btn icon-btn" id="hamburger-toggle-btn">
+                <i class="ph-bold ph-list"></i>
+            </button>
         </div>
     </nav>
 
     <main class="workspace">
-        
         <aside class="sidebar">
-            <div class="file-info" id="file-info"><strong data-i18n="active_file">Aktif Dosya</strong><br><br><span style="color: var(--text-muted);" data-i18n="no_file">Henüz dosya seçilmedi.</span></div>
+            <div class="file-info" id="file-info">
+                <strong data-i18n="active_file">Active File</strong><br><br>
+                <span style="color: var(--text-muted);" data-i18n="no_file">No file selected.</span>
+            </div>
             
-            <div class="compare-info" id="compare-section" style="display: none; margin-top: 15px; padding: 15px; border: 1px solid var(--border-color); background: var(--bg-base); border-radius: 2px;"><label class="btn outline-btn" style="width: 100%; justify-content: center; font-size: 0.75rem;"><i class="ph-bold ph-git-diff"></i> <span data-i18n="compare_btn">KARŞILAŞTIR</span><input type="file" id="upload-compare" accept=".sav" style="display: none;"></label><div id="compare-details" style="display: none; margin-top: 15px; font-size: 0.8rem; color: var(--text-muted); line-height: 1.8;"></div></div>
+            <div class="compare-info" id="compare-section" style="display: none; margin-top: 15px; padding: 15px; border: 1px solid var(--border-color); background: var(--bg-base); border-radius: 2px;">
+                <label class="btn outline-btn" style="width: 100%; justify-content: center; font-size: 0.75rem;">
+                    <i class="ph-bold ph-git-diff"></i> <span data-i18n="compare_btn">COMPARE</span>
+                    <input type="file" id="upload-compare" accept=".sav" style="display: none;">
+                </label>
+                <div id="compare-details" style="display: none; margin-top: 15px; font-size: 0.8rem; color: var(--text-muted); line-height: 1.8;"></div>
+            </div>
         </aside>
 
         <section class="editor-area">
-            <div class="tabs"><button class="tab active" data-target="smart-view"><i class="ph-bold ph-list-numbers"></i> <span data-i18n="tab_values">Değerler</span></button><button class="tab" data-target="hex-view"><i class="ph-bold ph-hash"></i> <span data-i18n="tab_hex">Hex Editör</span></button></div>
-            
+            <div class="tabs">
+                <button class="tab active" data-target="smart-view">
+                    <i class="ph-bold ph-list-numbers"></i> <span data-i18n="tab_values">Values</span>
+                </button>
+                <button class="tab" data-target="hex-view">
+                    <i class="ph-bold ph-hash"></i> <span data-i18n="tab_hex">Hex Editor</span>
+                </button>
+            </div>
+
             <div class="view-content active" id="smart-view">
                 <div class="welcome-screen" id="empty-message" style="margin-top: 10vh;">
                     <div class="drop-zone" id="drop-zone">
                         <i class="ph-duotone ph-file-dashed drop-icon"></i>
-                        <h2 data-i18n="welcome_drop">Dosyanızı Buraya Sürükleyin</h2>
-                        <p data-i18n="welcome_drop_sub">veya bilgisayarınızdan seçmek için tıklayın (.sav)</p>
+                        <h2 data-i18n="welcome_drop">Drag & Drop Your File Here</h2>
+                        <p data-i18n="welcome_drop_sub">or click to select from your computer (.sav)</p>
                         <input type="file" id="drop-zone-input" accept=".sav" style="display:none;">
                     </div>
                 </div>
                 <div id="smart-editor-container" style="display: none;">
                     <div class="search-box">
                         <i class="ph-bold ph-magnifying-glass"></i>
-                        <input type="text" id="search-input" data-i18n-placeholder="search_placeholder" placeholder="Arama yap...">
+                        <input type="text" id="search-input" data-i18n-placeholder="search_placeholder" placeholder="Search... (e.g., TotalShoot)">
                     </div>
                     <div class="smart-list" id="smart-list"></div>
                 </div>
@@ -142,9 +257,10 @@
             <div class="view-content" id="hex-view">
                 <div class="search-box hex-search-bar" id="hex-search-container" style="display: none; margin-bottom: 20px;">
                     <i class="ph-bold ph-magnifying-glass"></i>
-                    <input type="text" id="hex-search-input" data-i18n-placeholder="hex_search_placeholder" placeholder="Hex veya Metin arat...">
-                    <button id="hex-search-btn" class="btn primary-btn" style="padding: 6px 16px; margin-left: 10px;" data-i18n="search_btn">BUL</button>
+                    <input type="text" id="hex-search-input" data-i18n-placeholder="hex_search_placeholder" placeholder="Search Hex or Text...">
+                    <button id="hex-search-btn" class="btn primary-btn" style="padding: 6px 16px; margin-left: 10px;" data-i18n="search_btn">FIND</button>
                 </div>
+                
                 <div class="hex-editor-layout">
                     <div class="hex-editor-container">
                         <div class="hex-header">
@@ -153,9 +269,10 @@
                             <div class="hex-ascii-col" data-i18n="ascii">ASCII</div>
                         </div>
                         <div class="hex-body" id="hex-body">
-                            <div class="empty-state"><p data-i18n="empty_msg">Düzenlemeye başlamak için bir dosya yükleyin.</p></div>
+                            <div class="empty-state"><p data-i18n="empty_msg">Upload a file to begin editing.</p></div>
                         </div>
                     </div>
+
                     <div class="data-inspector" id="data-inspector" style="display: none;">
                         <div class="inspector-header">
                             <h3><i class="ph-bold ph-eye"></i> DATA INSPECTOR</h3>
@@ -163,13 +280,13 @@
                         </div>
                         <div class="inspector-grid">
                             <div class="inspector-row"><span>Binary</span><strong id="ins-bin">00000000</strong></div>
-                            <div class="inspector-row"><span>Int8</span><strong id="ins-int8">0</strong></div>
-                            <div class="inspector-row"><span>Uint8</span><strong id="ins-uint8">0</strong></div>
-                            <div class="inspector-row"><span>Int16 (LE)</span><strong id="ins-int16">0</strong></div>
-                            <div class="inspector-row"><span>Uint16 (LE)</span><strong id="ins-uint16">0</strong></div>
-                            <div class="inspector-row"><span>Int32 (LE)</span><strong id="ins-int32">0</strong></div>
-                            <div class="inspector-row"><span>Uint32 (LE)</span><strong id="ins-uint32">0</strong></div>
-                            <div class="inspector-row"><span>Float32</span><strong id="ins-float">0.0</strong></div>
+                            <div class="inspector-row"><span>Int8 (Signed)</span><strong id="ins-int8">0</strong></div>
+                            <div class="inspector-row"><span>Uint8 (Unsigned)</span><strong id="ins-uint8">0</strong></div>
+                            <div class="inspector-row"><span>Int16 (Little Endian)</span><strong id="ins-int16">0</strong></div>
+                            <div class="inspector-row"><span>Uint16 (Little Endian)</span><strong id="ins-uint16">0</strong></div>
+                            <div class="inspector-row"><span>Int32 (Little Endian)</span><strong id="ins-int32">0</strong></div>
+                            <div class="inspector-row"><span>Uint32 (Little Endian)</span><strong id="ins-uint32">0</strong></div>
+                            <div class="inspector-row"><span>Float32 (Single)</span><strong id="ins-float">0.0</strong></div>
                         </div>
                     </div>
                 </div>
@@ -177,6 +294,72 @@
         </section>
     </main>
 
+    <footer style="text-align: center; padding: 15px; background: var(--bg-panel); border-top: 1px solid var(--border-color); font-size: 0.75rem; color: var(--text-muted); flex-shrink: 0;">
+        <p>&copy; 2026 SavStudio. Tüm hakları saklıdır.</p>
+        <div style="margin-top: 8px; display: flex; justify-content: center; gap: 15px;">
+            <a href="/kullanim-sartlari" style="color: var(--text-muted); text-decoration: none; transition: 0.2s;" onmouseover="this.style.color='var(--text-main)'" onmouseout="this.style.color='var(--text-muted)'">Kullanım Şartları</a>
+            <span style="color: var(--border-color);">|</span>
+            <a href="/gizlilik-politikasi" style="color: var(--text-muted); text-decoration: none; transition: 0.2s;" onmouseover="this.style.color='var(--text-main)'" onmouseout="this.style.color='var(--text-muted)'">Gizlilik Politikası</a>
+        </div>
+    </footer>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            const hamburgerBtn = document.getElementById("hamburger-toggle-btn");
+            const closeHamburgerBtn = document.getElementById("close-hamburger-btn");
+            const hamburgerOverlay = document.getElementById("hamburger-overlay");
+
+            hamburgerBtn.addEventListener("click", () => hamburgerOverlay.classList.remove("hidden"));
+            closeHamburgerBtn.addEventListener("click", () => hamburgerOverlay.classList.add("hidden"));
+            hamburgerOverlay.addEventListener("click", (e) => {
+                if(e.target === hamburgerOverlay) hamburgerOverlay.classList.add("hidden");
+            });
+
+            document.getElementById("menu-btn-open-hub").addEventListener("click", () => {
+                hamburgerOverlay.classList.add("hidden");
+                const btn = document.getElementById("btn-open-hub");
+                if(btn) btn.click();
+            });
+
+            document.getElementById("menu-btn-share-patch").addEventListener("click", () => {
+                hamburgerOverlay.classList.add("hidden");
+                const btn = document.getElementById("btn-share-patch");
+                if(btn) btn.click();
+            });
+
+            document.getElementById("menu-btn-command-palette").addEventListener("click", () => {
+                hamburgerOverlay.classList.add("hidden");
+                const btn = document.getElementById("btn-command-palette");
+                if(btn) btn.click();
+            });
+
+            document.getElementById("menu-btn-export-patch").addEventListener("click", () => {
+                hamburgerOverlay.classList.add("hidden");
+                const btn = document.getElementById("btn-export-patch");
+                if(btn) btn.click();
+            });
+            
+            document.getElementById("menu-btn-lang-toggle").addEventListener("click", () => {
+                const btn = document.getElementById("lang-toggle");
+                const textSpan = document.getElementById("lang-text");
+                if(btn) {
+                    btn.click();
+                    textSpan.innerText = btn.innerText;
+                }
+            });
+            
+            document.getElementById("menu-btn-import-patch").addEventListener("click", (e) => {
+                const uploadInput = document.getElementById("upload-patch");
+                if(uploadInput) uploadInput.click();
+                hamburgerOverlay.classList.add("hidden");
+            });
+        });
+    </script>
+    <script>
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('sw.js').catch(err => console.error("SW Registration failed:", err));
+        }
+    </script>
     <script src="app.js"></script>
 </body>
 </html>
